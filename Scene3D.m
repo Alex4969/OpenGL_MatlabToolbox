@@ -5,8 +5,6 @@ classdef Scene3D < handle
         fenetre             % JFrame dans lequel il y a ce canvas
         canvas              % GLCanvas dans lequel on peut utiliser les fonction openGL
         context             % GLContext
-
-        couleurFond         % Couleur du fond (matrice 1x4)
     end %fin de propriete defaut
     
     methods
@@ -24,10 +22,8 @@ classdef Scene3D < handle
 
             obj.context = obj.canvas.getContext();
 
-            obj.couleurFond = [0.0 1 0.2 1];
-
             gl = obj.getGL();
-            gl.glClearColor(obj.couleurFond(1), obj.couleurFond(2), obj.couleurFond(3), obj.couleurFond(4));
+            gl.glClearColor(0.0, 0.0, 0.4, 1.0);
             gl.glEnable(gl.GL_DEPTH_TEST);
             gl.glDepthFunc(gl.GL_LESS);
             gl.glEnable(gl.GL_BLEND);
@@ -45,6 +41,21 @@ classdef Scene3D < handle
             obj.context.release();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
+
+        function setCouleurFond(obj, newColor)
+            %SETCOULEURFOND change la couleur du fond de l'écran.
+            %Peut prendre en entrée une matrice 1x3 (rgb) ou 1x4 (rgba)
+            if (numel(newColor) == 3)
+                newColor(4) = 1;
+            end
+            if numel(newColor) == 4
+                gl = obj.getGL();
+                gl.glClearColor(newColor(1), newColor(2), newColor(3), newColor(4));
+                obj.context.release();
+            else
+                warning('Le format de la nouvelle couleur n est pas bon');
+            end
+        end % fin setCouleurFond
     end % fin des methodes defauts
 
     methods (Access = private)
