@@ -1,4 +1,4 @@
-classdef VisibleElement < handle
+classdef (Abstract) VisibleElement < handle
     %VISIBLEELEMENT 
     
     properties
@@ -9,11 +9,9 @@ classdef VisibleElement < handle
     
     methods
 
-        function obj = VisibleElement(gl, aGeom)
+        function obj = VisibleElement(aGeom)
             %VISIBLEELEMENT
             obj.Geom = aGeom;
-            sommets = [ obj.Geom.listePoints obj.Geom.composanteSupp ];
-            obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
             %%%TODO TRAITER LE SHADER
 
 

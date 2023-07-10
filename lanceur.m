@@ -1,5 +1,7 @@
 clear all
 
+addpath('outils\');
+
 import javax.swing.JFrame
 
 frame = JFrame("Ma Scene OpenGL");
@@ -32,9 +34,14 @@ pyraTexGeom.setModelMatrix(MTrans3D([1 0 0]));
 pyraColorGeom = Geometry(posPyramide, indicesPyramide, couleurPyramide);
 pyraColorGeom.setModelMatrix(MTrans3D([-1 0 0]));
 
+% un cube importé depuis un fichier
 cube = Geometry();
 cube.CreateFromFile('objets3D/cube.stl');
 cube.setModelMatrix(MTrans3D([0 0 -1]));
+
+pyramide1 = ElementFace(pyraGeom);
+
+viewer.ajouterObjet(pyramide1);
 
 %%%%  affichage  %%%%
 viewer.Draw();

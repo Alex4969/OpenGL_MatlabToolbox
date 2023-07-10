@@ -60,10 +60,17 @@ classdef GLGeometry < handle
         end % fin de bing
 
         function Unbind(obj, gl)
-            gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0);
+            %gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0);
             gl.glBindVertexArray(0);
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0);
         end % fin de unbind
+
+        function Delete(obj, gl)
+            %DELETE Supprime l'objet de la mémoire
+            gl.glDeleteBuffers(1, obj.VAOBuffer);
+            gl.glDeleteBuffers(1, obj.VBOBuffer);
+            gl.glDeleteBuffers(1, obj.EBOBuffer);
+        end % fin de Delete
 
     end % fin des methodes defauts
 
@@ -89,6 +96,7 @@ classdef GLGeometry < handle
         end % fin de generateSommets
 
         function generateIndices(obj, gl, indices)
+            indices = uint32(indices);
             indexData = java.nio.IntBuffer.allocate(numel(indices));
             indexData.put(indices(:));
             indexData.rewind();
