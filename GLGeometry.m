@@ -15,6 +15,7 @@ classdef GLGeometry < handle
         nColor
         nTextureMapping
         nNormals
+        newLayout logical       % vrai s'il faut changer le layout OpenGL
     end
     
     methods
@@ -22,7 +23,8 @@ classdef GLGeometry < handle
         function obj = GLGeometry(gl, sommets, indices)
             %GLGEOMETRIE
 
-            obj.SetAttribSize(3, 0, 0, 0); %taille des vertex attribute par defaut
+            obj.SetVertexAttribSize(3, 0, 0, 0); %taille des vertex attribute par defaut
+            obj.newLayout = true;
 
             obj.generateVertexArray(gl);
             CheckError(gl, 'Erreur pour la creation du vao');
@@ -36,7 +38,7 @@ classdef GLGeometry < handle
             obj.Unbind(gl);
         end % fin du constructeur de GLgeometry
 
-        function SetAttribSize(obj, nPos, nColor, nTextureMapping, nNormals)
+        function SetVertexAttribSize(obj, nPos, nColor, nTextureMapping, nNormals)
             if nargin < 2, nPos = 3; end
             if nargin < 3, nColor = 0; end
             if nargin < 4, nTextureMapping = 0; end
@@ -45,12 +47,15 @@ classdef GLGeometry < handle
             obj.nColor = nColor;
             obj.nTextureMapping = nTextureMapping;
             obj.nNormals = nNormals;
-            warning('il faut set ces valeur dans openGL');
+            obj.newLayout = true;
         end % fin de setAttribSize
 
         function Bind(obj, gl)
             gl.glBindVertexArray(obj.VAOId);
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
+            if (obj.newLayout == true)
+                obj.declareVertexAttrib(gl);
+            end
             %gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0);
         end % fin de bing
 
@@ -103,6 +108,7 @@ classdef GLGeometry < handle
             [index, offset] = obj.setVertexAttrib(gl, obj.nColor, index, offset, taille);
             [index, offset] = obj.setVertexAttrib(gl, obj.nTextureMapping, index, offset, taille);
             [index, offset] = obj.setVertexAttrib(gl, obj.nNormals, index, offset, taille);
+            obj.newLayout = false;
         end % fin de declareVertexAttrib
 
         function [index, offset] = setVertexAttrib(obj, gl, nAttrib, index, offset, taille)
