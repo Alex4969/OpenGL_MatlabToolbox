@@ -8,10 +8,12 @@ classdef Geometrie < handle
         listePoints         % matrice nx3 ou nx2 contenant les points dans l'espace
         listeConnection     % matrice ligne donne la connectivité en triangle des points de la liste de points
         modelMatrix         % transformation du modèle dans la scène 3D (translation, rotation, homothétie)
+        composanteSupp      % matrice nxm contenant des indications supplémentaires sur les sommets (couleurs, normales...)
     end
     
     methods
-        function obj = Geometrie(points,index)
+        
+        function obj = Geometrie(points, index, supp)
             %GEOMETRIE sans argument, le modele est ensuite donné en stl
             %recupere la liste de pointe et sa connectivité
             if (nargin == 0)
@@ -20,6 +22,13 @@ classdef Geometrie < handle
                 obj.enable = 1;
                 obj.listePoints = points;
                 obj.listeConnection = index;
+                if nargin == 3
+                    if size(points, 1) ~= size(supp, 1)
+                        warning('le nombre de ligne de supp et points doit etre similaire !')
+                    else
+                        obj.composanteSupp = supp;
+                    end
+                end
             end
             obj.modelMatrix = eye(4);
         end % fin du constructeur
@@ -37,6 +46,21 @@ classdef Geometrie < handle
             obj.listeConnection = temp(:);
             obj.enable = 1;
         end % fin de createFromFile
-    end % fin des methodes defaut
-end
 
+        function addToModelMatrix(obj, model, after)
+            %ADDTOMODELMATRIX multiplie la nouvelle matrice modele par
+            %celle deja existante (avant ou apres selon after)
+            if (nargin == 3 && after == 1)
+                obj.modelMatrix = obj.modelMatrix * model;
+            else
+                obj.modelMatrix = model * obj.modelMatrix;
+            end
+        end % fin de addToModelMatrix
+
+        function setModelMatrix(obj, model)
+            obj.modelMatrix = model;
+        end % fin de setModelMatrix
+
+    end % fin des methodes defaut
+
+end % fin de la classe geometrie
