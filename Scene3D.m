@@ -7,6 +7,7 @@ classdef Scene3D < handle
         context             % GLContext
 
         listeElements       % cell Array contenant les objets 3D de la scenes
+        listeShaders
     end %fin de propriete defaut
     
     methods
@@ -22,6 +23,8 @@ classdef Scene3D < handle
             obj.canvas.setAutoSwapBufferMode(false);
             obj.canvas.display();
 
+            
+                
             obj.context = obj.canvas.getContext();
 
             gl = obj.getGL();
@@ -31,6 +34,10 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_BLEND);
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
             gl.glEnable(gl.GL_LINE_SMOOTH);
+
+            obj.listeShaders = dictionary;
+            prog = {ShaderProgram(gl, "defaut")};
+            obj.listeShaders("defaut") = prog;
 
             obj.context.release();
         end % fin du constructeur de Scene3D
@@ -44,6 +51,8 @@ classdef Scene3D < handle
             gl = obj.getGL();
             elem.Init(gl);
             obj.listeElements{ 1 , numel(obj.listeElements)+1 } = elem;
+            obj.choixProg(elem);
+            obj.context.release();
         end % fin de ajouterObjet
 
         function Draw(obj)
@@ -53,7 +62,13 @@ classdef Scene3D < handle
 
             %dessiner les objets
             i = 1;
-            while (i <= size(obj.listeElements, 2))
+            progAct = obj.listeElements{i}.shader;
+            progAct.Bind(gl);
+            while i <= numel(obj.listeElements)
+                if progAct ~= obj.listeElements{i}.shader
+                    progAct = obj.listeElements{i}.shader;
+                    progAct.Bind();
+                end
                 obj.listeElements{i}.Draw(gl);
                 i = i + 1;
             end
@@ -61,6 +76,17 @@ classdef Scene3D < handle
             obj.context.release();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
+
+        function Delete(obj)
+            %DELETE Supprime les objets de la scene
+            gl = obj.getGL();
+            i = 1;
+            while (i <= size(obj.listeElements, 2))
+                obj.listeElements{i}.Delete(gl);
+                i = i+1;
+            end
+            obj.context.release();
+        end % fin de Delete
 
         function setCouleurFond(obj, newColor)
             %SETCOULEURFOND change la couleur du fond de l'écran.
@@ -84,6 +110,24 @@ classdef Scene3D < handle
                 obj.context.makeCurrent();
             end
             gl = obj.context.getCurrentGL();
+        end
+
+        function choixProg(obj, elem)
+            attrib = elem.GetAttrib();
+            if (attrib(1) == 0 && attrib(2) == 0 && attrib(3) == 0)
+                choix = "defaut";
+            end
+            obj.ajouterProg(elem, choix);
+        end % fin de choixProg
+
+        function ajouterProg(obj, elem, fileName)
+            if isKey(obj.listeShaders, fileName)
+                shader = obj.listeShaders(fileName);
+                elem.shader = shader{1};
+            else
+                prog = {ShaderProgram(obj.getGL(), fileName)};
+                obj.listeShaders(fileName) = prog;
+            end
         end
     end % fin des methodes privees
 

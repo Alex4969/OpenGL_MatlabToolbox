@@ -4,7 +4,7 @@ classdef (Abstract) VisibleElement < handle
     properties
         Geom Geometry
         GLGeom GLGeometry
-        shaderId
+        shader ShaderProgram
     end
     
     methods
@@ -20,6 +20,11 @@ classdef (Abstract) VisibleElement < handle
         function SetAttributeSize(obj, nPos, nColor, nTextureMapping, nNormals)
             obj.GLGeom.SetVertexAttribSize(nPos, nColor, nTextureMapping, nNormals);
             %%%TODO TRAITER LE SHADER
+        end
+
+        function res = GetAttrib(obj)
+            res = [obj.GLGeom.nColor obj.GLGeom.nTextureMapping obj.GLGeom.nNormals];
+            res = logical(res);
         end
 
     end % fin des methodes defauts

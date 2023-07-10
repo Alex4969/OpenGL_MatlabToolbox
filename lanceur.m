@@ -47,3 +47,4 @@ viewer.ajouterObjet(pyramide1);
 viewer.Draw();
 
 %%%%  suppression  %%%%
+viewer.Delete();

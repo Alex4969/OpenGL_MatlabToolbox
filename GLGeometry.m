@@ -60,7 +60,8 @@ classdef GLGeometry < handle
         end % fin de bing
 
         function Unbind(obj, gl)
-            %gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0);
+            %UNBIND retire les objets du contexte OpenGL
+            gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0);
             gl.glBindVertexArray(0);
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0);
         end % fin de unbind
