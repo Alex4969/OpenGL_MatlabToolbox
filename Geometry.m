@@ -1,4 +1,4 @@
-classdef Geometrie < handle
+classdef Geometry < handle
     %GEOMETRIE contient les propriété d'une géometrie
     %Cette classe ne permet que de faire des test et sera remplacer par la
     %vrai classe Geometrie en fin de projet
@@ -12,8 +12,8 @@ classdef Geometrie < handle
     end
     
     methods
-        
-        function obj = Geometrie(points, index, supp)
+
+        function obj = Geometry(points, index, supp)
             %GEOMETRIE sans argument, le modele est ensuite donné en stl
             %recupere la liste de pointe et sa connectivité
             if (nargin == 0)
