@@ -1,7 +1,7 @@
 classdef Camera < handle
     %CAMERA Summary of this class goes here
 
-    properties
+    properties (Access = private)
         %%% Attributs de la caméra
         position        % 1x3 position de la caméra
         target          % 1x3 position de la cible/objet regardé par la caméra
@@ -92,6 +92,14 @@ classdef Camera < handle
             obj.fov = newFov;
             obj.computeProj();
         end % fin de setFov
+        
+        function pos = getPosition(obj)
+            pos = obj.position;
+        end % fin de getPosition
+
+        function camMat = getCameraMatrix(obj)
+            camMat = obj.projMatrix * obj.viewMatrix;
+        end % fin de getCameraMatrix
 
     end %fin des methodes defauts
 
@@ -117,7 +125,7 @@ classdef Camera < handle
 
         function computeProj(obj)
             obj.projMatrix = MProj3D(obj.type, [obj.ratio, obj.fov, obj.near, obj.far]);
-        end
+        end % fin de computeProj
 
     end % fin des methodes privées
 
