@@ -21,7 +21,7 @@ classdef Camera < handle
 
         function obj = Camera(ratio)
         %CAMERA Construct an instance of this class
-            obj.position = [5 0 5];
+            obj.position = [5 5 5];
             obj.target = [0 0 0];
             obj.up = [0 1 0];
             obj.lookAt();

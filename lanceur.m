@@ -14,6 +14,28 @@ viewer = Scene3D('GL4', frame);
 
 %%%%  definition des objets  %%%%
 
+% Une boule
+for i=0:9
+    alpha = pi/10 * i;
+    z = cos(alpha);
+    r = sqrt(1 - (z*z));
+    for j = 0:9
+        beta = 2 * pi/10 * j;
+        posBoule(i*10 + j + 1, 1:3) = [r * cos(beta), r * sin(beta), z];
+    end
+end
+
+indBoule = [];
+for i=0:9
+    for j=0:9
+        base = i*10;
+        indBoule = [indBoule base base+10 base+j];
+        indBoule = [indBoule base+j base+10 base+10+j];
+    end
+end
+
+bouleGeom = Geometry(posBoule, indBoule);
+
 % Une pyramide
 posPyramide = [  -0.5 0.0 -0.5   ;
                   0.5 0.0 -0.5   ;
@@ -39,9 +61,15 @@ cube = Geometry();
 cube.CreateFromFile('objets3D/cube.stl');
 cube.setModelMatrix(MTrans3D([0 0 -1]));
 
+% Creation des elements Visible
 pyramide1 = ElementFace(pyraGeom);
+pyramide1.couleurArretes = [1 0 0 1];
+pyramide1.couleurFaces = [1 1 0 1];
+boule = ElementFace(bouleGeom);
+boule.couleurPoints = [0 1 1 1];
 
-viewer.ajouterObjet(pyramide1);
+%viewer.ajouterObjet(pyramide1);
+viewer.ajouterObjet(boule);
 
 %%%%  affichage  %%%%
 viewer.Draw();

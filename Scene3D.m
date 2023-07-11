@@ -8,6 +8,8 @@ classdef Scene3D < handle
 
         listeElements       % cell Array contenant les objets 3D de la scenes
         listeShaders
+
+        camera Camera       % instance de la camera
     end %fin de propriete defaut
     
     methods
@@ -23,7 +25,7 @@ classdef Scene3D < handle
             obj.canvas.setAutoSwapBufferMode(false);
             obj.canvas.display();
 
-            
+            obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
                 
             obj.context = obj.canvas.getContext();
 
@@ -69,6 +71,7 @@ classdef Scene3D < handle
                     progAct = obj.listeElements{i}.shader;
                     progAct.Bind();
                 end
+                progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getCameraMatrix())
                 obj.listeElements{i}.Draw(gl);
                 i = i + 1;
             end
