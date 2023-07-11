@@ -27,7 +27,7 @@ classdef Scene3D < handle
             obj.canvas.display();
 
             obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
-            obj.lumiere = Light([-5, 3, -5], [1 1 1]);
+            obj.lumiere = Light([0, 3, 3], [1 1 1]);
                 
             obj.context = obj.canvas.getContext();
 
@@ -70,10 +70,10 @@ classdef Scene3D < handle
                 if (i == 1 || progAct ~= obj.listeElements{i}.shader)
                     progAct = obj.listeElements{i}.shader;
                     progAct.Bind(gl);
-                    lightData = obj.lumiere.GetLightInfo();
                     progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getCameraMatrix());
-                    progAct.SetUniform3f(gl, 'uLightPos', lightData(1, 1:3));
-                    progAct.SetUniform3f(gl, 'uLightColor', lightData(2, 1:3));
+                    progAct.SetUniform3f(gl, 'uLightPos', obj.lumiere.getPosition());
+                    progAct.SetUniform3f(gl, 'uLightColor', obj.lumiere.getColor());
+                    progAct.SetUniform3f(gl, 'uCamPos', obj.camera.getPosition());
                 end
                 obj.listeElements{i}.Draw(gl);
                 i = i + 1;

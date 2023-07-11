@@ -47,6 +47,7 @@ cube.setModelMatrix(MTrans3D([0 0 -1]));
 
 % Creation des elements Visible
 pyramide1 = ElementFace(pyraGeom);
+pyramide1.ModifyModelMatrix(MScale3D(4));
 pyramide1.couleurArretes = [1 0 0 1];
 pyramide1.couleurFaces = [1 1 1 1];
 boule = ElementFace(bouleGeom);
@@ -61,7 +62,8 @@ viewer.ajouterObjet(boule);
 for i=1:1:360
     viewer.Draw();
     rot = MRot3D([0 0 1]);
-    boule.Geom.addToModelMatrix(rot);
+    boule.ModifyModelMatrix(rot, 1);
+    viewer.camera.setPosition([7*cos(i * pi/180) 5 7*sin(i * pi/180)]);
 end
 
 %%%%  suppression  %%%%

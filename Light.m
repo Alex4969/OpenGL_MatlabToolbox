@@ -20,9 +20,13 @@ classdef Light < handle
             obj.position = newPos;
         end % fin de SetPosition
 
-        function lightData = GetLightInfo(obj)
-            lightData = [obj.position ; obj.couleurLumiere];
-        end % fin de GetlightInfo
+        function pos = getPosition(obj)
+            pos = obj.position;
+        end % fin de GetPosition
+
+        function col = getColor(obj)
+            col = obj.couleurLumiere;
+        end % fin de GetPosition
 
     end % fin des methodes defauts
 

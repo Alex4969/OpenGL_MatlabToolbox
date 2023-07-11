@@ -57,7 +57,7 @@ classdef ShaderProgram < handle
             matUni.rewind();
             location = obj.findLocation(gl, nom);
             gl.glUniformMatrix4fv(location, 1, gl.GL_FALSE, matUni);
-        end
+        end % fin de SetUniformMat4
 
     end % fin des méthodes defauts
 
