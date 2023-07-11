@@ -13,7 +13,7 @@ classdef ElementFace < VisibleElement
     methods
         function obj = ElementFace(aGeom)
             %FACEELEMENT 
-            obj@VisibleElement(aGeom);
+            obj@VisibleElement(aGeom); % appel au constructeur parent
 
             obj.epaisseurArretes = 2;
             obj.epaisseurPoints = 2;
@@ -62,7 +62,9 @@ classdef ElementFace < VisibleElement
 
         function Delete(obj, gl)
             obj.GLGeom.Delete(gl);
-        end
-    end
-end
+        end % fin de Delete
+
+    end % fin de methodes defauts
+
+end % fin classe ElementFace
 
