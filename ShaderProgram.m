@@ -49,7 +49,7 @@ classdef ShaderProgram < handle
         function SetUniform3f(obj, gl, nom, attrib)
             location = obj.findLocation(gl, nom);
             gl.glUniform3f(location, attrib(1), attrib(2), attrib(3));
-        end % fin de setUniform4f
+        end % fin de setUniform3f
 
         function SetUniformMat4(obj, gl, nom, matrix)
             matUni = java.nio.FloatBuffer.allocate(16);
@@ -69,7 +69,7 @@ classdef ShaderProgram < handle
             else 
                 location = gl.glGetUniformLocation(obj.shaderProgId, nom);
                 if (location == -1)
-                    warning(['uniform ' nom 'na pas ete trouve dans le shader']);
+                    warning(['uniform ' nom ' na pas ete trouve dans le programme']);
                 end
                 obj.mapUniformLocation(nom) = location;
             end

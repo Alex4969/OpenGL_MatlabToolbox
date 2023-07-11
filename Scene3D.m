@@ -10,6 +10,7 @@ classdef Scene3D < handle
         listeShaders
 
         camera Camera       % instance de la camera
+        lumiere Light       % instance de la lumiere
     end %fin de propriete defaut
     
     methods
@@ -26,6 +27,7 @@ classdef Scene3D < handle
             obj.canvas.display();
 
             obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
+            obj.lumiere = Light([-5, 3, -5], [1 1 1]);
                 
             obj.context = obj.canvas.getContext();
 
@@ -64,14 +66,15 @@ classdef Scene3D < handle
 
             %dessiner les objets
             i = 1;
-            progAct = obj.listeElements{i}.shader;
-            progAct.Bind(gl);
             while i <= numel(obj.listeElements)
-                if progAct ~= obj.listeElements{i}.shader
+                if (i == 1 || progAct ~= obj.listeElements{i}.shader)
                     progAct = obj.listeElements{i}.shader;
-                    progAct.Bind();
+                    progAct.Bind(gl);
+                    lightData = obj.lumiere.GetLightInfo();
+                    progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getCameraMatrix());
+                    progAct.SetUniform3f(gl, 'uLightPos', lightData(1, 1:3));
+                    progAct.SetUniform3f(gl, 'uLightColor', lightData(2, 1:3));
                 end
-                progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getCameraMatrix())
                 obj.listeElements{i}.Draw(gl);
                 i = i + 1;
             end
