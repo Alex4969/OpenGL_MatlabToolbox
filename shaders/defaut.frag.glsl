@@ -1,16 +1,16 @@
 #version 450 core
 
-out vec4 color;
+out vec4 color;             //SORTIE : la couleur de ce pixel
 
-in vec3 vSurfaceNormal;
-in vec3 vCrntPos;
+in vec3 vSurfaceNormal;     //ENTREE DEPUIS GEOM : la normale a la surface
+in vec3 vCrntPos;           //ENTREE DEPUIS VERT : la position du point (avant projection!)
 
-uniform vec4 uColor;
-uniform vec3 uLightColor;
-uniform vec3 uLightPos;
-uniform vec3 uCamPos;
-uniform vec3 uLightDir = vec3(0.0, -1.0, 0.0);    //Direction de la lumiere pour la directionel et la spotlight
-uniform vec3 uLightData = vec3(0.0, 0.0, 0.0);    //[type, a, b] type {0=desactive, 1=point, 2=direct, 3=spot}
+uniform vec4 uColor;        //couleur de l'element
+uniform vec3 uLightColor;   //couleur de la lumiere
+uniform vec3 uLightPos;     //position de la lumiere
+uniform vec3 uCamPos;       //position de la camera
+uniform vec3 uLightDir ;    //Direction de la lumiere pour la directionel et la spotlight
+uniform vec3 uLightData;    //[type, a, b] type {0=desactive, 1=point, 2=direct, 3=spot}
                             // a et b parametre pour point ou spot
 
 float pointLight() // lumiere qui s'attenue en fonction de la distance (= ampoule)

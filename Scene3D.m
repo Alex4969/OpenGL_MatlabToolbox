@@ -73,6 +73,8 @@ classdef Scene3D < handle
                     progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getCameraMatrix());
                     progAct.SetUniform3f(gl, 'uLightPos', obj.lumiere.getPosition());
                     progAct.SetUniform3f(gl, 'uLightColor', obj.lumiere.getColor());
+                    progAct.SetUniform3f(gl, 'uLightDir', obj.lumiere.getDirection());
+                    progAct.SetUniform3f(gl, 'uLightData', obj.lumiere.getParam());
                     progAct.SetUniform3f(gl, 'uCamPos', obj.camera.getPosition());
                 end
                 obj.listeElements{i}.Draw(gl);
