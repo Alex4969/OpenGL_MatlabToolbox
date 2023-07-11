@@ -16,8 +16,10 @@ classdef ShaderProgram < handle
             obj.shaderProgId = gl.glCreateProgram();
 
             obj.compileFile(gl, gl.GL_VERTEX_SHADER, "shaders/" +  fileName + ".vert.glsl");
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, "shaders/" +  fileName + '.frag.glsl');
-            obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, "shaders/" +  fileName + '.geom.glsl');
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, "shaders/" +  fileName + ".frag.glsl");
+            if (isfile("shaders/" +  fileName + ".geom.glsl"))
+                obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, "shaders/" +  fileName + ".geom.glsl");
+            end
 
             gl.glLinkProgram(obj.shaderProgId);
             gl.glValidateProgram(obj.shaderProgId);

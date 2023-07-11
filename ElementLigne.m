@@ -34,7 +34,9 @@ classdef ElementLigne < VisibleElement
 
             gl.glLineWidth(obj.epaisseurLignes);
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
-            obj.shader.SetUniform4f(gl, 'uColor', obj.couleurArretes);
+            if (obj.GLGeom.nColor == 0)
+                obj.shader.SetUniform4f(gl, 'uColor', obj.couleurLignes);
+            end
             gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
 
             CheckError(gl, 'apres le dessin');
