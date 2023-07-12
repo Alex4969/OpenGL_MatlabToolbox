@@ -21,7 +21,7 @@ classdef Texture
             gl.glBindTexture(gl.GL_TEXTURE_2D, obj.textureId);
         end % fin de Bind
 
-        function Unbind(obj, gl)
+        function Unbind(~, gl)
             gl.glBindTexture(gl.GL_TEXTURE_2D, 0);
         end
         
@@ -39,10 +39,15 @@ classdef Texture
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR);	
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE);
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE);
-            im = imread(obj.filePath);
-            format = size(im,3);
+            [im, ~, alpha] = imread(obj.filePath);
+            if isempty(alpha)
+                format = 3;
+            else
+                format = 4;
+                im(:,:,4) = alpha;
+            end
             im = rot90(im, -1);
-            im = permute(im, [format 1:(format-1)]);
+            im = permute(im, [3 1:2]);
             imBuffer = java.nio.ByteBuffer.allocate(numel(im));
             imBuffer.put(im(:));
             imBuffer.rewind();
