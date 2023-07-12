@@ -36,8 +36,10 @@ classdef ElementFace < VisibleElement
             obj.GLGeom.Bind(gl);
             obj.shader.SetUniformMat4(gl, 'uModelMatrix', obj.Geom.modelMatrix);
 
-            if obj.GLGeom.nTextureMapping ~= 0
-
+            if obj.textureId ~= -1
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
+                obj.shader.SetUniform1i(gl, 'uTexture', obj.textureId);
+                gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             elseif obj.GLGeom.nColor ~= 0
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
                 gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);

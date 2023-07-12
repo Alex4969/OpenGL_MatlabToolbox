@@ -2,10 +2,10 @@ classdef ShaderProgram < handle
     %SHADERPROGRAM Compile un programme
     
     properties
-        filePath
-        shaderProgId
+        filePath            % string : le nom du fichier sans extension
+        shaderProgId        % uint32 : id de la texture
 
-        mapUniformLocation
+        mapUniformLocation  % char -> int32 : associe un nom d'uniform (variable GLSL) a sa location
     end
     
     methods
@@ -51,6 +51,11 @@ classdef ShaderProgram < handle
         function SetUniform3f(obj, gl, nom, attrib)
             location = obj.findLocation(gl, nom);
             gl.glUniform3f(location, attrib(1), attrib(2), attrib(3));
+        end % fin de setUniform3f
+
+        function SetUniform1i(obj, gl, nom, attrib)
+            location = obj.findLocation(gl, nom);
+            gl.glUniform1i(location, attrib);
         end % fin de setUniform3f
 
         function SetUniformMat4(obj, gl, nom, matrix)

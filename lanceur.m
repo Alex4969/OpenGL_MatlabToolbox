@@ -53,19 +53,26 @@ pyramide1.couleurFaces = [1 1 1 1];
 pyramide2 = ElementFace(pyraColorGeom);
 pyramide2.ModifyModelMatrix(MScale3D(4));
 
+pyramide3 = ElementFace(pyraTexGeom);
+pyramide3.ModifyModelMatrix(MScale3D(4));
+
 boule = ElementFace(bouleGeom);
 boule.couleurPoints = [0 1 1 1];
 boule.epaisseurPoints = 4;
 boule.couleurArretes = [1 0 1 1];
 
-viewer.ajouterObjet(pyramide1);
-viewer.ajouterObjet(pyramide2, 3, 3, 0, 0);
-viewer.ajouterObjet(boule);
+viewer.AjouterObjet(pyramide1);
+viewer.AjouterObjet(pyramide2, 3, 3, 0, 0);
+viewer.AjouterObjet(pyramide3, 3, 0, 2, 0);
+viewer.AddTexture("briques.jpg");
+viewer.AddTexture("sable.png");
+viewer.ApplyTexture("sable.png", pyramide3)
+viewer.AjouterObjet(boule);
 viewer.lumiere.SetParam([2 0.01 0.005]);
 viewer.lumiere.SetPosition([5 5 3]);
 
 %%%%  affichage  %%%%
-for i=1:1:360
+for i=-45:30
     viewer.Draw();
     rot = MRot3D([0 0 1]);
     boule.ModifyModelMatrix(rot, 1);

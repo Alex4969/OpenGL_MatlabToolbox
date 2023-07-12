@@ -7,7 +7,8 @@ classdef Scene3D < handle
         context             % GLContext
 
         listeElements       % cell Array contenant les objets 3D de la scenes
-        listeShaders
+        listeShaders        % dictionnaire qui lie le nom du fichier glsl a son programme
+        listeTextures
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
@@ -35,6 +36,10 @@ classdef Scene3D < handle
             obj.gyroscope = Axes(0, 0.6);
             obj.gyroscope.SetEpaisseur(4);
             obj.grille = Grid(obj.axes.getFin(), 2);
+
+            obj.listeShaders = dictionary;
+            obj.listeTextures = dictionary;
+
                 
             obj.context = obj.canvas.getContext();
 
@@ -46,7 +51,6 @@ classdef Scene3D < handle
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
             gl.glEnable(gl.GL_LINE_SMOOTH);
 
-            obj.listeShaders = dictionary;
             prog = {ShaderProgram(gl, "defaut")};
             obj.listeShaders("defaut") = prog;
 
@@ -60,8 +64,10 @@ classdef Scene3D < handle
             obj.context.release();
         end % fin du constructeur de Scene3D
 
-        function ajouterObjet(obj, elem, nPos, nColor, nTextureMapping, nNormals)
-            %AJOUTEROBJET Ajouter un objet a la liste d'objet a dessiner
+        function AjouterObjet(obj, elem, nPos, nColor, nTextureMapping, nNormals)
+            %AJOUTEROBJET Initialise l'objet avec les fonction gl
+            % puis l'ajoute a la liste d'objet a dessiner
+            % 
             if (~isa(elem, 'VisibleElement'))
                 disp('l objet a ajouter n est pas un VisibleElement');
                 return
@@ -89,11 +95,11 @@ classdef Scene3D < handle
                     progAct = obj.listeElements{i}.shader;
                     progAct.Bind(gl);
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
+                    progAct.SetUniform3f  (gl, 'uCamPos',     obj.camera.getPosition());
                     progAct.SetUniform3f  (gl, 'uLightPos',   obj.lumiere.getPosition());
                     progAct.SetUniform3f  (gl, 'uLightColor', obj.lumiere.getColor());
                     progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
                     progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
-                    progAct.SetUniform3f  (gl, 'uCamPos',     obj.camera.getPosition());
                 end
                 obj.listeElements{i}.Draw(gl);
                 i = i + 1;
@@ -145,6 +151,21 @@ classdef Scene3D < handle
                 warning('Le format de la nouvelle couleur n est pas bon');
             end
         end % fin setCouleurFond
+
+        function AddTexture(obj, fileName)
+            gl = obj.getGL();
+            tex = {Texture(gl, fileName, numel(numEntries(obj.listeTextures)))};
+            obj.listeTextures(fileName) = tex;
+            obj.context.release();
+        end % fin de AddTexture
+
+        function ApplyTexture(obj, fileName, elem)
+            %%%TODO verifier que l'element le permette
+            tex = obj.listeTextures(fileName);
+            texId = tex{1}.slot;
+            elem.textureId = texId;
+        end % fin de PutTexture
+
     end % fin des methodes defauts
 
     methods (Access = private)
