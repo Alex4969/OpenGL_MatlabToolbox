@@ -183,6 +183,8 @@ classdef Scene3D < handle
                 choix = "colored";
             elseif attrib(2) == 1
                 choix = "textured";
+            elseif attrib(3) == 1
+                choix = "normed";
             elseif (attrib(1) == 0 && attrib(2) == 0 && attrib(3) == 0)
                 choix = "defaut";
             end
