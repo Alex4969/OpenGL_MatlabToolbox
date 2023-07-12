@@ -60,7 +60,7 @@ classdef Scene3D < handle
             obj.context.release();
         end % fin du constructeur de Scene3D
 
-        function ajouterObjet(obj, elem)
+        function ajouterObjet(obj, elem, nPos, nColor, nTextureMapping, nNormals)
             %AJOUTEROBJET Ajouter un objet a la liste d'objet a dessiner
             if (~isa(elem, 'VisibleElement'))
                 disp('l objet a ajouter n est pas un VisibleElement');
@@ -68,6 +68,9 @@ classdef Scene3D < handle
             end
             gl = obj.getGL();
             elem.Init(gl);
+            if (nargin > 2)
+                elem.SetAttributeSize(nPos, nColor, nTextureMapping, nNormals);
+            end
             obj.listeElements{ 1 , numel(obj.listeElements)+1 } = elem;
             obj.choixProg(elem);
             obj.context.release();
@@ -154,8 +157,12 @@ classdef Scene3D < handle
         end % fin de getGL
 
         function choixProg(obj, elem)
-            attrib = elem.GetAttrib();
-            if (attrib(1) == 0 && attrib(2) == 0 && attrib(3) == 0)
+            attrib = elem.GetAttrib(); % 1x3 logical : color, mapping, normal
+            if (attrib(1) == 1)
+                choix = "colored";
+            elseif attrib(2) == 1
+                choix = "textured";
+            elseif (attrib(1) == 0 && attrib(2) == 0 && attrib(3) == 0)
                 choix = "defaut";
             end
             obj.ajouterProg(elem, choix);

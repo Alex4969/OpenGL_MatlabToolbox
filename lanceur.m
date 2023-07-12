@@ -15,7 +15,6 @@ viewer = Scene3D('GL4', frame);
 %%%%  definition des objets  %%%%
 
 % Une boule
-
 [posBoule, indBoule] = generateSpere(8, 10);
 bouleGeom = Geometry(posBoule, indBoule);
 bouleGeom.setModelMatrix(MTrans3D([0 3 0]));
@@ -50,20 +49,27 @@ pyramide1 = ElementFace(pyraGeom);
 pyramide1.ModifyModelMatrix(MScale3D(4));
 pyramide1.couleurArretes = [1 0 0 1];
 pyramide1.couleurFaces = [1 1 1 1];
+
+pyramide2 = ElementFace(pyraColorGeom);
+pyramide2.ModifyModelMatrix(MScale3D(4));
+
 boule = ElementFace(bouleGeom);
 boule.couleurPoints = [0 1 1 1];
 boule.epaisseurPoints = 4;
 boule.couleurArretes = [1 0 1 1];
 
 viewer.ajouterObjet(pyramide1);
+viewer.ajouterObjet(pyramide2, 3, 3, 0, 0);
 viewer.ajouterObjet(boule);
+viewer.lumiere.SetParam([2 0.01 0.005]);
+viewer.lumiere.SetPosition([5 5 3]);
 
 %%%%  affichage  %%%%
 for i=1:1:360
     viewer.Draw();
     rot = MRot3D([0 0 1]);
     boule.ModifyModelMatrix(rot, 1);
-    viewer.camera.setPosition([7*cos(i * pi/180) 5 7*sin(i * pi/180)]);
+    viewer.camera.setPosition([7*sin(i * pi/180) 5 7*cos(i * pi/180)]);
 end
 
 %%%%  suppression  %%%%
