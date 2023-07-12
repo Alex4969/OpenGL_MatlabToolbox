@@ -51,9 +51,6 @@ classdef Scene3D < handle
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
             gl.glEnable(gl.GL_LINE_SMOOTH);
 
-            prog = {ShaderProgram(gl, "defaut")};
-            obj.listeShaders("defaut") = prog;
-
             obj.axes.Init(gl);
             obj.ajouterProg(obj.axes, "axis");
             obj.gyroscope.Init(gl);
@@ -160,10 +157,13 @@ classdef Scene3D < handle
         end % fin de AddTexture
 
         function ApplyTexture(obj, fileName, elem)
-            %%%TODO verifier que l'element le permette
-            tex = obj.listeTextures(fileName);
-            texId = tex{1}.slot;
-            elem.textureId = texId;
+            if (isa(elem, 'ElementFace') && elem.GLGeom.nTextureMapping ~= 0)
+                tex = obj.listeTextures(fileName);
+                texId = tex{1}.slot;
+                elem.textureId = texId;
+            else 
+                warning('L objet donne en parametre n est pas texturable');
+            end
         end % fin de PutTexture
 
     end % fin des methodes defauts
@@ -192,13 +192,13 @@ classdef Scene3D < handle
         end % fin de choixProg
 
         function ajouterProg(obj, elem, fileName)
-            if isKey(obj.listeShaders, fileName)
-                shader = obj.listeShaders(fileName);
-                elem.shader = shader{1};
-            else
+            if (numEntries(obj.listeShaders) == 0 || isKey(obj.listeShaders, fileName) == 0)
                 prog = {ShaderProgram(obj.getGL(), fileName)};
                 obj.listeShaders(fileName) = prog;
                 elem.shader = prog{1};
+            else
+                shader = obj.listeShaders(fileName);
+                elem.shader = shader{1};
             end
         end % fin de ajouterProg
 
