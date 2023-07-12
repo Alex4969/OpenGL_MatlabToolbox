@@ -2,7 +2,7 @@ classdef ShaderProgram < handle
     %SHADERPROGRAM Compile un programme
     
     properties
-        fileName
+        filePath
         shaderProgId
 
         mapUniformLocation
@@ -11,14 +11,14 @@ classdef ShaderProgram < handle
     methods
 
         function obj = ShaderProgram(gl, fileName)
-            obj.fileName = fileName;
+            obj.filePath = "shaders/" + fileName;
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
 
-            obj.compileFile(gl, gl.GL_VERTEX_SHADER, "shaders/" +  fileName + ".vert.glsl");
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, "shaders/" +  fileName + ".frag.glsl");
-            if (isfile("shaders/" +  fileName + ".geom.glsl"))
-                obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, "shaders/" +  fileName + ".geom.glsl");
+            obj.compileFile(gl, gl.GL_VERTEX_SHADER, obj.filePath + ".vert.glsl");
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, obj.filePath + ".frag.glsl");
+            if (isfile(obj.filePath + ".geom.glsl"))
+                obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, obj.filePath + ".geom.glsl");
             end
 
             gl.glLinkProgram(obj.shaderProgId);

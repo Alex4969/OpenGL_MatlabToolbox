@@ -11,7 +11,8 @@ classdef Scene3D < handle
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
-        axes Axes
+        axes Axes           % instance des axes lié au repere
+        grille Grid         % instance de la grille lié au repere
     end %fin de propriete defaut
     
     methods
@@ -30,6 +31,7 @@ classdef Scene3D < handle
             obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light([0, 3, 3], [1 1 1]);
             obj.axes = Axes(-100, 100);
+            obj.grille = Grid(obj.axes.getFin(), 2);
                 
             obj.context = obj.canvas.getContext();
 
@@ -47,6 +49,8 @@ classdef Scene3D < handle
 
             obj.axes.Init(gl);
             obj.ajouterProg(obj.axes, "axis");
+            obj.grille.Init(gl);
+            obj.ajouterProg(obj.grille, "grille");
 
             obj.context.release();
         end % fin du constructeur de Scene3D
@@ -76,11 +80,11 @@ classdef Scene3D < handle
                     progAct = obj.listeElements{i}.shader;
                     progAct.Bind(gl);
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-                    progAct.SetUniform3f(gl,   'uLightPos',   obj.lumiere.getPosition());
-                    progAct.SetUniform3f(gl,   'uLightColor', obj.lumiere.getColor());
-                    progAct.SetUniform3f(gl,   'uLightDir',   obj.lumiere.getDirection());
-                    progAct.SetUniform3f(gl,   'uLightData',  obj.lumiere.getParam());
-                    progAct.SetUniform3f(gl,   'uCamPos',     obj.camera.getPosition());
+                    progAct.SetUniform3f  (gl, 'uLightPos',   obj.lumiere.getPosition());
+                    progAct.SetUniform3f  (gl, 'uLightColor', obj.lumiere.getColor());
+                    progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
+                    progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
+                    progAct.SetUniform3f  (gl, 'uCamPos',     obj.camera.getPosition());
                 end
                 obj.listeElements{i}.Draw(gl);
                 i = i + 1;
@@ -90,6 +94,11 @@ classdef Scene3D < handle
             progAct.Bind(gl);
             progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
             obj.axes.Draw(gl);
+
+            progAct = obj.grille.shader;
+            progAct.Bind(gl);
+            progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
+            obj.grille.Draw(gl);
 
             obj.context.release();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
@@ -123,12 +132,13 @@ classdef Scene3D < handle
     end % fin des methodes defauts
 
     methods (Access = private)
+
         function gl = getGL(obj)
             if ~obj.context.isCurrent()
                 obj.context.makeCurrent();
             end
             gl = obj.context.getCurrentGL();
-        end
+        end % fin de getGL
 
         function choixProg(obj, elem)
             attrib = elem.GetAttrib();
@@ -147,7 +157,8 @@ classdef Scene3D < handle
                 obj.listeShaders(fileName) = prog;
                 elem.shader = prog{1};
             end
-        end
+        end % fin de ajouterProg
+
     end % fin des methodes privees
 
 end % fin de la classe Scene3D

@@ -3,7 +3,7 @@ classdef ElementLigne < VisibleElement
     
     properties
         epaisseurLignes     % float
-        couleurLignes       % 1x3
+        couleurLignes       % 1x4
     end
     
     methods
@@ -13,7 +13,7 @@ classdef ElementLigne < VisibleElement
             obj@VisibleElement(aGeom);
 
             if nargin < 2, epaisseur = 2; end
-            if nargin < 3, couleur = [1 1 1]; end
+            if nargin < 3, couleur = [1 1 1 1]; end
             obj.epaisseurLignes = epaisseur;
             obj.couleurLignes   = couleur;
         end % fin du constructeur ElementLigne
@@ -26,7 +26,6 @@ classdef ElementLigne < VisibleElement
         function Draw(obj, gl)
             %DRAW dessine cet objet
             if obj.Geom.enable == 0
-                disp('objet invisible');
                 return
             end
             obj.GLGeom.Bind(gl);
@@ -46,6 +45,21 @@ classdef ElementLigne < VisibleElement
         function Delete(obj, gl)
             obj.GLGeom.Delete(gl);
         end % fin de Delete
+
+        function SetEpaisseur(obj, newEp)
+            obj.epaisseurLignes = newEp;
+        end
+
+        function SetCouleur(obj, newColor)
+            if numel(newColor) == 3
+                newColor(4) = 1;
+            end
+            if numel(newColor) == 4
+                obj.couleurLignes = newColor;
+            else 
+                warning('mauvaise matrice de couleur');
+            end
+        end % fin de SetCouleur
 
     end % fin des methodes defauts
 

@@ -3,7 +3,8 @@ classdef Axes < ElementLigne
     %   Detailed explanation goes here
     
     properties
-        
+        debut
+        fin
     end
     
     methods
@@ -21,6 +22,8 @@ classdef Axes < ElementLigne
             
             axesGeom = Geometry(sommetsValeurs, indices, sommetsCouleur);
             obj@ElementLigne(axesGeom);
+            obj.debut = deb;
+            obj.fin = fin;
         end % fin du constructeur Axes
 
         function Init(obj, gl)
@@ -28,6 +31,14 @@ classdef Axes < ElementLigne
             obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
             obj.SetAttributeSize(3, 3, 0, 0);
         end % fin de Init
+
+        function deb = getDebut(obj)
+            deb = obj.debut;
+        end
+
+        function fin = getFin(obj)
+            fin = obj.fin;
+        end
 
     end % fin des methdoes defauts
 
