@@ -13,8 +13,6 @@ classdef Texture
             %TEXTURE 
             obj.filePath = "textures/" + fileName;
             obj.slot = slot;
-            
-            extension = extractAfter(fileName, '.');
             obj.generateTexture(gl);
         end % fin du constructeur Texture
 

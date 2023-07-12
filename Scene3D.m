@@ -154,7 +154,7 @@ classdef Scene3D < handle
 
         function AddTexture(obj, fileName)
             gl = obj.getGL();
-            tex = {Texture(gl, fileName, numel(numEntries(obj.listeTextures)))};
+            tex = {Texture(gl, fileName, numEntries(obj.listeTextures))};
             obj.listeTextures(fileName) = tex;
             obj.context.release();
         end % fin de AddTexture

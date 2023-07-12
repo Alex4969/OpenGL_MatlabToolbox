@@ -66,7 +66,8 @@ viewer.AjouterObjet(pyramide2, 3, 3, 0, 0);
 viewer.AjouterObjet(pyramide3, 3, 0, 2, 0);
 viewer.AddTexture("briques.jpg");
 viewer.AddTexture("sable.png");
-viewer.ApplyTexture("sable.png", pyramide3)
+viewer.AddTexture("couleurs.jpg");
+viewer.ApplyTexture("briques.jpg", pyramide3)
 viewer.AjouterObjet(boule, 3, 0, 0, 3);
 viewer.lumiere.SetParam([2 0.01 0.005]);
 viewer.lumiere.SetPosition([5 5 3]);
