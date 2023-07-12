@@ -1,6 +1,6 @@
 function M = MProj3D(type,in)
 % create a projection matrix (perspective, ortho, or perspective with field of view.
-% [width height near far] pour ortho & perspective
+% [width height near far] pour ortho & perspective width et height normalisés
 % [ratio FOV    near far] pour perspective avec angle de vue (angle en degré)
 % http://www.songho.ca/opengl/gl_projectionmatrix.html
 

@@ -101,11 +101,24 @@ classdef Camera < handle
             camMat = obj.projMatrix * obj.viewMatrix;
         end % fin de getCameraMatrix
 
+        function Mrot = getRotation(obj)
+            Mrot = obj.viewMatrix;
+        end
+
     end %fin des methodes defauts
 
     methods (Access = private)
         
         function lookAt(obj)
+            Mrot = obj.computeRotationCamera();
+
+            Mtrans = eye(4);
+            Mtrans(1:3,4) = -obj.position';
+
+            obj.viewMatrix = Mrot * Mtrans;
+        end % fin de lookAt
+
+        function Mrot = computeRotationCamera(obj)
             forward = obj.position - obj.target;            
             forward = forward / norm(forward);
 
@@ -116,12 +129,7 @@ classdef Camera < handle
             Mrot(1,1:3) = left;
             Mrot(2,1:3) = newUp;
             Mrot(3,1:3) = forward;
-
-            Mtrans = eye(4);
-            Mtrans(1:3,4) = -obj.position';
-
-            obj.viewMatrix = Mrot * Mtrans;
-        end % fin de lookAt
+        end
 
         function computeProj(obj)
             obj.projMatrix = MProj3D(obj.type, [obj.ratio, obj.fov, obj.near, obj.far]);

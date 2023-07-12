@@ -12,6 +12,7 @@ classdef Scene3D < handle
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
         axes Axes           % instance des axes lié au repere
+        gyroscope Axes      % indication d'angle dans le repere
         grille Grid         % instance de la grille lié au repere
     end %fin de propriete defaut
     
@@ -31,6 +32,8 @@ classdef Scene3D < handle
             obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light([0, 3, 3], [1 1 1]);
             obj.axes = Axes(-100, 100);
+            obj.gyroscope = Axes(0, 0.6);
+            obj.gyroscope.SetEpaisseur(4);
             obj.grille = Grid(obj.axes.getFin(), 2);
                 
             obj.context = obj.canvas.getContext();
@@ -49,6 +52,8 @@ classdef Scene3D < handle
 
             obj.axes.Init(gl);
             obj.ajouterProg(obj.axes, "axis");
+            obj.gyroscope.Init(gl);
+            obj.ajouterProg(obj.gyroscope, "axis");
             obj.grille.Init(gl);
             obj.ajouterProg(obj.grille, "grille");
 
@@ -71,6 +76,7 @@ classdef Scene3D < handle
         function Draw(obj)
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
+            gl.glViewport(0, 0, obj.canvas.getWidth() , obj.canvas.getHeight());
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
 
             %dessiner les objets
@@ -99,6 +105,13 @@ classdef Scene3D < handle
             progAct.Bind(gl);
             progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
             obj.grille.Draw(gl);
+
+            %%afficher le gysmo
+            gl.glViewport(0, 0, 120, 80);
+            progAct = obj.gyroscope.shader;
+            progAct.Bind(gl);
+            progAct.SetUniformMat4(gl, 'uCamMatrix',  MProj3D('O', [1.2 0.8 1 10]) * obj.camera.getRotation());
+            obj.gyroscope.Draw(gl);
 
             obj.context.release();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
