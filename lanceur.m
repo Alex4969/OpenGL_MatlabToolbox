@@ -15,9 +15,10 @@ viewer = Scene3D('GL4', frame);
 %%%%  definition des objets  %%%%
 
 % Une boule
-[posBoule, indBoule] = generateSpere(8, 10);
-bouleGeom = Geometry(posBoule, indBoule, posBoule);
-bouleGeom.setModelMatrix(MTrans3D([0 3 0]));
+[posBoule, indBoule, mappingBoule] = generateSpere(15, 20);
+bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);
+bouleNormalesGeom.setModelMatrix(MTrans3D([0 3 0]));
+bouleTexGeom = Geometry(posBoule, indBoule, mappingBoule);
 
 % Une pyramide
 posPyramide = [  -0.5 0.0 -0.5   ;
@@ -56,19 +57,26 @@ pyramide2.ModifyModelMatrix(MScale3D(4));
 pyramide3 = ElementFace(pyraTexGeom);
 pyramide3.ModifyModelMatrix(MScale3D(4));
 
-boule = ElementFace(bouleGeom);
+boule = ElementFace(bouleNormalesGeom);
 boule.couleurPoints = [0 1 1 1];
 boule.epaisseurPoints = 4;
 boule.couleurArretes = [1 0 1 1];
+
+boule2 = ElementFace(bouleTexGeom);
+boule2.SetModelMatrix(MTrans3D([0 0 3]));
+boule2.ModifyModelMatrix(MRot3D([90 0 0]), 1);
+boule2.ModifyModelMatrix(MScale3D(2), 1);
 
 viewer.AjouterObjet(pyramide1);
 viewer.AjouterObjet(pyramide2, 3, 3, 0, 0);
 viewer.AjouterObjet(pyramide3, 3, 0, 2, 0);
 viewer.AddTexture("briques.jpg");
-viewer.AddTexture("sable.png");
 viewer.AddTexture("couleurs.jpg");
+viewer.AddTexture("monde.jpg");
 viewer.ApplyTexture("briques.jpg", pyramide3)
 viewer.AjouterObjet(boule, 3, 0, 0, 3);
+viewer.AjouterObjet(boule2, 3, 0, 2, 0);
+viewer.ApplyTexture("monde.jpg", boule2);
 viewer.lumiere.SetParam([2 0.01 0.005]);
 viewer.lumiere.SetPosition([5 5 3]);
 
