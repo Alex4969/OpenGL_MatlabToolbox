@@ -110,7 +110,9 @@ classdef Scene3D < handle
             gl.glViewport(0, 0, obj.canvas.getWidth()/10, obj.canvas.getHeight()/10);
             progAct = obj.gyroscope.shader;
             progAct.Bind(gl);
-            progAct.SetUniformMat4(gl, 'uCamMatrix',  MProj3D('O', [obj.canvas.getWidth()/10 obj.canvas.getHeight()/10 1 10]));
+            gyroMatrix = MProj3D('O', [obj.canvas.getWidth()/10 obj.canvas.getHeight()/10 1 20]) * obj.camera.getRotation();
+            gyroMatrix(1:3, 4) = 0;
+            progAct.SetUniformMat4(gl, 'uCamMatrix', gyroMatrix);
             obj.gyroscope.Draw(gl);
 
             obj.context.release();
