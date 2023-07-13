@@ -90,9 +90,7 @@ for i=-7:0.05:7
     viewer.camera.setPosition([i 4 5]);
     viewer.camera.setTarget([i 0 0]);
     viewer.lumiere.SetPosition([i 0 3]);
-    if (i > 0)
-        viewer.lumiere.SetColor([1 1 0.5]);
-    end
+    viewer.lumiere.SetColor([0.75+i/28 1 0.75-i/28]);
 end
 
 %%%%  suppression  %%%%

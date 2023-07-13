@@ -167,9 +167,11 @@ classdef Scene3D < handle
                     tex = obj.listeTextures(fileName);
                     texId = tex{1}.slot;
                     elem.textureId = texId;
+                    obj.ajouterProg(elem, "textured");
                 else
                     %%% TODO CHANGER DE PROGRAMME SHADER
                     elem.textureId = -1;
+                    obj.ajouterProg(elem, "defaut");
                     if fileName ~= ""
                         warning('la texture n existe pas')
                     end
@@ -203,11 +205,9 @@ classdef Scene3D < handle
             attrib = elem.GetAttrib(); % 1x3 logical : color, mapping, normal
             if (attrib(1) == 1)
                 choix = "colored";
-            elseif attrib(2) == 1
-                choix = "textured";
             elseif attrib(3) == 1
                 choix = "normed";
-            elseif (attrib(1) == 0 && attrib(2) == 0 && attrib(3) == 0)
+            else
                 choix = "defaut";
             end
             obj.ajouterProg(elem, choix);

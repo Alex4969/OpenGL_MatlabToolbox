@@ -28,10 +28,14 @@ classdef ShaderProgram < handle
         function compileFile(obj, gl, type, nomFichier)
             shaderId = gl.glCreateShader(type);
             src = fileread(nomFichier);
+            if contains(src, 'intensiteLumineuse')
+                src2 = fileread("shaders/light.frag.glsl");
+                src = [src  src2];
+            end
             gl.glShaderSource(shaderId, 1, src, []);
             gl.glCompileShader(shaderId);
             gl.glAttachShader(obj.shaderProgId, shaderId);
-            gl.glDeleteShader(shaderId);
+            %gl.glDeleteShader(shaderId);
         end %fin de compileFile
 
         function Bind(obj, gl)
