@@ -28,12 +28,12 @@ classdef (Abstract) VisibleElement < handle
         end
 
         function SetModelMatrix(obj, newModel)
-            obj.Geom.setModelMatrix(newModel);
+            obj.Geom.SetModelMatrix(newModel);
         end
 
         function ModifyModelMatrix(obj, matrix, after)
             if nargin < 3, after = 0; end
-            obj.Geom.addToModelMatrix(matrix, after);
+            obj.Geom.AddToModelMatrix(matrix, after);
         end
 
     end % fin des methodes defauts

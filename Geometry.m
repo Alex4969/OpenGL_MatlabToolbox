@@ -47,7 +47,7 @@ classdef Geometry < handle
             obj.enable = 1;
         end % fin de createFromFile
 
-        function addToModelMatrix(obj, model, after)
+        function AddToModelMatrix(obj, model, after)
             %ADDTOMODELMATRIX multiplie la nouvelle matrice modele par
             %celle deja existante (avant ou apres selon after)
             if (nargin == 3 && after == 1)
@@ -57,7 +57,7 @@ classdef Geometry < handle
             end
         end % fin de addToModelMatrix
 
-        function setModelMatrix(obj, model)
+        function SetModelMatrix(obj, model)
             obj.modelMatrix = model;
         end % fin de setModelMatrix
 
