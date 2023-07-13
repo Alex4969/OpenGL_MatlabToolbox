@@ -23,7 +23,7 @@ bouleTexGeom = Geometry(posBoule, indBoule, mappingBoule);
 % Un cube
 [posCube, indCube, mappCub] = generateCube();
 cubeGeom = Geometry(posCube, indCube, mappCub);
-cubeGeom.setModelMatrix(MTrans3D([2 2 3]));
+cubeGeom.setModelMatrix(MScale3D(2));
 
 % Une pyramide
 posPyramide = [  -0.5 0.0 -0.5   ;
@@ -36,6 +36,8 @@ mappingPyramide = [ 0 0 ; 1 0 ; 0 0 ; 1 0 ; 0.5 1 ];
 couleurPyramide = [ 1 0 0 ; 1 1 0 ; 0 1 0 ; 0 0.6 1 ; 1 1 1];
 
 indicesPyramide = [0 1 2   2 3 0   4 1 0   4 2 1   4 3 2   4 0 3];
+
+[posPyramide, indicesPyramide] = generatePyramide(4, 0.8);
 
 pyraGeom = Geometry(posPyramide, indicesPyramide);
 
@@ -74,24 +76,22 @@ boule2.ModifyModelMatrix(MScale3D(2), 1);
 
 cube1 = ElementFace(cubeGeom);
 
-viewer.AjouterObjet(pyramide1);
-viewer.AjouterObjet(pyramide2, 3, 3, 0, 0);
-viewer.AjouterObjet(pyramide3, 3, 0, 2, 0);
 viewer.AddTexture("briques.jpg");
 viewer.AddTexture("couleurs.jpg");
 viewer.AddTexture("monde.jpg");
+viewer.AjouterObjet(pyramide1);
+viewer.AjouterObjet(pyramide2, 3, 3, 0, 0);
+viewer.AjouterObjet(pyramide3, 3, 0, 2, 0);
 viewer.ApplyTexture("briques.jpg", pyramide3)
 viewer.AjouterObjet(boule, 3, 0, 0, 3);
 viewer.AjouterObjet(boule2, 3, 0, 2, 0);
 viewer.ApplyTexture("monde.jpg", boule2);
-viewer.AjouterObjet(cube1, 3, 0, 2, 0);
-viewer.ApplyTexture("couleurs.jpg", cube1);
 
 viewer.lumiere.SetParam([1 0.01 0.005]);
 viewer.lumiere.SetPosition([5 5 3]);
 
 %%%%  affichage  %%%%
-for i=-45:200
+for i=-45:45
     viewer.Draw();
     rot = MRot3D([0 0 1]);
     boule.ModifyModelMatrix(rot, 1);
