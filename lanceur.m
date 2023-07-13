@@ -1,6 +1,6 @@
 clear all
 
-addpath('outils\');
+addpath('outils');
 
 import javax.swing.JFrame
 
@@ -74,8 +74,8 @@ chess = ElementFace(chessGeom);
 chess.SetModelMatrix(MTrans3D([7 0 0]) * MScale3D(0.02));
 viewer.AjouterObjet(chess);
 
-viewer.lumiere.SetParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
-viewer.lumiere.SetPosition([0 2 3]);
+viewer.lumiere.setParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
+viewer.lumiere.setPosition([0 2 3]);
 [posBoule, indBoule] = generateSpere(8, 10, 0.5);
 bouleLightGeom = Geometry(posBoule, indBoule);
 viewer.AddGeomToLight(bouleLightGeom);
@@ -88,8 +88,8 @@ for i=-10:0.06:10
     % viewer.camera.setPosition([7*sin(i * pi/180) 5 7*cos(i * pi/180)]);
     viewer.camera.setPosition([i 4 5]);
     viewer.camera.setTarget([i 0 0]);
-    viewer.lumiere.SetPosition([i 0 3]);
-    viewer.lumiere.SetColor([0.75+i/28 1 0.75-i/28]);
+    viewer.lumiere.setPosition([i 0 3]);
+    viewer.lumiere.setColor([0.75+i/28 1 0.75-i/28]);
     viewer.Draw();
 end
 

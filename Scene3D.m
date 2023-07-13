@@ -110,7 +110,7 @@ classdef Scene3D < handle
             gl.glViewport(0, 0, obj.canvas.getWidth()/10, obj.canvas.getHeight()/10);
             progAct = obj.gyroscope.shader;
             progAct.Bind(gl);
-            gyroMatrix = MProj3D('O', [obj.canvas.getWidth()/10 obj.canvas.getHeight()/10 1 20]) * obj.camera.getRotation();
+            gyroMatrix = MProj3D('O', [obj.canvas.getWidth()/10 obj.canvas.getHeight()/10 1 20]) * obj.camera.getviewMatrix();
             gyroMatrix(1:3, 4) = 0;
             progAct.SetUniformMat4(gl, 'uCamMatrix', gyroMatrix);
             obj.gyroscope.Draw(gl);
@@ -200,7 +200,7 @@ classdef Scene3D < handle
             elem = ElementFace(geom);
             elem.Init(gl);
             obj.ajouterProg(elem, "grille");
-            obj.lumiere.SetForme(elem);
+            obj.lumiere.setForme(elem);
             obj.context.release();
         end
 
