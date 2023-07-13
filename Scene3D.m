@@ -106,7 +106,6 @@ classdef Scene3D < handle
             obj.axes.Draw(gl);
 
             if ~isempty(obj.lumiere.forme)
-                disp('ici');
                 progAct = obj.lumiere.forme.shader;
                 progAct.Bind(gl);
                 progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
@@ -164,9 +163,17 @@ classdef Scene3D < handle
 
         function ApplyTexture(obj, fileName, elem)
             if (isa(elem, 'ElementFace') && elem.GLGeom.nTextureMapping ~= 0)
-                tex = obj.listeTextures(fileName);
-                texId = tex{1}.slot;
-                elem.textureId = texId;
+                if (isKey(obj.listeTextures, fileName))
+                    tex = obj.listeTextures(fileName);
+                    texId = tex{1}.slot;
+                    elem.textureId = texId;
+                else
+                    %%% TODO CHANGER DE PROGRAMME SHADER
+                    elem.textureId = -1;
+                    if fileName ~= ""
+                        warning('la texture n existe pas')
+                    end
+                end
             else 
                 warning('L objet donne en parametre n est pas texturable');
             end

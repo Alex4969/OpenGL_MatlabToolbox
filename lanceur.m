@@ -91,7 +91,7 @@ for i=-7:0.05:7
     viewer.camera.setTarget([i 0 0]);
     viewer.lumiere.SetPosition([i 0 3]);
     if (i > 0)
-        viewer.lumiere.SetColor([1 0 0.5]);
+        viewer.lumiere.SetColor([1 1 0.5]);
     end
 end
 

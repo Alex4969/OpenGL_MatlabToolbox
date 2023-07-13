@@ -79,29 +79,15 @@ classdef ElementFace < VisibleElement
         end
 
         function SetCouleurFaces(obj, newCol)
-            if (newCol == 0)
-                obj.couleurFaces = newCol;
-            elseif (numel(newCol) == 3)
-                newCol(4) = 1;
-            end
-            if (numel(newCol) == 4)
-                obj.couleurFaces = newCol;
-            end
+            obj.couleurFaces = obj.testNewCol(newCol);
         end
 
         function SetCouleurArrete(obj, newCol)
-            if (newCol == 0)
-                obj.couleurArretes = newCol;
-            elseif (numel(newCol) == 3)
-                newCol(4) = 1;
-            end
-            if (numel(newCol) == 4)
-                obj.couleurArretes = newCol;
-            end
+            obj.couleurArretes = obj.testNewCol(newCol);
         end
 
         function SetCouleurPoints(obj, newCol)
-            obj.couleurPoints = newCol;
+            obj.couleurPoints = obj.testNewCol(newCol);
         end
 
         function Delete(obj, gl)
@@ -109,6 +95,20 @@ classdef ElementFace < VisibleElement
         end % fin de Delete
 
     end % fin de methodes defauts
+
+    methods (Access = private)
+        function col = testNewCol(~, newCol)
+            if (numel(newCol) == 3)
+                newCol(4) = 1;
+            end
+            if numel(newCol) == 4
+                col = newCol;
+            else
+                col = 0;
+                warning('mauvais format pour la nouvelle couleur');
+            end
+        end % fin de testNewCol
+    end % fin des methodes privees
 
 end % fin classe ElementFace
 
