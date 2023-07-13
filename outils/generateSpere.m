@@ -12,7 +12,7 @@ function [posBoule, indBoule, mapping] = generateSpere(nPointsHauteur, nPointsCe
         for j = 0:(nPointsCercle-1)
             base = i*nPointsCercle;
             beta = 2 * pi/(nPointsCercle-1) * j;
-            posBoule(base + j + 1, 1:3) = [r * cos(beta), r * sin(beta), z];
+            posBoule(base + j + 1, 1:3) = [r * cos(beta), z, r * sin(beta)];
             mapping(base + j + 1, 1:2) = [ 1-(j/(nPointsCercle-1))  i/(nPointsHauteur-1)];
             if (j + 1 == nPointsCercle)
                 jp = 0;
@@ -20,12 +20,12 @@ function [posBoule, indBoule, mapping] = generateSpere(nPointsHauteur, nPointsCe
                 jp = j + 1;
             end
             if i == 0
-                indBoule = [indBoule j nPointsCercle+j nPointsCercle+jp];
+                indBoule = [indBoule j nPointsCercle+jp nPointsCercle+j];
             elseif i == (nPointsHauteur-2)
-                indBoule = [indBoule base+j base+nPointsCercle+j base+jp];
+                indBoule = [indBoule base+j base+jp base+nPointsCercle+j];
             elseif i ~= (nPointsHauteur-1)
-                indBoule = [indBoule base+j base+nPointsCercle+j base+jp];
-                indBoule = [indBoule base+jp base+nPointsCercle+j base+nPointsCercle+jp];
+                indBoule = [indBoule base+j base+jp base+nPointsCercle+j];
+                indBoule = [indBoule base+jp base+nPointsCercle+jp base+nPointsCercle+j];
             end
         end
     end

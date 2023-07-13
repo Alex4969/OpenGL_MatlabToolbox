@@ -10,8 +10,8 @@ function [pos, ind, mapping] = generatePyramide(nBase, rBase)
         else
             ind = [ind i i+1 nBase];
         end
-        if (i > 1)
-            ind = [ind 0 i-1 i];
+        if (i > 1) % triangles pour la base
+            ind = [ind 0 i i-1];
         end
     end
     pos(nBase+1, 1:3) = [0 3/4 0];

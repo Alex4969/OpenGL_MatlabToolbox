@@ -44,21 +44,27 @@ viewer.ApplyTexture("briques.jpg", pyramide3)
 [posBoule, indBoule, mappingBoule] = generateSpere(12, 16);
 
 % sphere avec des normales par sommet
-bouleNormalesGeom = Geometry(posBoule, indBoule);
+bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);
 boule1 = ElementFace(bouleNormalesGeom);
-boule1.SetModelMatrix(MTrans3D([-1 0 0]) * MRot3D([90 0 0]));
+boule1.SetModelMatrix(MTrans3D([-0.5 -1 0]));
 boule1.couleurArretes = [1 0 1 1];
-viewer.AjouterObjet(boule1, 3, 0, 0, 0);
+viewer.AjouterObjet(boule1, 3, 0, 0, 3);
+
+bouleGeom = Geometry(posBoule, indBoule);
+boule2 = ElementFace(bouleGeom);
+boule2.SetModelMatrix(MTrans3D([-0.5 1 0]));
+boule2.couleurArretes = [1 0 1 1];
+viewer.AjouterObjet(boule2, 3, 0, 0, 0);
 
 % sphere avec texture map monde
 bouleTexGeom = Geometry(posBoule, indBoule, mappingBoule);
-boule2 = ElementFace(bouleTexGeom);
-boule2.SetModelMatrix(MTrans3D([3 0 0]));
-boule2.ModifyModelMatrix(MRot3D([90 0 0]), 1);
-boule2.ModifyModelMatrix(MScale3D(2), 1);
-viewer.AjouterObjet(boule2, 3, 0, 2, 0);
+boule3 = ElementFace(bouleTexGeom);
+boule3.SetModelMatrix(MTrans3D([3 0 0]));
+boule3.ModifyModelMatrix(MRot3D([180 0 0]), 1);
+boule3.ModifyModelMatrix(MScale3D(2), 1);
+viewer.AjouterObjet(boule3, 3, 0, 2, 0);
 viewer.AddTexture("monde.jpg");
-viewer.ApplyTexture("monde.jpg", boule2);
+viewer.ApplyTexture("monde.jpg", boule3);
 
 % piece d'echec depuis un fichier
 chessGeom = Geometry();
@@ -75,10 +81,11 @@ for i=-10:0.05:7
     viewer.Draw();
     rot = MRot3D([0 0 1]);
     boule1.ModifyModelMatrix(rot, 1);
+    boule2.ModifyModelMatrix(rot, 1);
     % viewer.camera.setPosition([7*sin(i * pi/180) 5 7*cos(i * pi/180)]);
     viewer.camera.setPosition([i 4 5]);
     viewer.camera.setTarget([i 0 0]);
-    viewer.lumiere.SetPosition([i 4 5]);
+    viewer.lumiere.SetPosition([i 3 5]);
 end
 
 %%%%  suppression  %%%%

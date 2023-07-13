@@ -15,5 +15,6 @@ void main()
     gl_Position = uCamMatrix * crntPos;
 
     vCrntPos = crntPos.xyz;
-    vNormal = normalize(normal);
+    mat3 rotation = mat3(uModelMatrix);
+    vNormal = normalize(rotation * normal);
 };
