@@ -100,22 +100,11 @@ classdef Scene3D < handle
                 obj.listeElements{i}.Draw(gl);
             end
 
-            progAct = obj.axes.shader;
-            progAct.Bind(gl);
-            progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-            obj.axes.Draw(gl);
-
+            obj.drawIntenalObject(gl, obj.axes);
+            obj.drawIntenalObject(gl, obj.grille);
             if ~isempty(obj.lumiere.forme)
-                progAct = obj.lumiere.forme.shader;
-                progAct.Bind(gl);
-                progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-                obj.lumiere.forme.Draw(gl);
+                obj.drawIntenalObject(gl, obj.lumiere.forme);
             end
-
-            progAct = obj.grille.shader;
-            progAct.Bind(gl);
-            progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-            obj.grille.Draw(gl);
 
             %%afficher le gysmo
             gl.glViewport(0, 0, obj.canvas.getWidth()/10, obj.canvas.getHeight()/10);
@@ -128,13 +117,36 @@ classdef Scene3D < handle
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
 
+        function drawIntenalObject(obj, gl, elem)
+            progAct = elem.shader;
+            progAct.Bind(gl);
+            progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
+            elem.Draw(gl);
+        end
+
         function Delete(obj)
             %DELETE Supprime les objets de la scene
             gl = obj.getGL();
-            i = 1;
-            while (i <= size(obj.listeElements, 2))
+            for i=1:numel(obj.listeElements)
                 obj.listeElements{i}.Delete(gl);
-                i = i+1;
+            end
+            if numEntries(obj.listeShaders) ~= 0
+                progs = values(obj.listeShaders);
+                for i=1:numel(progs)
+                    progs{1}.Delete(gl);
+                end
+            end
+            if numEntries(obj.listeTextures) ~= 0
+                textures = values(obj.listeTextures);
+                for i=1:numel(textures)
+                    textures{1}.Delete(gl);
+                end
+            end
+            obj.axes.Delete(gl);
+            obj.grille.Delete(gl);
+            obj.gyroscope.Delete(gl);
+            if ~isempty(obj.lumiere.forme)
+                obj.lumiere.forme.Delete(gl);
             end
             obj.context.release();
         end % fin de Delete

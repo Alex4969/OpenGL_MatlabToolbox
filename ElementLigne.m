@@ -42,10 +42,6 @@ classdef ElementLigne < VisibleElement
             obj.GLGeom.Unbind(gl);
         end % fin de Draw
 
-        function Delete(obj, gl)
-            obj.GLGeom.Delete(gl);
-        end % fin de Delete
-
         function SetEpaisseur(obj, newEp)
             obj.epaisseurLignes = newEp;
         end

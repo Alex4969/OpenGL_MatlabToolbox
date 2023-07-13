@@ -36,13 +36,16 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom.AddToModelMatrix(matrix, after);
         end
 
+        function Delete(obj, gl)
+            obj.GLGeom.Delete(gl);
+        end % fin de Delete
+
     end % fin des methodes defauts
 
     methods (Abstract = true)
         
         Init(obj, gl)
         Draw(obj, gl)
-        Delete(obj, gl)
 
     end % fin des methodes abstraites
 

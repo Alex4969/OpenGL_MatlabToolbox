@@ -90,10 +90,6 @@ classdef ElementFace < VisibleElement
             obj.couleurPoints = obj.testNewCol(newCol);
         end
 
-        function Delete(obj, gl)
-            obj.GLGeom.Delete(gl);
-        end % fin de Delete
-
     end % fin de methodes defauts
 
     methods (Access = private)

@@ -59,7 +59,7 @@ classdef GLGeometry < handle
             %gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0);
         end % fin de bing
 
-        function Unbind(obj, gl)
+        function Unbind(~, gl)
             %UNBIND retire les objets du contexte OpenGL
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0);
             gl.glBindVertexArray(0);
@@ -116,11 +116,11 @@ classdef GLGeometry < handle
             [index, offset] = obj.setVertexAttrib(gl, obj.nPos, index, offset, taille);
             [index, offset] = obj.setVertexAttrib(gl, obj.nColor, index, offset, taille);
             [index, offset] = obj.setVertexAttrib(gl, obj.nTextureMapping, index, offset, taille);
-            [index, offset] = obj.setVertexAttrib(gl, obj.nNormals, index, offset, taille);
+            [~, ~] = obj.setVertexAttrib(gl, obj.nNormals, index, offset, taille);
             obj.newLayout = false;
         end % fin de declareVertexAttrib
 
-        function [index, offset] = setVertexAttrib(obj, gl, nAttrib, index, offset, taille)
+        function [index, offset] = setVertexAttrib(~, gl, nAttrib, index, offset, taille)
             if (nAttrib ~= 0)
                 gl.glVertexAttribPointer(index, nAttrib, gl.GL_FLOAT, gl.GL_FALSE, taille, offset);
                 gl.glEnableVertexAttribArray(index);

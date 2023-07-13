@@ -1,10 +1,11 @@
-classdef Texture
+classdef Texture < handle
     %TEXTURE Summary of this class goes here
     %   Detailed explanation goes here
     
     properties
         filePath        % string : nom du fichier avec l'extension
         textureId       % uint32 : id de la texture
+        texBuffer
         slot
     end
     
@@ -24,15 +25,18 @@ classdef Texture
         function Unbind(~, gl)
             gl.glBindTexture(gl.GL_TEXTURE_2D, 0);
         end
-        
+
+        function Delete(obj, gl)
+            gl.glDeleteTextures(1, obj.texBuffer);
+        end
     end % fin des methodes defauts
 
     methods (Access = private)
 
         function generateTexture(obj, gl)
-            tex = java.nio.IntBuffer.allocate(1);
-            gl.glGenTextures(1, tex);
-            obj.textureId = typecast(tex.array(), 'uint32');
+            obj.texBuffer = java.nio.IntBuffer.allocate(1);
+            gl.glGenTextures(1, obj.texBuffer);
+            obj.textureId = typecast(obj.texBuffer.array(), 'uint32');
             gl.glActiveTexture(gl.GL_TEXTURE0 + obj.slot);
             gl.glBindTexture(gl.GL_TEXTURE_2D, obj.textureId);
         	gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR);	
