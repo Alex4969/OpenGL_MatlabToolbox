@@ -1,14 +1,17 @@
-function [posBoule, indBoule, mapping] = generateSpere(nPointsHauteur, nPointsCercle)
+function [posBoule, indBoule, mapping] = generateSpere(nPointsHauteur, nPointsCercle, rayon)
 %GENERATESPERE genere une sphere avec nPointsHauteur sur le demi-cercle
 %nPointsCercle pour chaque cercle
+    if nargin < 3
+        rayon = 1;
+    end
     nPointsCercle = nPointsCercle + 1; % on fait superposer un point a chaque fois pour les textures
     indBoule = [];
     posBoule = zeros(nPointsCercle * nPointsHauteur, 3);
     mapping = zeros(nPointsCercle * nPointsHauteur, 2);
     for i=0:(nPointsHauteur-1)
         alpha = pi/(nPointsHauteur-1) * i;
-        z = cos(alpha);
-        r = sqrt(1 - (z*z));
+        z = cos(alpha) * rayon;
+        r = sqrt(rayon*rayon - (z*z));
         for j = 0:(nPointsCercle-1)
             base = i*nPointsCercle;
             beta = 2 * pi/(nPointsCercle-1) * j;

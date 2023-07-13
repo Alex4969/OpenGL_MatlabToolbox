@@ -16,7 +16,7 @@ classdef ElementFace < VisibleElement
             obj@VisibleElement(aGeom); % appel au constructeur parent
 
             obj.epaisseurArretes = 2;
-            obj.epaisseurPoints = 2;
+            obj.epaisseurPoints = 4;
             obj.couleurArretes = 0;
             obj.couleurPoints = 0;
             obj.couleurFaces = [0.2 0.5 0.0 1.0];
@@ -79,11 +79,25 @@ classdef ElementFace < VisibleElement
         end
 
         function SetCouleurFaces(obj, newCol)
-            obj.couleurFaces = newCol;
+            if (newCol == 0)
+                obj.couleurFaces = newCol;
+            elseif (numel(newCol) == 3)
+                newCol(4) = 1;
+            end
+            if (numel(newCol) == 4)
+                obj.couleurFaces = newCol;
+            end
         end
 
         function SetCouleurArrete(obj, newCol)
-            obj.couleurArretes = newCol;
+            if (newCol == 0)
+                obj.couleurArretes = newCol;
+            elseif (numel(newCol) == 3)
+                newCol(4) = 1;
+            end
+            if (numel(newCol) == 4)
+                obj.couleurArretes = newCol;
+            end
         end
 
         function SetCouleurPoints(obj, newCol)

@@ -8,7 +8,7 @@ classdef Scene3D < handle
 
         listeElements       % cell Array contenant les objets 3D de la scenes
         listeShaders        % dictionnaire qui lie le nom du fichier glsl a son programme
-        listeTextures
+        listeTextures       % dictionnaire qui lie le nom de l'image a sa texture
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
@@ -86,8 +86,7 @@ classdef Scene3D < handle
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
 
             %dessiner les objets
-            i = 1;
-            while i <= numel(obj.listeElements)
+            for i= 1:numel(obj.listeElements)
                 if (i == 1 || progAct ~= obj.listeElements{i}.shader)
                     progAct = obj.listeElements{i}.shader;
                     progAct.Bind(gl);
@@ -99,7 +98,6 @@ classdef Scene3D < handle
                     progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
                 end
                 obj.listeElements{i}.Draw(gl);
-                i = i + 1;
             end
 
             progAct = obj.axes.shader;
@@ -107,16 +105,24 @@ classdef Scene3D < handle
             progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
             obj.axes.Draw(gl);
 
+            if ~isempty(obj.lumiere.forme)
+                disp('ici');
+                progAct = obj.lumiere.forme.shader;
+                progAct.Bind(gl);
+                progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
+                obj.lumiere.forme.Draw(gl);
+            end
+
             progAct = obj.grille.shader;
             progAct.Bind(gl);
             progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
             obj.grille.Draw(gl);
 
             %%afficher le gysmo
-            gl.glViewport(0, 0, 120, 80);
+            gl.glViewport(0, 0, obj.canvas.getWidth()/10, obj.canvas.getHeight()/10);
             progAct = obj.gyroscope.shader;
             progAct.Bind(gl);
-            progAct.SetUniformMat4(gl, 'uCamMatrix',  MProj3D('O', [1.2 0.8 1 10]) * obj.camera.getRotation());
+            progAct.SetUniformMat4(gl, 'uCamMatrix',  MProj3D('O', [obj.canvas.getWidth()/10 obj.canvas.getHeight()/10 1 10]));
             obj.gyroscope.Draw(gl);
 
             obj.context.release();
@@ -134,7 +140,7 @@ classdef Scene3D < handle
             obj.context.release();
         end % fin de Delete
 
-        function setCouleurFond(obj, newColor)
+        function SetCouleurFond(obj, newColor)
             %SETCOULEURFOND change la couleur du fond de l'écran.
             %Peut prendre en entrée une matrice 1x3 (rgb) ou 1x4 (rgba)
             if (numel(newColor) == 3)
@@ -165,6 +171,15 @@ classdef Scene3D < handle
                 warning('L objet donne en parametre n est pas texturable');
             end
         end % fin de PutTexture
+
+        function AddGeomToLight(obj, geom)
+            gl = obj.getGL();
+            elem = ElementFace(geom);
+            elem.Init(gl);
+            obj.ajouterProg(elem, "grille");
+            obj.lumiere.SetForme(elem);
+            obj.context.release();
+        end
 
     end % fin des methodes defauts
 

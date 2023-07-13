@@ -20,7 +20,7 @@ viewer = Scene3D('GL4', frame);
 % pyramide simple
 pyraGeom = Geometry(posPyramide, indicesPyramide);
 pyramide1 = ElementFace(pyraGeom);
-pyramide1.SetModelMatrix(MTrans3D([-10 0 0]) * MRot3D([0 45 0]) * MScale3D(3));
+pyramide1.SetModelMatrix(MTrans3D([-10 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 pyramide1.couleurArretes = [1 0 0 1];
 pyramide1.couleurFaces = [1 1 1 1];
 viewer.AjouterObjet(pyramide1);
@@ -28,32 +28,33 @@ viewer.AjouterObjet(pyramide1);
 % pyramide avec une couleur par sommet
 couleurPyramide = [ 1 0 0 ; 1 1 0 ; 0 1 0 ; 0 0.6 1 ; 1 1 1];
 pyraColorGeom = Geometry(posPyramide, indicesPyramide, couleurPyramide);
-pyraColorGeom.SetModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(3));
+pyraColorGeom.SetModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 pyramide2 = ElementFace(pyraColorGeom);
 viewer.AjouterObjet(pyramide2, 3, 3, 0, 0);
 
 % pyramide avec texture
 pyraTexGeom = Geometry(posPyramide, indicesPyramide, mappingPyramide);
-pyraTexGeom.SetModelMatrix(MTrans3D([-4 0 0]) * MRot3D([0 45 0]) * MScale3D(3));
+pyraTexGeom.SetModelMatrix(MTrans3D([-4 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 pyramide3 = ElementFace(pyraTexGeom);
 viewer.AjouterObjet(pyramide3, 3, 0, 2, 0);
 viewer.AddTexture("briques.jpg");
 viewer.ApplyTexture("briques.jpg", pyramide3)
 
 % generation d'une sphere
-[posBoule, indBoule, mappingBoule] = generateSpere(12, 16);
+[posBoule, indBoule, mappingBoule] = generateSpere(12, 16, 0.8);
 
 % sphere avec des normales par sommet
 bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);
 boule1 = ElementFace(bouleNormalesGeom);
-boule1.SetModelMatrix(MTrans3D([-0.5 -1 0]));
+boule1.SetModelMatrix(MTrans3D([-0.5 1.8 0]));
 boule1.couleurArretes = [1 0 1 1];
 viewer.AjouterObjet(boule1, 3, 0, 0, 3);
 
+% sphere classique
 bouleGeom = Geometry(posBoule, indBoule);
 boule2 = ElementFace(bouleGeom);
-boule2.SetModelMatrix(MTrans3D([-0.5 1 0]));
-boule2.couleurArretes = [1 0 1 1];
+boule2.SetModelMatrix(MTrans3D([-0.5 -0.2 0]));
+boule2.couleurPoints = [1 1 0 1];
 viewer.AjouterObjet(boule2, 3, 0, 0, 0);
 
 % sphere avec texture map monde
@@ -75,9 +76,12 @@ viewer.AjouterObjet(chess);
 
 viewer.lumiere.SetParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
 viewer.lumiere.SetPosition([0 2 3]);
+[posBoule, indBoule] = generateSpere(8, 10, 0.5);
+bouleLightGeom = Geometry(posBoule, indBoule);
+viewer.AddGeomToLight(bouleLightGeom);
 
 %%%%  affichage  %%%%
-for i=-10:0.05:7
+for i=-7:0.05:7
     viewer.Draw();
     rot = MRot3D([0 0 1]);
     boule1.ModifyModelMatrix(rot, 1);
@@ -85,7 +89,10 @@ for i=-10:0.05:7
     % viewer.camera.setPosition([7*sin(i * pi/180) 5 7*cos(i * pi/180)]);
     viewer.camera.setPosition([i 4 5]);
     viewer.camera.setTarget([i 0 0]);
-    viewer.lumiere.SetPosition([i 3 5]);
+    viewer.lumiere.SetPosition([i 0 3]);
+    if (i > 0)
+        viewer.lumiere.SetColor([1 0 0.5]);
+    end
 end
 
 %%%%  suppression  %%%%

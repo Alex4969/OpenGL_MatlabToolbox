@@ -6,6 +6,8 @@ classdef Light < handle
         position            % 1x3 position de la lumiere dans la scene
         couleurLumiere      % 1x3 couleur de la lumière
 
+        forme ElementFace   % donne une forme a la lumiere
+
         directionLumiere    % 1x3 direction souhaité de la lumière (pour la lumière directionel ou spot)
         paramsLumiere       % [t a b] t = type (0 : desactivé, 1 : pointLight, 2 : directionel, 3 : spotLight)
                             % a et b sont les parametre d'intensité pour le pointLight
@@ -25,12 +27,24 @@ classdef Light < handle
             obj.paramsLumiere = param;
         end % fin du constructeur de light
 
+        function SetForme(obj, elem)
+            obj.forme = elem;
+            obj.forme.SetModelMatrix(MTrans3D(obj.position));
+            obj.forme.SetCouleurFaces(obj.couleurLumiere);
+        end % fin de SetForme
+
         function SetPosition(obj, newPos)
             obj.position = newPos;
+            if ~isempty(obj.forme)
+                obj.forme.SetModelMatrix(MTrans3D(obj.position));
+            end
         end % fin de SetPosition
 
         function SetColor(obj, newCol)
             obj.couleurLumiere = newCol;
+            if ~isempty(obj.forme)
+                obj.forme.SetCouleurFaces(newCol);
+            end
         end % fin de SetCouleur
 
         function SetDirection(obj, newDir)
