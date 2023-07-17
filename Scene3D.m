@@ -52,7 +52,7 @@ classdef Scene3D < handle
             obj.lumiere = Light([0, 3, 3], [1 1 1]);
             obj.axes = Axes(-100, 100);
             obj.gyroscope = Axes(0, 0.6);
-            obj.gyroscope.SetEpaisseur(4);
+            obj.gyroscope.setEpaisseur(4);
             obj.grille = Grid(obj.axes.getFin(), 2);
 
             obj.listeShaders = dictionary;
@@ -169,7 +169,7 @@ classdef Scene3D < handle
             gl = obj.getGL();
             elem.Init(gl);
             if (nargin > 2)
-                elem.SetAttributeSize(nPos, nColor, nTextureMapping, nNormals);
+                elem.setAttributeSize(nPos, nColor, nTextureMapping, nNormals);
             end
             obj.listeElements{ 1 , numel(obj.listeElements)+1 } = elem;
             obj.choixProg(elem);
@@ -216,6 +216,7 @@ classdef Scene3D < handle
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
 
+
         function drawInternalObject(obj, gl, elem)
             progAct = elem.shader;
             progAct.Bind(gl);
@@ -224,6 +225,8 @@ classdef Scene3D < handle
         end
 
         function delete(obj)
+
+        function Delete(obj)
             %DELETE Supprime les objets de la scene
             disp('deleting Scene3D...')
             gl = obj.getGL();
@@ -251,7 +254,7 @@ classdef Scene3D < handle
             obj.context.release();
         end % fin de Delete
 
-        function SetCouleurFond(obj, newColor)
+        function setCouleurFond(obj, newColor)
             %SETCOULEURFOND change la couleur du fond de l'écran.
             %Peut prendre en entrée une matrice 1x3 (rgb) ou 1x4 (rgba)
             if (numel(newColor) == 3)
@@ -267,38 +270,46 @@ classdef Scene3D < handle
         end % fin setCouleurFond
 
         function AddTexture(obj, fileName)
-            gl = obj.getGL();
-            tex = {Texture(gl, fileName, numEntries(obj.listeTextures))};
-            obj.listeTextures(fileName) = tex;
-            obj.context.release();
+            if (isfile("textures\" + fileName))
+                gl = obj.getGL();
+                tex = {Texture(gl, fileName, numEntries(obj.listeTextures))};
+                obj.listeTextures(fileName) = tex;
+                obj.context.release();
+            else
+                warning("le fichier de texture nexiste pas");
+            end
         end % fin de AddTexture
 
         function ApplyTexture(obj, fileName, elem)
             if (isa(elem, 'ElementFace') && elem.GLGeom.nTextureMapping ~= 0)
-                if (isKey(obj.listeTextures, fileName))
+                if (numEntries(obj.listeTextures) ~= 0 && isKey(obj.listeTextures, fileName))
                     tex = obj.listeTextures(fileName);
                     texId = tex{1}.slot;
                     elem.textureId = texId;
                     obj.ajouterProg(elem, "textured");
                 else
-                    %%% TODO CHANGER DE PROGRAMME SHADER
                     elem.textureId = -1;
                     obj.ajouterProg(elem, "defaut");
                     if fileName ~= ""
-                        warning('la texture n existe pas')
+                        if (isfile("textures\" + fileName))
+                            obj.AddTexture(fileName);
+                            obj.ApplyTexture(fileName, elem);
+                        else
+                            warning('la texture n existe pas');
+                        end
                     end
                 end
             else 
                 warning('L objet donne en parametre n est pas texturable');
             end
-        end % fin de PutTexture
+        end % fin de ApplyTexture
 
         function AddGeomToLight(obj, geom)
             gl = obj.getGL();
             elem = ElementFace(geom);
             elem.Init(gl);
             obj.ajouterProg(elem, "grille");
-            obj.lumiere.SetForme(elem);
+            obj.lumiere.setForme(elem);
             obj.context.release();
         end
 
@@ -314,7 +325,7 @@ classdef Scene3D < handle
         end % fin de getGL
 
         function choixProg(obj, elem)
-            attrib = elem.GetAttrib(); % 1x3 logical : color, mapping, normal
+            attrib = elem.getAttrib(); % 1x3 logical : color, mapping, normal
             if (attrib(1) == 1)
                 choix = "colored";
             elseif attrib(3) == 1
@@ -335,6 +346,13 @@ classdef Scene3D < handle
                 elem.shader = shader{1};
             end
         end % fin de ajouterProg
+
+        function drawIntenalObject(obj, gl, elem)
+            progAct = elem.shader;
+            progAct.Bind(gl);
+            progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
+            elem.Draw(gl);
+        end % fin de drawInternalObject
 
     end % fin des methodes privees
 

@@ -29,7 +29,7 @@ classdef Axes < ElementLigne
         function Init(obj, gl)
             sommets = [ obj.Geom.listePoints obj.Geom.composanteSupp ];
             obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
-            obj.SetAttributeSize(3, 3, 0, 0);
+            obj.setAttributeSize(3, 3, 0, 0);
         end % fin de Init
 
         function deb = getDebut(obj)
