@@ -37,11 +37,10 @@ pyraTexGeom = Geometry(posPyramide, indicesPyramide, mappingPyramide);
 pyraTexGeom.setModelMatrix(MTrans3D([-4 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 pyramide3 = ElementFace(pyraTexGeom);
 viewer.AjouterObjet(pyramide3, 3, 0, 2, 0);
-%viewer.AddTexture("briques.jpg");
 viewer.ApplyTexture("briques.jpg", pyramide3)
 
 % generation d'une sphere
-[posBoule, indBoule, mappingBoule] = generateSpere(12, 16, 0.8);
+[posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 1.2);
 
 % sphere avec des normales par sommet
 bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);
@@ -76,13 +75,13 @@ viewer.AjouterObjet(chess);
 
 viewer.lumiere.setParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
 viewer.lumiere.setPosition([0 2 3]);
-[posBoule, indBoule] = generateSpere(8, 10, 0.5);
+[posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.5);
 bouleLightGeom = Geometry(posBoule, indBoule);
 viewer.AddGeomToLight(bouleLightGeom);
 
 %%%%  affichage  %%%%
 for i=-10:0.06:10
-    rot = MRot3D([0 0 1]);
+    rot = MRot3D([0 1 0]);
     boule1.ModifyModelMatrix(rot, 1);
     boule2.ModifyModelMatrix(rot, 1);
     % viewer.camera.setPosition([7*sin(i * pi/180) 5 7*cos(i * pi/180)]);
