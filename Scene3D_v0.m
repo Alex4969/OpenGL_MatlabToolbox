@@ -1,8 +1,8 @@
-classdef Scene3D < handle
+classdef Scene3D_v0 < handle
     %SCENE3D la scene 3D a afficher
     
     properties
-        fenetre jOGLframe   % jOGLframe contient la fenetre, un panel, le canvas, la toolbar ...
+        fenetre             % JFrame dans lequel il y a ce canvas
         canvas              % GLCanvas dans lequel on peut utiliser les fonction openGL
         context             % GLContext
 
@@ -15,38 +15,20 @@ classdef Scene3D < handle
         axes Axes           % instance des axes lié au repere
         gyroscope Axes      % indication d'angle dans le repere
         grille Grid         % instance de la grille lié au repere
-
-        cbk_manager javacallbackmanager
-        startX
-        startY
     end %fin de propriete defaut
     
-
     methods
-        function obj = Scene3D(windowsSize)
-            % windowsSize=[width length]
+        function obj = Scene3D_v0(glVersion, jframe)
             %SCENE3D Construct an instance of this class
             %   Création du GLCanvas
-            % % obj.fenetre = jframe;
-            % % gp = com.jogamp.opengl.GLProfile.get(glVersion);
-            % % cap = com.jogamp.opengl.GLCapabilities(gp);
-            % % obj.canvas = com.jogamp.opengl.awt.GLCanvas(cap);
-            % % obj.fenetre.add(obj.canvas);
-            % % obj.fenetre.show();
-            % % obj.canvas.setAutoSwapBufferMode(false);
-            % % obj.canvas.display();
-
-            obj.fenetre=jOGLframe('GL4',0);
-            if nargin==0
-                obj.fenetre.setSize([1280 1280*9/16]);
-            elseif nargin==1
-                obj.fenetre.setSize(windowsSize);
-            else
-                error('Bad argument number')
-            end
-            
-            obj.canvas=obj.fenetre.canvas.javaObj;
-            obj.context = obj.fenetre.canvas.javaObj.getContext();
+            obj.fenetre = jframe;
+            gp = com.jogamp.opengl.GLProfile.get(glVersion);
+            cap = com.jogamp.opengl.GLCapabilities(gp);
+            obj.canvas = com.jogamp.opengl.awt.GLCanvas(cap);
+            obj.fenetre.add(obj.canvas);
+            obj.fenetre.show();
+            obj.canvas.setAutoSwapBufferMode(false);
+            obj.canvas.display();
 
             obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light([0, 3, 3], [1 1 1]);
@@ -59,7 +41,7 @@ classdef Scene3D < handle
             obj.listeTextures = dictionary;
 
                 
-            % obj.context = obj.canvas.getContext();
+            obj.context = obj.canvas.getContext();
 
             gl = obj.getGL();
             gl.glClearColor(0.0, 0.0, 0.4, 1.0);
@@ -77,86 +59,7 @@ classdef Scene3D < handle
             obj.ajouterProg(obj.grille, "grille");
 
             obj.context.release();
-
-            %Listeners
-            obj.cbk_manager=javacallbackmanager(obj.canvas);
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MousePressed');
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseReleased');
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
-
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'KeyPressed');
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
-            % addlistener(obj.fenetre.canvas,'evt_MousePressed',@obj.cbk_MousePressed);
-
-
         end % fin du constructeur de Scene3D
-    end
-
-    methods
-
-        function cbk_MousePressed(obj,source,event)
-            %disp('MousePressed')
-            obj.startX=event.getPoint.getX;
-            obj.startY=event.getPoint.getY;
-        end
-
-        function cbk_MouseReleased(obj,source,event)
-            disp('MouseReleased')
-            event.getPoint;
-        end
-
-        function cbk_MouseDragged(obj,source,event)
-            %disp('MouseDragged')
-            dX=(event.getPoint.getX-obj.startX);
-            dY=(event.getPoint.getY-obj.startY);
-            % obj.camera.setPosition(obj.camera.getPosition-[dX dY 0]);
-            obj.camera.translateXY(obj.camera.speed*sign(dX),obj.camera.speed*sign(dY));
-            obj.camera.getPosition
-            obj.Draw();
-        end
-
-        function cbk_KeyPressed(obj,source,event)
-            disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
-            switch event.getKeyChar
-                case 'l'
-                    obj.camera.setPosition(obj.camera.getPosition-[obj.camera.speed 0 0]);
-                case 'r'
-                    obj.camera.setPosition(obj.camera.getPosition+[obj.camera.speed 0 0]);
-                case 'u'
-                    obj.camera.setPosition(obj.camera.getPosition+[0 obj.camera.speed 0]);
-                case 'd'
-                    obj.camera.setPosition(obj.camera.getPosition-[0 obj.camera.speed 0]);                    
-                case 'o' %origin
-                    obj.camera.defaultView;
-                case 'f' %origin
-                    obj.camera.upView;                    
-                case 'p' %perspective/ortho
-                    obj.camera.switchProjType;
-            end
-            obj.Draw();
-        end
-
-        function cbk_MouseWheelMoved(obj,source,event)
-            disp ('MouseWheelMoved')
-            obj.camera.zoom(sign(event.getWheelRotation)*obj.camera.speed*obj.camera.sensibility);
-            z=obj.camera.getPosition;
-            z(3)
-            obj.Draw();     
-        end        
-    end
-
-    methods
-
-        function cbk_ComponentResized(obj,source,event)
-            disp('ComponentResized')
-            obj.cbk_manager.rmCallback('ComponentResized');
-            w=source.getSize.getWidth;
-            h=source.getSize.getHeight;
-            disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])     
-            obj.Draw;
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
-        end
 
         function AjouterObjet(obj, elem, nPos, nColor, nTextureMapping, nNormals)
             %AJOUTEROBJET Initialise l'objet avec les fonction gl
@@ -197,10 +100,10 @@ classdef Scene3D < handle
                 obj.listeElements{i}.Draw(gl);
             end
 
-            obj.drawInternalObject(gl, obj.axes);
-            obj.drawInternalObject(gl, obj.grille);
+            obj.drawIntenalObject(gl, obj.axes);
+            obj.drawIntenalObject(gl, obj.grille);
             if ~isempty(obj.lumiere.forme)
-                obj.drawInternalObject(gl, obj.lumiere.forme);
+                obj.drawIntenalObject(gl, obj.lumiere.forme);
             end
 
             %%afficher le gysmo
@@ -216,16 +119,15 @@ classdef Scene3D < handle
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
 
-        function drawInternalObject(obj, gl, elem)
+        function drawIntenalObject(obj, gl, elem)
             progAct = elem.shader;
             progAct.Bind(gl);
             progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
             elem.Draw(gl);
         end
 
-        function delete(obj)
+        function Delete(obj)
             %DELETE Supprime les objets de la scene
-            disp('deleting Scene3D...')
             gl = obj.getGL();
             for i=1:numel(obj.listeElements)
                 obj.listeElements{i}.Delete(gl);

@@ -1,18 +1,16 @@
 clear all
 
 addpath('outils\');
-addpath('java\');
 
-% % import javax.swing.JFrame
-% % 
-% % frame = JFrame("Ma Scene OpenGL");
-% % frame.setDefaultCloseOperation(frame.DISPOSE_ON_CLOSE);
-% % frame.setSize(1280, 720);
-% % frame.setLocationRelativeTo([]);
-% % frame.setVisible(true);
+import javax.swing.JFrame
 
-% viewer = Scene3D('GL4', frame);
-viewer = Scene3D;
+frame = JFrame("Ma Scene OpenGL");
+frame.setDefaultCloseOperation(frame.DISPOSE_ON_CLOSE);
+frame.setSize(1280, 720);
+frame.setLocationRelativeTo([]);
+frame.setVisible(true);
+
+viewer = Scene3D_v0('GL4', frame);
 
 %%%%  definition des objets  %%%%
 
@@ -98,5 +96,4 @@ for i=-10:0.06:10
 end
 
 %%%%  suppression  %%%%
-% viewer.delete();
-
+viewer.Delete();

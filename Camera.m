@@ -1,12 +1,24 @@
 classdef Camera < handle
     %CAMERA Summary of this class goes here
 
+    properties
+        speed=0.1
+        sensibility=100
+    end
+
     properties (Access = private)
         %%% Attributs de la caméra
         position        % 1x3 position de la caméra
         target          % 1x3 position de la cible/objet regardé par la caméra
         up              % 1x3 position du vecteur pointant vers le haut (NORMALISE!)
         viewMatrix      % 4x4 matrice de transformation correspondant aux valeurs ci dessus
+
+        orientation
+
+
+        height
+        width
+
 
         %%% Attributs de la projection
         near            % double distance du plan rapproché
@@ -33,6 +45,8 @@ classdef Camera < handle
             obj.type = 'P';
             obj.computeProj();
         end % fin du constructeur camera
+
+
 
         function setPosition(obj, newPosition)
             obj.position = newPosition;
@@ -106,6 +120,35 @@ classdef Camera < handle
         end
 
     end %fin des methodes defauts
+
+    % special transformations
+    methods
+        function translateXY(obj,dx,dy)
+            obj.position=obj.position+[dx dy 0];
+            % obj.target=obj.target+[dx dy 0];
+            obj.lookAt();
+        end
+
+        function zoom(obj,dz)
+            obj.position=obj.position+[0 0 dz];
+            obj.lookAt();
+        end
+
+        function defaultView(obj)
+            obj.position=[2 2 10];
+            obj.up=[0 1 0];
+            obj.target=[0 0 0];
+            obj.lookAt();
+        end  
+
+        function upView(obj)
+            obj.position=[0 10 0];
+            obj.up=[1 0 0];
+            obj.target=[0 0 0];
+            obj.lookAt();
+        end  
+
+    end
 
     methods (Access = private)
         
