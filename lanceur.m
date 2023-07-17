@@ -14,6 +14,8 @@ addpath('java\');
 % viewer = Scene3D('GL4', frame);
 viewer = Scene3D;
 
+viewer.SetCouleurFond([0 0 0])
+
 %%%%  definition des objets  %%%%
 
 % generation des parametre de la pyramide
