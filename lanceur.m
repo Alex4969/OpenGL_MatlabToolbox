@@ -16,7 +16,7 @@ addpath('java\');
 % viewer = Scene3D('GL4', frame);
 viewer = Scene3D;
 
-viewer.SetCouleurFond([0 0 0])
+viewer.setCouleurFond([0 0 0.4])
 
 %%%%  definition des objets  %%%%
 
@@ -94,9 +94,9 @@ for i=-10:0.06:10
     % viewer.camera.setPosition([7*sin(i * pi/180) 5 7*cos(i * pi/180)]);
     viewer.camera.setPosition([i 4 5]);
     viewer.camera.setTarget([i 0 0]);
-    viewer.lumiere.SetPosition([i 0 3]);
-    viewer.lumiere.SetColor([1 1 1]);%([0.75+i/28 1 0.75-i/28]);
-    chess.SetCouleurFaces(rand(1,3));
+    viewer.lumiere.setPosition([i 0 3]);
+    viewer.lumiere.setColor([1 1 1]);%([0.75+i/28 1 0.75-i/28]);
+    chess.setCouleurFaces(rand(1,3));
 
     viewer.lumiere.setPosition([i 0 3]);
     %viewer.lumiere.setColor([0.75+i/28 1 0.75-i/28]);

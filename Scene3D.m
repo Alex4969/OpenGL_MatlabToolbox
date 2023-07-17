@@ -93,6 +93,7 @@ classdef Scene3D < handle
         end % fin du constructeur de Scene3D
     end
 
+    % callback
     methods
 
         function cbk_MousePressed(obj,source,event)
@@ -144,10 +145,7 @@ classdef Scene3D < handle
             z(3)
             obj.Draw();     
         end        
-    end
-
-    methods
-
+    
         function cbk_ComponentResized(obj,source,event)
             disp('ComponentResized')
             obj.cbk_manager.rmCallback('ComponentResized');
@@ -157,7 +155,9 @@ classdef Scene3D < handle
             obj.Draw;
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
+    end
 
+    methods
         function AjouterObjet(obj, elem, nPos, nColor, nTextureMapping, nNormals)
             %AJOUTEROBJET Initialise l'objet avec les fonction gl
             % puis l'ajoute a la liste d'objet a dessiner
@@ -225,8 +225,6 @@ classdef Scene3D < handle
         end
 
         function delete(obj)
-
-        function Delete(obj)
             %DELETE Supprime les objets de la scene
             disp('deleting Scene3D...')
             gl = obj.getGL();
