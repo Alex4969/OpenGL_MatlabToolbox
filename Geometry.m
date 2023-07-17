@@ -57,7 +57,7 @@ classdef Geometry < handle
             end
         end % fin de addToModelMatrix
 
-        function SetModelMatrix(obj, model)
+        function setModelMatrix(obj, model)
             obj.modelMatrix = model;
         end % fin de setModelMatrix
 

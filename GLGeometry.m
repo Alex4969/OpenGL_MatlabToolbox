@@ -11,11 +11,12 @@ classdef GLGeometry < handle
 
         %%% Definition des Vertex Attribute
         %%% Contient le nombre de valeurs pour cet attribut ou 0 si il n'y est pas
-        nPos
-        nColor
-        nTextureMapping
-        nNormals
-        newLayout logical       % vrai s'il faut changer le layout OpenGL
+        nPos                    % nombre de valeur utile pour définir la position (généralement 2 ou 3, défaut 3)
+        nColor                  % nombre de valeur utile pour définir la couleur (généralement 3 ou 4, défaut 0)
+        nTextureMapping         % nombre de valeur utile pour définir le mapping (généralement 2, défaut 0)
+        nNormals                % nombre de valeur utile pour définir les normales (généralement 3, défaut 0)
+        newLayout logical       % vrai s'il faut changer le layout OpenGL. le changement se fait dans le bind si besoin.
+                                % definir un nouveau layout pour OpenGL necessite un contexte
     end
     
     methods
@@ -78,6 +79,7 @@ classdef GLGeometry < handle
     methods (Access = private)
         
         function generateVertexArray(obj, gl)
+            %GENERATEVERTEXARRAY : Creer le VAO
             obj.VAOBuffer = java.nio.IntBuffer.allocate(1);
             gl.glGenVertexArrays(1, obj.VAOBuffer);
             obj.VAOId = typecast(obj.VAOBuffer.array, 'uint32');
@@ -85,6 +87,7 @@ classdef GLGeometry < handle
         end % fin de generateVertexArray
 
         function generateSommets(obj, gl, sommets)
+            %GENERATESOMMETS : Creer le VBO a partir de la liste de sommets de la géometrie
             sommetsData = java.nio.FloatBuffer.allocate(numel(sommets));
             sommets = sommets';
             sommetsData.put(sommets(:));
@@ -97,6 +100,7 @@ classdef GLGeometry < handle
         end % fin de generateSommets
 
         function generateIndices(obj, gl, indices)
+            %GENERATEINDICIES : Creer le EBO a partir de la liste de connectivité de la géometrie
             indices = uint32(indices);
             indexData = java.nio.IntBuffer.allocate(numel(indices));
             indexData.put(indices(:));
@@ -109,6 +113,7 @@ classdef GLGeometry < handle
         end % fin de generateIndices
 
         function declareVertexAttrib(obj, gl)
+            %DECLAREVERTEXATTRIB : definit les vertex attribute pour OpenGL. Fait plusieurs appel a setVertexAttrib
             taille = obj.nPos + obj.nColor + obj.nTextureMapping + obj.nNormals;
             taille = taille * 4;
             index = 0;
@@ -121,6 +126,7 @@ classdef GLGeometry < handle
         end % fin de declareVertexAttrib
 
         function [index, offset] = setVertexAttrib(~, gl, nAttrib, index, offset, taille)
+            %SETVERTEXATTRIB : définit 1 vertex attribute pour OpenGL
             if (nAttrib ~= 0)
                 gl.glVertexAttribPointer(index, nAttrib, gl.GL_FLOAT, gl.GL_FALSE, taille, offset);
                 gl.glEnableVertexAttribArray(index);

@@ -14,21 +14,21 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom = aGeom;
         end % fin du constructeur de VisibleElement
 
-        function SetAttributeSize(obj, nPos, nColor, nTextureMapping, nNormals)
+        function setAttributeSize(obj, nPos, nColor, nTextureMapping, nNormals)
             obj.GLGeom.SetVertexAttribSize(nPos, nColor, nTextureMapping, nNormals);
         end
 
-        function res = GetAttrib(obj)
+        function res = getAttrib(obj)
             res = [obj.GLGeom.nColor obj.GLGeom.nTextureMapping obj.GLGeom.nNormals];
             res = logical(res);
         end
 
-        function model = GetModelMatrix(obj)
+        function model = getModelMatrix(obj)
             model = obj.Geom.modelMatrix;
         end
 
-        function SetModelMatrix(obj, newModel)
-            obj.Geom.SetModelMatrix(newModel);
+        function setModelMatrix(obj, newModel)
+            obj.Geom.setModelMatrix(newModel);
         end
 
         function ModifyModelMatrix(obj, matrix, after)

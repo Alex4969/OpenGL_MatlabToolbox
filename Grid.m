@@ -69,7 +69,7 @@ classdef Grid < ElementLigne
             obj.GLGeom.Unbind(gl);
         end % fin du Draw
 
-        function SetVisibleNormales(obj, normales)
+        function setVisibleNormales(obj, normales)
             obj.normaleX = normales(1);
             obj.normaleY = normales(2);
             obj.normaleZ = normales(3);

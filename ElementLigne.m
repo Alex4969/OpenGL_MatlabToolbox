@@ -42,20 +42,20 @@ classdef ElementLigne < VisibleElement
             obj.GLGeom.Unbind(gl);
         end % fin de Draw
 
-        function SetEpaisseur(obj, newEp)
+        function setEpaisseur(obj, newEp)
             obj.epaisseurLignes = newEp;
         end
 
-        function SetCouleur(obj, newColor)
+        function setCouleur(obj, newColor)
             if numel(newColor) == 3
                 newColor(4) = 1;
             end
             if numel(newColor) == 4
                 obj.couleurLignes = newColor;
             else 
-                warning('mauvaise matrice de couleur');
+                warning('mauvaise matrice de couleur, changement annulé');
             end
-        end % fin de SetCouleur
+        end % fin de setCouleur
 
     end % fin des methodes defauts
 

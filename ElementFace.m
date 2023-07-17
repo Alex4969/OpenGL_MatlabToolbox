@@ -70,23 +70,23 @@ classdef ElementFace < VisibleElement
             obj.GLGeom.Unbind(gl);
         end % fin de Draw
 
-        function SetEpaisseurArretes(obj, newEp)
+        function setEpaisseurArretes(obj, newEp)
             obj.epaisseurArretes = newEp;
         end
 
-        function SetEpaisseurPoints(obj, newEp)
+        function setEpaisseurPoints(obj, newEp)
             obj.epaisseurPoints = newEp;
         end
 
-        function SetCouleurFaces(obj, newCol)
+        function setCouleurFaces(obj, newCol)
             obj.couleurFaces = obj.testNewCol(newCol);
         end
 
-        function SetCouleurArrete(obj, newCol)
+        function setCouleurArrete(obj, newCol)
             obj.couleurArretes = obj.testNewCol(newCol);
         end
 
-        function SetCouleurPoints(obj, newCol)
+        function setCouleurPoints(obj, newCol)
             obj.couleurPoints = obj.testNewCol(newCol);
         end
 
@@ -101,7 +101,9 @@ classdef ElementFace < VisibleElement
                 col = newCol;
             else
                 col = 0;
-                warning('mauvais format pour la nouvelle couleur');
+                if (newCol ~= 0)
+                    warning('mauvais format pour la nouvelle couleur, couleur mise a 0');
+                end
             end
         end % fin de testNewCol
     end % fin des methodes privees

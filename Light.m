@@ -29,23 +29,23 @@ classdef Light < handle
 
         function setForme(obj, elem)
             obj.forme = elem;
-            obj.forme.SetModelMatrix(MTrans3D(obj.position));
-            obj.forme.SetCouleurFaces(obj.couleurLumiere);
+            obj.forme.setModelMatrix(MTrans3D(obj.position));
+            obj.forme.setCouleurFaces(obj.couleurLumiere);
         end % fin de SetForme
 
         function setPosition(obj, newPos)
             obj.position = newPos;
             if ~isempty(obj.forme)
-                obj.forme.SetModelMatrix(MTrans3D(obj.position));
+                obj.forme.setModelMatrix(MTrans3D(obj.position));
             end
         end % fin de SetPosition
 
         function setColor(obj, newCol)
             obj.couleurLumiere = newCol;
             if ~isempty(obj.forme)
-                obj.forme.SetCouleurFaces(newCol);
+                obj.forme.setCouleurFaces(newCol);
             end
-        end % fin de SetCouleur
+        end % fin de setCouleur
 
         function setDirection(obj, newDir)
             obj.directionLumiere = newDir;
