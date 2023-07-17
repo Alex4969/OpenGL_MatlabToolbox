@@ -47,7 +47,7 @@ viewer.AjouterObjet(pyramide3, 3, 0, 2, 0);
 viewer.ApplyTexture("briques.jpg", pyramide3)
 
 % generation d'une sphere
-[posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 1.2);
+[posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
 
 % sphere avec des normales par sommet
 bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);

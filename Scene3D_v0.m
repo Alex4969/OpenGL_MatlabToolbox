@@ -34,7 +34,7 @@ classdef Scene3D_v0 < handle
             obj.lumiere = Light([0, 3, 3], [1 1 1]);
             obj.axes = Axes(-100, 100);
             obj.gyroscope = Axes(0, 0.6);
-            obj.gyroscope.SetEpaisseur(4);
+            obj.gyroscope.setEpaisseur(4);
             obj.grille = Grid(obj.axes.getFin(), 2);
 
             obj.listeShaders = dictionary;
@@ -72,7 +72,7 @@ classdef Scene3D_v0 < handle
             gl = obj.getGL();
             elem.Init(gl);
             if (nargin > 2)
-                elem.SetAttributeSize(nPos, nColor, nTextureMapping, nNormals);
+                elem.setAttributeSize(nPos, nColor, nTextureMapping, nNormals);
             end
             obj.listeElements{ 1 , numel(obj.listeElements)+1 } = elem;
             obj.choixProg(elem);
@@ -200,7 +200,7 @@ classdef Scene3D_v0 < handle
             elem = ElementFace(geom);
             elem.Init(gl);
             obj.ajouterProg(elem, "grille");
-            obj.lumiere.SetForme(elem);
+            obj.lumiere.setForme(elem);
             obj.context.release();
         end
 
@@ -216,7 +216,7 @@ classdef Scene3D_v0 < handle
         end % fin de getGL
 
         function choixProg(obj, elem)
-            attrib = elem.GetAttrib(); % 1x3 logical : color, mapping, normal
+            attrib = elem.getAttrib(); % 1x3 logical : color, mapping, normal
             if (attrib(1) == 1)
                 choix = "colored";
             elseif attrib(3) == 1
