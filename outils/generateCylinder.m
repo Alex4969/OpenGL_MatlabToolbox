@@ -1,4 +1,4 @@
-function [pos, ind, mapping] = generateCylinder(nPointsCercle, angleMax, rayon, hauteur, ferme)
+function [pos, ind, mapping, norm] = generateCylinder(nPointsCercle, angleMax, rayon, hauteur, ferme)
 %GENERATECYLINDER genere un cylinder avec nPointsCercle par cercle
 %angle pour avoir des d
     if nargin < 2
@@ -14,11 +14,14 @@ function [pos, ind, mapping] = generateCylinder(nPointsCercle, angleMax, rayon, 
     nPointsCercle = nPointsCercle + 1; % on fait superposer un point a chaque fois pour les textures
     ind = [];
     pos = zeros(nPointsCercle * 2, 3);
+    norm = zeros(nPointsCercle * 2, 3);
     mapping = zeros(nPointsCercle * 2, 2);
     for j = 0:(nPointsCercle-1)
         beta = angleMax/(nPointsCercle-1) * j;
-        pos(j + 1, 1:3)                 = [rayon * cos(beta), -hauteur, rayon * sin(beta)];
-        pos(nPointsCercle + j + 1, 1:3) = [rayon * cos(beta),  hauteur, rayon * sin(beta)];
+        pos    (j + 1, 1:3)                 = [rayon * cos(beta), -hauteur, rayon * sin(beta)];
+        pos    (nPointsCercle + j + 1, 1:3) = [rayon * cos(beta),  hauteur, rayon * sin(beta)];
+        norm   (j + 1, 1:3)                 = [cos(beta), 0, sin(beta)];
+        norm   (nPointsCercle + j + 1, 1:3) = [cos(beta), 0, sin(beta)];
         mapping(j + 1, 1:2)                 = [ 1-(j/(nPointsCercle-1))  0];
         mapping(nPointsCercle + j + 1, 1:2) = [ 1-(j/(nPointsCercle-1))  1];
         if j~=0
@@ -32,4 +35,3 @@ function [pos, ind, mapping] = generateCylinder(nPointsCercle, angleMax, rayon, 
     end
 
 end
-

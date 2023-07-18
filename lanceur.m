@@ -29,7 +29,7 @@ pyramide1 = ElementFace(pyraGeom);
 pyramide1.setModelMatrix(MTrans3D([-10 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 pyramide1.couleurArretes = [1 0 0 1];
 pyramide1.couleurFaces = [1 1 1 1];
-pyramide1.epaisseurArretes=15;
+pyramide1.epaisseurArretes=5;
 viewer.AjouterObjet(pyramide1);
 
 % pyramide avec une couleur par sommet
@@ -77,13 +77,18 @@ boule2.visible = 0;
 boule3.visible = 0;
 
 % generation du cylindre
-[posCyl, indCyl, mappingCyl] = generateCylinder(12, 1.3*pi, 1, 2, 0);
+[posCyl, indCyl, mappingCyl, normCyl] = generateCylinder(20, pi, 1, 2, 0);
 
-cylGeom = Geometry(posCyl, indCyl);
+cylGeom = Geometry(posCyl, indCyl, normCyl);
 cyl1 = ElementFace(cylGeom);
-cyl1.setModelMatrix(MTrans3D([1 1 1]));
 cyl1.setCouleurArrete([1 1 0]);
-viewer.AjouterObjet(cyl1);
+viewer.AjouterObjet(cyl1, 3, 0, 0, 3);
+
+cylTexGeom = Geometry(posCyl, indCyl, mappingCyl);
+cyl2 = ElementFace(cylTexGeom);
+cyl2.setModelMatrix(MTrans3D([1 1 1]));
+viewer.AjouterObjet(cyl2, 3, 0, 2, 0);
+viewer.ApplyTexture("couleurs.jpg", cyl2);
 
 % piece d'echec depuis un fichier
 chessGeom = Geometry();
