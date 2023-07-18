@@ -75,6 +75,31 @@ classdef Grid < ElementLigne
             obj.normaleZ = normales(3);
         end % fin de setAxes
 
+        function setGrid(obj, gl, newBorne, newEcart)
+            if nargin < 2, newEcart = newBorne/10; end
+            if mod(newBorne, newEcart) ~= 0 || newEcart > newBorne
+                newEcart = newBorne/10;
+                warning("mauvaise valeurs pour setGrid. Valeurs choisis : borne = " + newBorne + " et ecart = " + newEcart);
+            end
+            e = newEcart;
+            b = newBorne;
+            deb = [-b b b -b ; 0 0 0 0 ; -b -b b b]; % lignes du carré
+            i = e:e:b-e;
+            taille = 2*b/e -2;
+            matBorne = ones(1, taille)*b;
+            matZeros = zeros(1, taille * 4);
+            mat = [-matBorne matBorne -i i -i i ; matZeros ; -i i -i i -matBorne matBorne];
+            mat = [deb mat];
+            mat = mat';
+            t = taille/2;
+            ind = [0 1 1 2 2 3 3 0];
+            for i=0:1:t-1
+                ajout = [4+i 4+taille+i   4+t+i 4+t+taille+i   4+2*taille+i 4+2*taille+taille+i   4+2*taille+t+i 4+2*taille+taille+t+i];
+                ind = [ind ajout];
+            end
+            obj.ChangeGeom(gl, mat, ind);
+        end % fin de setGrid
+
     end % fin des methodes defauts
 
 end % fin classe Grid

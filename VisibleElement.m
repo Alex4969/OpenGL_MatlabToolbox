@@ -14,6 +14,7 @@ classdef (Abstract) VisibleElement < handle
         function obj = VisibleElement(aGeom)
             %VISIBLEELEMENT
             obj.Geom = aGeom;
+            obj.visible = true;
         end % fin du constructeur de VisibleElement
 
         function setAttributeSize(obj, nPos, nColor, nTextureMapping, nNormals)
@@ -41,6 +42,19 @@ classdef (Abstract) VisibleElement < handle
         function Delete(obj, gl)
             obj.GLGeom.Delete(gl);
         end % fin de Delete
+
+        function ChangeGeom(obj, gl, pos, ind, supp)
+            obj.GLGeom.Delete(gl);
+            delete(obj.GLGeom);
+            delete(obj.Geom);
+            if nargin < 5
+                obj.Geom = Geometry(pos, ind);
+                obj.GLGeom = GLGeometry(gl, pos, ind);
+            else
+                obj.Geom = Geometry(pos, ind, supp);
+                obj.GLGeom = GLGeometry(gl, [pos supp], ind);
+            end
+        end % fin de changeGeom
 
     end % fin des methodes defauts
 

@@ -53,10 +53,13 @@ classdef GLGeometry < handle
 
         function Bind(obj, gl)
             gl.glBindVertexArray(obj.VAOId);
+            CheckError(gl, '1');
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
+            CheckError(gl, '2');
             if (obj.newLayout == true)
                 obj.declareVertexAttrib(gl);
             end
+            CheckError(gl, '3');
             %gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0);
         end % fin de bing
 

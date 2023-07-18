@@ -40,6 +40,21 @@ classdef Axes < ElementLigne
             fin = obj.fin;
         end
 
+        function setAxes(obj, gl, deb, fin)
+            sommetsValeurs = [  deb   0.0   0.0 ;   % 0
+                                fin   0.0   0.0 ;   % 1
+                                0.0   deb   0.0 ;   % 2 
+                                0.0   fin   0.0 ;   % 3
+                                0.0   0.0   deb ;   % 4
+                                0.0   0.0   fin ];  % 5
+            sommetsCouleur = [1.0 0.0 0.0 ; 1.0 0.0 0.0 ; 0.0 1.0 0.0 ; 0.0 1.0 0.0 ; 0.0 0.0 1.0 ; 0.0 0.0 1.0 ];
+            indices = [0 1 2 3 4 5];
+            obj.ChangeGeom(gl, sommetsValeurs, indices, sommetsCouleur);
+            obj.setAttributeSize(3, 3, 0, 0);
+            obj.debut = deb;
+            obj.fin = fin;
+        end
+
     end % fin des methdoes defauts
 
 end % fin classe Axes

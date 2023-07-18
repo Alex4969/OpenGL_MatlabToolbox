@@ -158,6 +158,7 @@ classdef Scene3D < handle
     end
 
     methods
+
         function AjouterObjet(obj, elem, nPos, nColor, nTextureMapping, nNormals)
             %AJOUTEROBJET Initialise l'objet avec les fonction gl
             % puis l'ajoute a la liste d'objet a dessiner
@@ -308,6 +309,16 @@ classdef Scene3D < handle
             elem.Init(gl);
             obj.ajouterProg(elem, "grille");
             obj.lumiere.setForme(elem);
+            obj.context.release();
+        end
+
+        function ModifyGrid(obj, newBorne, newEcart)
+            obj.grille.setGrid(obj.getGL(), newBorne, newEcart);
+            obj.context.release();
+        end
+        
+        function ModifyAxes(obj, newDeb, nexFin)
+            obj.axes.setAxes(obj.getGL(), newDeb, nexFin);
             obj.context.release();
         end
 

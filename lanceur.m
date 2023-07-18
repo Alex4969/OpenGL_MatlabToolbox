@@ -54,7 +54,7 @@ bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);
 boule1 = ElementFace(bouleNormalesGeom);
 boule1.setModelMatrix(MTrans3D([-0.5 1.8 0]));
 boule1.couleurArretes = [1 0 1 1];
-viewer.AjouterObjet(boule1, 3, 0, 0, 3);
+%viewer.AjouterObjet(boule1, 3, 0, 0, 3);
 
 % sphere classique
 bouleGeom = Geometry(posBoule, indBoule);
