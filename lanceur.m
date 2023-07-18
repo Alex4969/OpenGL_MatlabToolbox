@@ -72,6 +72,18 @@ boule3.ModifyModelMatrix(MScale3D(2), 1);
 viewer.AjouterObjet(boule3, 3, 0, 2, 0);
 viewer.AddTexture("monde.jpg");
 viewer.ApplyTexture("monde.jpg", boule3);
+boule1.visible = 0;
+boule2.visible = 0;
+boule3.visible = 0;
+
+% generation du cylindre
+[posCyl, indCyl, mappingCyl] = generateCylinder(12, 1.3*pi, 1, 2, 0);
+
+cylGeom = Geometry(posCyl, indCyl);
+cyl1 = ElementFace(cylGeom);
+cyl1.setModelMatrix(MTrans3D([1 1 1]));
+cyl1.setCouleurArrete([1 1 0]);
+viewer.AjouterObjet(cyl1);
 
 % piece d'echec depuis un fichier
 chessGeom = Geometry();
