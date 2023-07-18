@@ -36,7 +36,7 @@ classdef Camera < handle
             obj.position = [5 5 5];
             obj.target = [0 0 0];
             obj.up = [0 1 0];
-            obj.lookAt();
+            obj.computeView();
 
             obj.near = 1;
             obj.far = 20;
@@ -48,17 +48,17 @@ classdef Camera < handle
 
         function setPosition(obj, newPosition)
             obj.position = newPosition;
-            obj.lookAt();
+            obj.computeView();
         end % fin de setPosition
 
         function setTarget(obj, newTarget)
             obj.target = newTarget;
-            obj.lookAt();
+            obj.computeView();
         end % fin de setTarget
 
         function setUp(obj, newUp)
             obj.up = newUp;
-            obj.lookAt();
+            obj.computeView();
         end % fin de setView
 
         function setView(obj, newPos, newTarget, newUp)
@@ -67,7 +67,7 @@ classdef Camera < handle
             if nargin == 4
                 obj.up = newUp;
             end
-            obj.lookAt();
+            obj.computeView();
         end % fin de setView
 
         function setProj(obj, newType, newRatio, newFov, newNear, newFar)
@@ -124,40 +124,54 @@ classdef Camera < handle
         function translateXY(obj,dx,dy)
             obj.position=obj.position+[dx dy 0];
             % obj.target=obj.target+[dx dy 0];
-            obj.lookAt();
+            obj.computeView();
         end
 
-        function zoom(obj,dz)
-            obj.position=obj.position+[0 0 dz];
-            obj.lookAt();
+        function zoom(obj,signe)
+            facteur = 1 + signe*obj.speed;
+            vect = obj.position - obj.target;
+            vect = vect * facteur;
+            obj.position = obj.target + vect;
+            obj.computeView();
+        end
+
+        function rotate(obj, dx, dy)
+            pos = obj.position;
+            centre = obj.target;
+            pos = pos - centre;
+            matRot4 = MRot3D([dy -dx 0] * obj.sensibility);
+            matRot3(1:3, 1:3) = matRot4(1:3, 1:3);
+            newPos = pos * matRot3 + centre;
+            obj.position = newPos;
+            obj.computeView();
         end
 
         function defaultView(obj)
             obj.position=[2 2 10];
             obj.up=[0 1 0];
             obj.target=[0 0 0];
-            obj.lookAt();
+            obj.computeView();
         end  
 
         function upView(obj)
             obj.position=[0 10 0];
             obj.up=[1 0 0];
             obj.target=[0 0 0];
-            obj.lookAt();
+            obj.computeView();
         end  
 
     end
 
     methods (Access = private)
         
-        function lookAt(obj)
+        function computeView(obj)
             Mrot = obj.computeRotationCamera();
 
             Mtrans = eye(4);
             Mtrans(1:3,4) = -obj.position';
 
             obj.viewMatrix = Mrot * Mtrans;
-        end % fin de lookAt
+        end % fin de computeView
 
         function Mrot = computeRotationCamera(obj)
             forward = obj.position - obj.target;            

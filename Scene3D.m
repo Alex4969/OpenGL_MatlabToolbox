@@ -108,13 +108,28 @@ classdef Scene3D < handle
         end
 
         function cbk_MouseDragged(obj,source,event)
-            %disp('MouseDragged')
-            dX=(event.getPoint.getX-obj.startX);
-            dY=(event.getPoint.getY-obj.startY);
+            obj.cbk_manager.rmCallback('MouseDragged');
+            disp('MouseDragged')
+            %dX = (event.getPoint.getX-obj.startX)
+            posX = event.getX();
+            dx = posX - obj.startX;
+            obj.startX = posX;
+            posY = event.getY();
+            dy = posY - obj.startY;
+            obj.startY = posY;
+            mod = event.getModifiers();
+            ctrlPressed = bitand(mod,event.CTRL_MASK);
+            if ctrlPressed
+                %faire qqch
+            else
+                obj.camera.rotate(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
+            end
+            %dY=(event.getPoint.getY-obj.startY);
             % obj.camera.setPosition(obj.camera.getPosition-[dX dY 0]);
-            obj.camera.translateXY(obj.camera.speed*sign(dX),obj.camera.speed*sign(dY));
-            obj.camera.getPosition
+            %obj.camera.translateXY(obj.camera.speed*sign(dX),obj.camera.speed*sign(dY));
+            %obj.camera.getPosition
             obj.Draw();
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 
         function cbk_KeyPressed(obj,source,event)
@@ -139,23 +154,21 @@ classdef Scene3D < handle
         end
 
         function cbk_MouseWheelMoved(obj,source,event)
+            obj.cbk_manager.rmCallback('MouseWheelMoved');
             disp ('MouseWheelMoved')
-            obj.camera.zoom(sign(event.getWheelRotation)*obj.camera.speed*obj.camera.sensibility);
-            z=obj.camera.getPosition;
-            z(3)
-            obj.Draw();     
-        end        
+            obj.camera.zoom(event.getWheelRotation());
+            obj.Draw();
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
+        end
     
         function cbk_ComponentResized(obj,source,event)
-            disp('ComponentResized')
             obj.cbk_manager.rmCallback('ComponentResized');
             w=source.getSize.getWidth;
             h=source.getSize.getHeight;
             disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
-            %obj.camera.setRatio(obj.canvas.getWidth()/obj.canvas.getHeight());
             obj.camera.setRatio(w/h);
-            obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
+            obj.Draw();
         end
     end
 
@@ -164,7 +177,6 @@ classdef Scene3D < handle
         function AjouterObjet(obj, elem, nPos, nColor, nTextureMapping, nNormals)
             %AJOUTEROBJET Initialise l'objet avec les fonction gl
             % puis l'ajoute a la liste d'objet a dessiner
-            % 
             if (~isa(elem, 'VisibleElement'))
                 disp('l objet a ajouter n est pas un VisibleElement');
                 return
