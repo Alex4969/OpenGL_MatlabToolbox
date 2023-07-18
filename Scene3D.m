@@ -151,8 +151,10 @@ classdef Scene3D < handle
             obj.cbk_manager.rmCallback('ComponentResized');
             w=source.getSize.getWidth;
             h=source.getSize.getHeight;
-            disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])     
-            obj.Draw;
+            disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
+            %obj.camera.setRatio(obj.canvas.getWidth()/obj.canvas.getHeight());
+            obj.camera.setRatio(w/h);
+            obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
     end
@@ -316,7 +318,7 @@ classdef Scene3D < handle
             obj.grille.setGrid(obj.getGL(), newBorne, newEcart);
             obj.context.release();
         end
-        
+
         function ModifyAxes(obj, newDeb, nexFin)
             obj.axes.setAxes(obj.getGL(), newDeb, nexFin);
             obj.context.release();
