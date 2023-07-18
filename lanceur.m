@@ -72,23 +72,23 @@ boule3.ModifyModelMatrix(MScale3D(2), 1);
 viewer.AjouterObjet(boule3, 3, 0, 2, 0);
 viewer.AddTexture("monde.jpg");
 viewer.ApplyTexture("monde.jpg", boule3);
-boule1.visible = 0;
-boule2.visible = 0;
-boule3.visible = 0;
 
 % generation du cylindre
 [posCyl, indCyl, mappingCyl, normCyl] = generateCylinder(20, pi, 1, 2, 0);
 
-cylGeom = Geometry(posCyl, indCyl, normCyl);
-cyl1 = ElementFace(cylGeom);
-cyl1.setCouleurArrete([1 1 0]);
-viewer.AjouterObjet(cyl1, 3, 0, 0, 3);
-
 cylTexGeom = Geometry(posCyl, indCyl, mappingCyl);
 cyl2 = ElementFace(cylTexGeom);
-cyl2.setModelMatrix(MTrans3D([1 1 1]));
+cyl2.setModelMatrix(MTrans3D([3 3 0]));
 viewer.AjouterObjet(cyl2, 3, 0, 2, 0);
 viewer.ApplyTexture("couleurs.jpg", cyl2);
+
+%generation du plan
+[posPlan, indPlan, mappingPlan] = generatePlan(16, 9);
+planGeom = Geometry(posPlan, indPlan, mappingPlan);
+plan1 = ElementFace(planGeom);
+plan1.setModelMatrix(MTrans3D([0 0 -4]));
+viewer.AjouterObjet(plan1, 3, 0, 2, 0);
+viewer.ApplyTexture("monde.jpg", plan1);
 
 % piece d'echec depuis un fichier
 chessGeom = Geometry();
