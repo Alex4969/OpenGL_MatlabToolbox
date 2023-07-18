@@ -5,6 +5,8 @@ classdef (Abstract) VisibleElement < handle
         Geom Geometry
         GLGeom GLGeometry
         shader ShaderProgram
+
+        visible logical
     end
     
     methods

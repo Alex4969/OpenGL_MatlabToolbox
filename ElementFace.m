@@ -30,7 +30,7 @@ classdef ElementFace < VisibleElement
 
         function Draw(obj, gl)
             %DRAW dessine cet objet
-            if obj.Geom.enable == 0
+            if obj.visible == 0
                 return
             end
             obj.GLGeom.Bind(gl);

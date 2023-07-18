@@ -25,7 +25,7 @@ classdef Camera < handle
         far             % double distance du plan éloigné
         ratio           % double ration d'observation (width/height)
         fov             % double angle de vue d'observation (en degré)
-        type            % 'P' pour perspective, 'O' pour orthonormé
+        type logical    % 1 pour perspective, 0 pour orthonormé
         projMatrix      % 4x4 matrice de transformation correspondant aux valeurs ci dessus
     end
 
@@ -38,15 +38,13 @@ classdef Camera < handle
             obj.up = [0 1 0];
             obj.lookAt();
 
-            obj.near = 0.1;
-            obj.far = 100;
+            obj.near = 1;
+            obj.far = 20;
             obj.ratio = ratio;
             obj.fov = 60;
-            obj.type = 'P';
+            obj.type = 1;
             obj.computeProj();
         end % fin du constructeur camera
-
-
 
         function setPosition(obj, newPosition)
             obj.position = newPosition;
@@ -83,10 +81,10 @@ classdef Camera < handle
 
         function switchProjType(obj)
         %%%TODO Faire la conversion proprement !!
-            if obj.type == 'P'
-                obj.type = 'O';
+            if obj.type == 1
+                obj.type = 0;
             else 
-                obj.type = 'P';
+                obj.type = 1;
             end
             obj.computeProj();
         end % fin de switchProjType
@@ -175,7 +173,14 @@ classdef Camera < handle
         end
 
         function computeProj(obj)
-            obj.projMatrix = MProj3D(obj.type, [obj.ratio, obj.fov, obj.near, obj.far]);
+            if obj.type == 0 % vue ortho
+                angle = obj.fov*pi/180; 
+                xPlanFar = tan(angle/2) * obj.far;
+                %xPlanFar = 9;
+                obj.projMatrix = MProj3D('O', [xPlanFar, xPlanFar/obj.ratio, obj.near, obj.far]);
+            else % vue en perspective
+                obj.projMatrix = MProj3D('P', [obj.ratio, obj.fov, obj.near, obj.far]);
+            end
         end % fin de computeProj
 
     end % fin des methodes privées

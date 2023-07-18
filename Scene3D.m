@@ -204,10 +204,10 @@ classdef Scene3D < handle
             end
 
             %%afficher le gysmo
-            gl.glViewport(0, 0, obj.canvas.getWidth()/10, obj.canvas.getHeight()/10);
+            gl.glViewport(0, 0, obj.canvas.getHeight()/10, obj.canvas.getHeight()/10);
             progAct = obj.gyroscope.shader;
             progAct.Bind(gl);
-            gyroMatrix = MProj3D('O', [obj.canvas.getWidth()/10 obj.canvas.getHeight()/10 1 20]) * obj.camera.getviewMatrix();
+            gyroMatrix = MProj3D('O', [1 1 1 20]) * obj.camera.getviewMatrix();
             gyroMatrix(1:3, 4) = 0;
             progAct.SetUniformMat4(gl, 'uCamMatrix', gyroMatrix);
             obj.gyroscope.Draw(gl);
@@ -263,7 +263,7 @@ classdef Scene3D < handle
                 gl.glClearColor(newColor(1), newColor(2), newColor(3), newColor(4));
                 obj.context.release();
             else
-                warning('Le format de la nouvelle couleur n est pas bon');
+                warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
         end % fin setCouleurFond
 

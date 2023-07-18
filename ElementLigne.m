@@ -25,7 +25,7 @@ classdef ElementLigne < VisibleElement
 
         function Draw(obj, gl)
             %DRAW dessine cet objet
-            if obj.Geom.enable == 0
+            if obj.visible == 0
                 return
             end
             obj.GLGeom.Bind(gl);
@@ -53,7 +53,7 @@ classdef ElementLigne < VisibleElement
             if numel(newColor) == 4
                 obj.couleurLignes = newColor;
             else 
-                warning('mauvaise matrice de couleur, changement annulé');
+                warning('mauvaise matrice de couleur, annulation');
             end
         end % fin de setCouleur
 

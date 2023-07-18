@@ -87,7 +87,7 @@ bouleLightGeom = Geometry(posBoule, indBoule);
 viewer.AddGeomToLight(bouleLightGeom);
 
 %%%%  affichage  %%%%
-for i=-10:0.06:10
+for i=-2:0.5:2
     rot = MRot3D([0 1 0]);
     boule1.ModifyModelMatrix(rot, 1);
     boule2.ModifyModelMatrix(rot, 1);

@@ -43,7 +43,7 @@ classdef Grid < ElementLigne
         end % fin du constructeur Grid
 
         function Draw(obj, gl)
-            if obj.Geom.enable == 0
+            if obj.visible == 0
                 return
             end
             obj.GLGeom.Bind(gl);
