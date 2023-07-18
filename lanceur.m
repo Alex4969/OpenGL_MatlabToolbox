@@ -4,16 +4,6 @@ clear all
 addpath('outils\');
 addpath('java\');
 
-
-% % import javax.swing.JFrame
-% % 
-% % frame = JFrame("Ma Scene OpenGL");
-% % frame.setDefaultCloseOperation(frame.DISPOSE_ON_CLOSE);
-% % frame.setSize(1280, 720);
-% % frame.setLocationRelativeTo([]);
-% % frame.setVisible(true);
-
-% viewer = Scene3D('GL4', frame);
 viewer = Scene3D;
 
 viewer.setCouleurFond([0 0 0.4])
@@ -54,7 +44,7 @@ bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);
 boule1 = ElementFace(bouleNormalesGeom);
 boule1.setModelMatrix(MTrans3D([-0.5 1.8 0]));
 boule1.couleurArretes = [1 0 1 1];
-%viewer.AjouterObjet(boule1, 3, 0, 0, 3);
+viewer.AjouterObjet(boule1, 3, 0, 0, 3);
 
 % sphere classique
 bouleGeom = Geometry(posBoule, indBoule);
@@ -104,7 +94,7 @@ bouleLightGeom = Geometry(posBoule, indBoule);
 viewer.AddGeomToLight(bouleLightGeom);
 
 %%%%  affichage  %%%%
-for i=-2:0.5:2
+for i=-2:0.4:2
     rot = MRot3D([0 1 0]);
     boule1.ModifyModelMatrix(rot, 1);
     boule2.ModifyModelMatrix(rot, 1);
@@ -123,4 +113,3 @@ end
 
 %%%%  suppression  %%%%
 % viewer.delete();
-

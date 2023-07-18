@@ -22,8 +22,8 @@ function [pos, ind, mapping, norm] = generateCylinder(nPointsCercle, angleMax, r
         pos    (nPointsCercle + j + 1, 1:3) = [rayon * cos(beta),  hauteur, rayon * sin(beta)];
         norm   (j + 1, 1:3)                 = [cos(beta), 0, sin(beta)];
         norm   (nPointsCercle + j + 1, 1:3) = [cos(beta), 0, sin(beta)];
-        mapping(j + 1, 1:2)                 = [ 1-(j/(nPointsCercle-1))  0];
-        mapping(nPointsCercle + j + 1, 1:2) = [ 1-(j/(nPointsCercle-1))  1];
+        mapping(j + 1, 1:2)                 = [(j/(nPointsCercle-1))  0];
+        mapping(nPointsCercle + j + 1, 1:2) = [(j/(nPointsCercle-1))  1];
         if j~=0
             ind = [ind j j-1 nPointsCercle+j-1    j nPointsCercle+j-1 nPointsCercle+j];
         end
