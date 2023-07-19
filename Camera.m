@@ -142,14 +142,18 @@ classdef Camera < handle
             pos = obj.position;
             centre = obj.target;
             pos = pos - centre;
-            % conversion en coordonné sphérique et application du changement (en coordonnée spherique les axes ne sont pas dans le meme sens : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
-            disp("pos avant : " + pos);
+            % conversion en coordonné sphérique et application du changement
+            % en coordonnée spherique les axes ne sont pas dans le meme sens : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
             rayon = norm(pos);
             theta = acos(pos(2) / rayon)   - dy;
-            phi   = atan(pos(1) / pos(3))  - dx;
+            phi   = atan2(pos(1), pos(3))  - dx;
+            if (theta < 0)
+                theta = 0.01;
+            elseif (theta > pi)
+                theta = pi - 0.01;
+            end
             % reconversion en coordonnée cartesien
-            pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi)] * rayon;
-            disp("pos apres : " + pos);
+            pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi) ] * rayon;
             obj.position = pos + centre;
             obj.computeView();
         end
