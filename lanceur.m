@@ -86,30 +86,18 @@ chessGeom.CreateFromFile('objets3D/chess4_ascii.stl');
 chess = ElementFace(chessGeom);
 chess.setModelMatrix(MTrans3D([7 0 0]) * MScale3D(0.02));
 viewer.AjouterObjet(chess);
+chess.setCouleurFaces(rand(1,3));
 
 viewer.lumiere.setParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
 viewer.lumiere.setPosition([0 2 3]);
-[posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.5);
+viewer.lumiere.setColor([1 1 1]);
+[posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.2);
 bouleLightGeom = Geometry(posBoule, indBoule);
 viewer.AddGeomToLight(bouleLightGeom);
 
 %%%%  affichage  %%%%
-for i=-2:0.4:2
-    rot = MRot3D([0 1 0]);
-    boule1.ModifyModelMatrix(rot, 1);
-    boule2.ModifyModelMatrix(rot, 1);
-    % viewer.camera.setPosition([7*sin(i * pi/180) 5 7*cos(i * pi/180)]);
-    viewer.camera.setPosition([i 4 5]);
-    viewer.camera.setTarget([i 0 0]);
-    viewer.lumiere.setPosition([i 0 3]);
-    viewer.lumiere.setColor([1 1 1]);%([0.75+i/28 1 0.75-i/28]);
-    chess.setCouleurFaces(rand(1,3));
 
-    viewer.lumiere.setPosition([i 0 3]);
-    %viewer.lumiere.setColor([0.75+i/28 1 0.75-i/28]);
-
-    viewer.Draw();
-end
+viewer.Draw();
 
 %%%%  suppression  %%%%
 % viewer.delete();

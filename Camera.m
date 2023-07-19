@@ -33,7 +33,7 @@ classdef Camera < handle
 
         function obj = Camera(ratio)
         %CAMERA Construct an instance of this class
-            obj.position = [5 5 5];
+            obj.position = [0 0 10];
             obj.target = [0 0 0];
             obj.up = [0 1 0];
             obj.computeView();
@@ -139,15 +139,20 @@ classdef Camera < handle
             pos = obj.position;
             centre = obj.target;
             pos = pos - centre;
-            matRot4 = MRot3D([dy -dx 0] * obj.sensibility);
-            matRot3(1:3, 1:3) = matRot4(1:3, 1:3);
-            newPos = pos * matRot3 + centre;
-            obj.position = newPos;
+            disp("pos avant : " + pos);
+            rayon = norm(pos);
+            theta = acos(pos(2) / rayon);
+            phi   = atan(pos(1) / pos(3));
+            theta = theta - dy;
+            phi = phi - dx;
+            pos = [   sin(theta)*sin(phi) cos(theta) sin(theta)*cos(phi)] * rayon;
+            disp("pos apres : " + pos);
+            obj.position = pos;
             obj.computeView();
         end
 
         function defaultView(obj)
-            obj.position=[2 2 10];
+            obj.position=[0 0 10];
             obj.up=[0 1 0];
             obj.target=[0 0 0];
             obj.computeView();
@@ -178,6 +183,7 @@ classdef Camera < handle
             forward = forward / norm(forward);
 
             left = cross(obj.up, forward);
+            left = left / norm(left);
             newUp = cross(forward, left);
 
             Mrot = eye(4);
