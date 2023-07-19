@@ -1,23 +1,12 @@
 classdef Camera < handle
     %CAMERA Summary of this class goes here
 
-    properties
-        speed=0.1
-        sensibility=100
-    end
-
     properties (Access = private)
         %%% Attributs de la caméra
         position        % 1x3 position de la caméra
         target          % 1x3 position de la cible/objet regardé par la caméra
         up              % 1x3 position du vecteur pointant vers le haut (NORMALISE!)
         viewMatrix      % 4x4 matrice de transformation correspondant aux valeurs ci dessus
-
-        orientation
-
-
-        height
-        width
 
 
         %%% Attributs de la projection
@@ -27,6 +16,13 @@ classdef Camera < handle
         fov             % double angle de vue d'observation (en degré)
         type logical    % 1 pour perspective, 0 pour orthonormé
         projMatrix      % 4x4 matrice de transformation correspondant aux valeurs ci dessus
+    end
+
+    properties
+
+        %%% Attributes pour le mouvement
+        speed = 0.15;
+        %sensibility
     end
 
     methods
@@ -80,7 +76,6 @@ classdef Camera < handle
         end % fin de setProj
 
         function switchProjType(obj)
-        %%%TODO Faire la conversion proprement !!
             if obj.type == 1
                 obj.type = 0;
             else 
@@ -123,7 +118,9 @@ classdef Camera < handle
     methods
         function translatePlanAct(obj,dx,dy)
             translation = dy * obj.up;
-            translation = translation + dx * cross(obj.position - obj.target, obj.up);
+            left = cross(obj.position - obj.target, obj.up);
+            left = left/norm(left);
+            translation = translation + dx * left;
             translation = translation * (1 + obj.speed);
             obj.position = obj.position + translation;
             obj.target   = obj.target   + translation;

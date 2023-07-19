@@ -19,6 +19,7 @@ classdef Scene3D < handle
         cbk_manager javacallbackmanager
         startX
         startY
+        mouseButton = -1
     end %fin de propriete defaut
     
 
@@ -100,17 +101,17 @@ classdef Scene3D < handle
             %disp('MousePressed')
             obj.startX=event.getPoint.getX;
             obj.startY=event.getPoint.getY;
+            obj.mouseButton = event.getButton();
         end
 
         function cbk_MouseReleased(obj,source,event)
             disp('MouseReleased')
-            event.getPoint;
         end
 
         function cbk_MouseDragged(obj,source,event)
             obj.cbk_manager.rmCallback('MouseDragged');
+            disp(event.getButton());
             disp('MouseDragged')
-            %dX = (event.getPoint.getX-obj.startX)
             posX = event.getX();
             dx = posX - obj.startX;
             obj.startX = posX;
@@ -120,18 +121,20 @@ classdef Scene3D < handle
             mod = event.getModifiers();
             ctrlPressed = bitand(mod,event.CTRL_MASK);
             if ctrlPressed
-                obj.camera.translatePlanAct(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
+                obj.camera.translatePlanAct(3 * dx/obj.canvas.getWidth(), 3 * dy/obj.canvas.getHeight());
             else
-                obj.camera.rotate(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
+                if (obj.mouseButton == 3)
+                    obj.camera.rotate(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
+                end
             end
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 
         function cbk_KeyPressed(obj,source,event)
-            %disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
+            % disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
             redraw = true;
-            switch event.getKeyChar
+            switch event.getKeyChar()
                 case 'l'
                     obj.camera.setPosition(obj.camera.getPosition-[obj.camera.speed 0 0]);
                 case 'r'
@@ -168,8 +171,8 @@ classdef Scene3D < handle
             h=source.getSize.getHeight;
             disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
             obj.camera.setRatio(w/h);
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
             obj.Draw();
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
     end
 
