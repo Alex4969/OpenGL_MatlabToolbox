@@ -114,7 +114,7 @@ classdef Camera < handle
 
     end %fin des methodes defauts
 
-    % special transformations
+    % special transformations / gestion de la souris
     methods
         function translatePlanAct(obj,dx,dy)
             translation = dy * obj.up;
@@ -143,7 +143,7 @@ classdef Camera < handle
             centre = obj.target;
             pos = pos - centre;
             % conversion en coordonné sphérique et application du changement
-            % en coordonnée spherique les axes ne sont pas dans le meme sens : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
+            % en coordonnée spherique les axes ne sont pas dans le meme ordre : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
             rayon = norm(pos);
             theta = acos(pos(2) / rayon)   - dy;
             phi   = atan2(pos(1), pos(3))  - dx;

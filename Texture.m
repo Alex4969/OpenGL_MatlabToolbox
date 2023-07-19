@@ -12,7 +12,7 @@ classdef Texture < handle
     methods
         function obj = Texture(gl, fileName, slot)
             %TEXTURE 
-            obj.filePath = "textures/" + fileName;
+            obj.filePath = fileName;
             obj.slot = slot;
             obj.generateTexture(gl);
         end % fin du constructeur Texture

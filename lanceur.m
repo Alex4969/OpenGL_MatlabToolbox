@@ -44,14 +44,14 @@ bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);
 boule1 = ElementFace(bouleNormalesGeom);
 boule1.setModelMatrix(MTrans3D([-0.5 1.8 0]));
 boule1.couleurArretes = [1 0 1 1];
-viewer.AjouterObjet(boule1, 3, 0, 0, 3);
+%viewer.AjouterObjet(boule1, 3, 0, 0, 3);
 
 % sphere classique
 bouleGeom = Geometry(posBoule, indBoule);
 boule2 = ElementFace(bouleGeom);
 boule2.setModelMatrix(MTrans3D([-0.5 -0.2 0]));
 boule2.couleurPoints = [1 1 0 1];
-viewer.AjouterObjet(boule2, 3, 0, 0, 0);
+%viewer.AjouterObjet(boule2, 3, 0, 0, 0);
 
 % sphere avec texture map monde
 bouleTexGeom = Geometry(posBoule, indBoule, mappingBoule);
@@ -88,6 +88,14 @@ chess.setModelMatrix(MTrans3D([7 0 0]) * MScale3D(0.02));
 viewer.AjouterObjet(chess);
 chess.setCouleurFaces(rand(1,3));
 
+dico = readFnt('textes/arial.fnt');
+[posTexte, indTexte, mappingTexte] = ElementTexte.constructText('abc', dico);
+texteGeom = Geometry(posTexte, indTexte, mappingTexte);
+texte1 = ElementTexte(texteGeom);
+viewer.AjouterTexte(texte1, "arial");
+
+% pos = [0 0 0; 0 1 0; 1 1 0; 1 0 0];s
+
 viewer.lumiere.setParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
 viewer.lumiere.setPosition([0 2 3]);
 viewer.lumiere.setColor([1 1 1]);
@@ -96,7 +104,6 @@ bouleLightGeom = Geometry(posBoule, indBoule);
 viewer.AddGeomToLight(bouleLightGeom);
 
 %%%%  affichage  %%%%
-
 viewer.Draw();
 
 %%%%  suppression  %%%%

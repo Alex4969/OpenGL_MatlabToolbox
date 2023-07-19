@@ -9,6 +9,7 @@ classdef Scene3D < handle
         listeElements       % cell Array contenant les objets 3D de la scenes
         listeShaders        % dictionnaire qui lie le nom du fichier glsl a son programme
         listeTextures       % dictionnaire qui lie le nom de l'image a sa texture
+        listeTextes         % cellArray contenant les textes a afficher
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
@@ -180,7 +181,7 @@ classdef Scene3D < handle
 
         function AjouterObjet(obj, elem, nPos, nColor, nTextureMapping, nNormals)
             %AJOUTEROBJET Initialise l'objet avec les fonction gl
-            % puis l'ajoute a la liste d'objet a dessiner
+            %puis l'ajoute a la liste d'objet a dessiner
             if (~isa(elem, 'VisibleElement'))
                 disp('l objet a ajouter n est pas un VisibleElement');
                 return
@@ -194,6 +195,15 @@ classdef Scene3D < handle
             obj.choixProg(elem);
             obj.context.release();
         end % fin de ajouterObjet
+
+        function AjouterTexte(obj, elem, fileName)
+            slot = obj.AddTextTexture(fileName);
+            elem.textureId = slot;
+            gl = obj.getGL();
+            elem.Init(gl);
+            obj.listeTextes{ 1 , numel(obj.listeTextes)+1 } = elem;
+            obj.ajouterProg(elem, 'textured');
+        end
 
         function Draw(obj)
             %DRAW dessine la scene avec tous ses objets
@@ -214,6 +224,19 @@ classdef Scene3D < handle
                     progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
                 end
                 obj.listeElements{i}.Draw(gl);
+            end
+            for i= 1:numel(obj.listeTextes)
+            if (i == 1 || progAct ~= obj.listeTextes{i}.shader)
+                    progAct = obj.listeTextes{i}.shader;
+                    progAct.Bind(gl);
+                    progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
+                    progAct.SetUniform3f  (gl, 'uCamPos',     obj.camera.getPosition());
+                    progAct.SetUniform3f  (gl, 'uLightPos',   obj.lumiere.getPosition());
+                    progAct.SetUniform3f  (gl, 'uLightColor', obj.lumiere.getColor());
+                    progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
+                    progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
+                end
+                obj.listeTextes{i}.Draw(gl);
             end
 
             obj.drawInternalObject(gl, obj.axes);
@@ -286,10 +309,23 @@ classdef Scene3D < handle
             end
         end % fin setCouleurFond
 
-        function AddTexture(obj, fileName)
-            if (isfile("textures\" + fileName))
+        function slot = AddTextTexture(obj, fileName)
+            if isfile("textes\" + fileName + ".png")
+                slot = numEntries(obj.listeTextures);
                 gl = obj.getGL();
-                tex = {Texture(gl, fileName, numEntries(obj.listeTextures))};
+                tex = {Texture(gl,"textes\" + fileName + ".png", slot)};
+                obj.listeTextures(fileName + ".png") = tex;
+                obj.context.release();
+            else
+                slot = -1;
+                warning('Ce fichier texture texte existe pas')
+            end
+        end
+
+        function AddTexture(obj, fileName)
+            if isfile("textures\" + fileName)
+                gl = obj.getGL();
+                tex = {Texture(gl,"textures\" + fileName, numEntries(obj.listeTextures))};
                 obj.listeTextures(fileName) = tex;
                 obj.context.release();
             else
