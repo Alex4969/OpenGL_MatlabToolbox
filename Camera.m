@@ -34,8 +34,8 @@ classdef Camera < handle
             obj.up = [0 1 0];
             obj.computeView();
 
-            obj.near = 1;
-            obj.far = 20;
+            obj.near = 0.1;
+            obj.far = 100;
             obj.ratio = ratio;
             obj.fov = 60;
             obj.type = 1;
@@ -133,6 +133,9 @@ classdef Camera < handle
             vect = vect * facteur;
             obj.position = obj.target + vect;
             obj.computeView();
+            if obj.type == 0 % recompute la matrice orthonorme car depend de la distance
+                obj.computeProj();
+            end
         end
 
         function rotate(obj, dx, dy)
@@ -198,10 +201,8 @@ classdef Camera < handle
 
         function computeProj(obj)
             if obj.type == 0 % vue ortho
-                angle = obj.fov*pi/180; 
-                xPlanFar = tan(angle/2) * obj.far;
-                %xPlanFar = 9;
-                obj.projMatrix = MProj3D('O', [xPlanFar, xPlanFar/obj.ratio, obj.near, obj.far]);
+                distance = norm(obj.position - obj.target);
+                obj.projMatrix = MProj3D('O', [distance * obj.ratio, distance, obj.near, obj.far]);
             else % vue en perspective
                 obj.projMatrix = MProj3D('P', [obj.ratio, obj.fov, obj.near, obj.far]);
             end
