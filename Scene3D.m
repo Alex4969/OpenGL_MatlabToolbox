@@ -120,20 +120,17 @@ classdef Scene3D < handle
             mod = event.getModifiers();
             ctrlPressed = bitand(mod,event.CTRL_MASK);
             if ctrlPressed
-                %faire qqch
+                obj.camera.translatePlanAct(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
             else
                 obj.camera.rotate(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
             end
-            %dY=(event.getPoint.getY-obj.startY);
-            % obj.camera.setPosition(obj.camera.getPosition-[dX dY 0]);
-            %obj.camera.translateXY(obj.camera.speed*sign(dX),obj.camera.speed*sign(dY));
-            %obj.camera.getPosition
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 
         function cbk_KeyPressed(obj,source,event)
-            disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
+            %disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
+            redraw = true;
             switch event.getKeyChar
                 case 'l'
                     obj.camera.setPosition(obj.camera.getPosition-[obj.camera.speed 0 0]);
@@ -149,8 +146,12 @@ classdef Scene3D < handle
                     obj.camera.upView;                    
                 case 'p' %perspective/ortho
                     obj.camera.switchProjType;
+                otherwise
+                    redraw = false;
             end
-            obj.Draw();
+            if redraw
+                obj.Draw();
+            end
         end
 
         function cbk_MouseWheelMoved(obj,source,event)

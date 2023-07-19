@@ -121,9 +121,12 @@ classdef Camera < handle
 
     % special transformations
     methods
-        function translateXY(obj,dx,dy)
-            obj.position=obj.position+[dx dy 0];
-            % obj.target=obj.target+[dx dy 0];
+        function translatePlanAct(obj,dx,dy)
+            translation = dy * obj.up;
+            translation = translation + dx * cross(obj.position - obj.target, obj.up);
+            translation = translation * (1 + obj.speed);
+            obj.position = obj.position + translation;
+            obj.target   = obj.target   + translation;
             obj.computeView();
         end
 
@@ -139,15 +142,15 @@ classdef Camera < handle
             pos = obj.position;
             centre = obj.target;
             pos = pos - centre;
+            % conversion en coordonné sphérique et application du changement (en coordonnée spherique les axes ne sont pas dans le meme sens : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
             disp("pos avant : " + pos);
             rayon = norm(pos);
-            theta = acos(pos(2) / rayon);
-            phi   = atan(pos(1) / pos(3));
-            theta = theta - dy;
-            phi = phi - dx;
-            pos = [   sin(theta)*sin(phi) cos(theta) sin(theta)*cos(phi)] * rayon;
+            theta = acos(pos(2) / rayon)   - dy;
+            phi   = atan(pos(1) / pos(3))  - dx;
+            % reconversion en coordonnée cartesien
+            pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi)] * rayon;
             disp("pos apres : " + pos);
-            obj.position = pos;
+            obj.position = pos + centre;
             obj.computeView();
         end
 
