@@ -6,14 +6,14 @@ classdef ElementTexte < VisibleElement
         str
         police Police
         taille              % coefficient multiplicateur (autour de 1)
-        ortho logical
+        type                % 'P' : perspective, 'N' : normal, de face, 'F' : Fixe
         textureId = -1
 
         couleurTexte
     end
     
     methods
-        function obj = ElementTexte(str, police, taille, ortho, color)
+        function obj = ElementTexte(str, police, taille, type, color)
             %TEXTE
             [pos, ind, mapping] = ElementTexte.constructText(str, police, taille);
             geom = Geometry(pos, ind, mapping);
@@ -21,11 +21,11 @@ classdef ElementTexte < VisibleElement
             obj.str = str;
             obj.police = police;
             obj.taille = taille;
-            obj.ortho = ortho;
+            obj.type = type;
             obj.couleurTexte = color;
         end
 
-        function Draw(obj, gl)
+        function Draw(obj, gl, mat)
             %DRAW dessine cet objet
             if obj.visible == 0
                 return

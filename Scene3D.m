@@ -185,11 +185,28 @@ classdef Scene3D < handle
 
         function Draw(obj)
             %DRAW dessine la scene avec tous ses objets
+            % ordre pour le draw afin de garder la transparence : objets opaque, trie des objets transp, objets transp
             gl = obj.getGL();
-            gl.glViewport(0, 0, obj.canvas.getWidth() , obj.canvas.getHeight());
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
 
-            %dessiner les objets
+            %%afficher le gysmo
+            gl.glViewport(0, 0, obj.canvas.getHeight()/10, obj.canvas.getHeight()/10);
+            progAct = obj.gyroscope.shader;
+            progAct.Bind(gl);
+            gyroMatrix = MProj3D('O', [1 1 1 20]) * obj.camera.getviewMatrix();
+            gyroMatrix(1:3, 4) = 0;
+            progAct.SetUniformMat4(gl, 'uCamMatrix', gyroMatrix);
+            obj.gyroscope.Draw(gl);
+
+            gl.glViewport(0, 0, obj.canvas.getWidth() , obj.canvas.getHeight());
+
+            %dessiner les objets interne puis utilisateurs
+            obj.drawInternalObject(gl, obj.axes);
+            obj.drawInternalObject(gl, obj.grille);
+            if ~isempty(obj.lumiere.forme)
+                obj.drawInternalObject(gl, obj.lumiere.forme);
+            end
+            
             for i= 1:numel(obj.listeElements)
                 if (i == 1 || progAct ~= obj.listeElements{i}.shader)
                     progAct = obj.listeElements{i}.shader;
@@ -208,30 +225,14 @@ classdef Scene3D < handle
                     progAct = obj.listeTextes{i}.shader;
                     progAct.Bind(gl);
                 end
-                if (obj.listeTextes{i}.ortho)
-                    viewMatrix = obj.camera.getviewMatrix;
-                    viewMatrix(1:3, 1:3) = eye(3);
+                if (obj.listeTextes{i}.type == 'N')
+                    %obj.listeTextes{i}.setModelMatrix(MTrans3D([0 -5 0]) * MRot3D(obj.camera.getPosition))
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getProjMatrix * viewMatrix);
                 else
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
                 end
-                obj.listeTextes{i}.Draw(gl);
+                obj.listeTextes{i}.Draw(gl, eye(2));
             end
-
-            obj.drawInternalObject(gl, obj.axes);
-            obj.drawInternalObject(gl, obj.grille);
-            if ~isempty(obj.lumiere.forme)
-                obj.drawInternalObject(gl, obj.lumiere.forme);
-            end
-
-            %%afficher le gysmo
-            gl.glViewport(0, 0, obj.canvas.getHeight()/10, obj.canvas.getHeight()/10);
-            progAct = obj.gyroscope.shader;
-            progAct.Bind(gl);
-            gyroMatrix = MProj3D('O', [1 1 1 20]) * obj.camera.getviewMatrix();
-            gyroMatrix(1:3, 4) = 0;
-            progAct.SetUniformMat4(gl, 'uCamMatrix', gyroMatrix);
-            obj.gyroscope.Draw(gl);
 
             obj.context.release();
             obj.canvas.swapBuffers(); % rafraichi la fenetre

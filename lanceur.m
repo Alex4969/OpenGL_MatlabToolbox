@@ -87,10 +87,10 @@ viewer.AjouterObjet(chess);
 chess.setCouleurFaces(rand(1,3));
 
 ravie = Police("ravie");
-texte = ElementTexte('Bonjour Alex', ravie, 0.5, true, [0.7 0.1 0.2 1.0]);
+texte = ElementTexte('Bonjour Alex', ravie, 0.5, 'P', [0.7 0.1 0.2 1.0]);
 viewer.AjouterTexte(texte);
 
-texte2 = ElementTexte('Au revoir', ravie, 0.5, true, [0.2 0.8 0.2 1.0]);
+texte2 = ElementTexte('Au revoir', ravie, 0.5, 'N', [0.2 0.8 0.2 1.0]);
 texte2.setModelMatrix(MTrans3D([0 -5 0]))
 viewer.AjouterTexte(texte2);
 
