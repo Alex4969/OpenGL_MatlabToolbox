@@ -10,5 +10,7 @@ uniform sampler2D uTexture; //n° slot de la texture a appliquée
 void main()
 {
     vec4 texColor = texture(uTexture, vTextureCoord) * uTextColor;
+    if (texColor.w < 0.1)
+        discard;
     color = texColor;
 }
