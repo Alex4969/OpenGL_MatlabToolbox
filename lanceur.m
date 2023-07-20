@@ -60,7 +60,6 @@ boule3.setModelMatrix(MTrans3D([3 0 0]));
 boule3.ModifyModelMatrix(MRot3D([180 0 0]), 1);
 boule3.ModifyModelMatrix(MScale3D(2), 1);
 viewer.AjouterObjet(boule3, 3, 0, 2, 0);
-viewer.AddTexture("monde.jpg");
 viewer.ApplyTexture("monde.jpg", boule3);
 
 % generation du cylindre
@@ -88,12 +87,17 @@ chess.setModelMatrix(MTrans3D([7 0 0]) * MScale3D(0.02));
 viewer.AjouterObjet(chess);
 chess.setCouleurFaces(rand(1,3));
 
-dico = readFnt('textes/arial.fnt');
-[posTexte, indTexte, mappingTexte] = ElementTexte.constructText('Bonjour Alexandre', dico);
-texteGeom = Geometry(posTexte, indTexte, mappingTexte);
-texte1 = ElementTexte(texteGeom);
-texte1.setModelMatrix(MTrans3D([0 0 2]));
-viewer.AjouterTexte(texte1, "arial");
+arial = Police("arial");
+texte = ElementTexte('Bonjour Alex', arial, 20, 1, 'droite', false);
+viewer.AjouterTexte(texte);
+
+
+% dico = readFnt('textes/arial.fnt');
+% [posTexte, indTexte, mappingTexte] = ElementTexte.constructText('Bonjour Alexandre', dico);
+% texteGeom = Geometry(posTexte, indTexte, mappingTexte);
+% texte1 = ElementTexte(texteGeom);
+% texte1.setModelMatrix(MTrans3D([0 0 2]));
+% viewer.AjouterTexte(texte1, "arial");
 
 viewer.lumiere.setParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
 viewer.lumiere.setPosition([0 2 3]);

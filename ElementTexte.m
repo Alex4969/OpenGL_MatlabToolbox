@@ -3,13 +3,30 @@ classdef ElementTexte < VisibleElement
     %   Detailed explanation goes here
     
     properties
+        str
+        police Police
+        taille
+        nbLigne
+        align
+        ortho logical
         textureId = -1
+
+        couleurTexte % a faire
+        couleurFond  % a faire
     end
     
     methods
-        function obj = ElementTexte(geom)
+        function obj = ElementTexte(str, police, taille, nbLigne, align, ortho)
             %TEXTE
+            [pos, ind, mapping] = ElementTexte.constructText(str, police, taille, nbLigne, align);
+            geom = Geometry(pos, ind, mapping);
             obj@VisibleElement(geom);
+            obj.str = str;
+            obj.police = police;
+            obj.taille = taille;
+            obj.nbLigne = nbLigne;
+            obj.align = align;
+            obj.ortho = ortho;
         end
 
         function Draw(obj, gl)
@@ -34,14 +51,14 @@ classdef ElementTexte < VisibleElement
     end
 
     methods(Static = true)
-        function [pos, ind, mapping] = constructText(str, dico)
+        function [pos, ind, mapping] = constructText(str, police, taille, nbLigne, align)
             pos = zeros(strlength(str) * 4, 3);
             mapping = zeros(strlength(str) * 4, 2);
             cursor = struct('x', 0, 'y', 0);
             ind = [];
             for i = 1:strlength(str)
                 base = (i-1)*4;
-                infos = dico(str(i));
+                infos = police.letterProperties(str(i));
                 cursor.x = cursor.x + infos.xoffset;
                 cursor.y = cursor.y - infos.yoffset;
                 pos(base + 1, 1:3) = [cursor.x              cursor.y               0];
@@ -57,7 +74,7 @@ classdef ElementTexte < VisibleElement
                 cursor.y = cursor.y + infos.yoffset;
                 ind = [ind base base+1 base+2 base+2 base+3 base];
             end
-            pos = pos / double(30);
+            pos = pos / double(police.taille);
             mapping = mapping/512;
         end % fin de constructText
 

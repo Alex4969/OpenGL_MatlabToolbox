@@ -26,18 +26,6 @@ classdef Scene3D < handle
 
     methods
         function obj = Scene3D(windowsSize)
-            % windowsSize=[width length]
-            %SCENE3D Construct an instance of this class
-            %   Création du GLCanvas
-            % % obj.fenetre = jframe;
-            % % gp = com.jogamp.opengl.GLProfile.get(glVersion);
-            % % cap = com.jogamp.opengl.GLCapabilities(gp);
-            % % obj.canvas = com.jogamp.opengl.awt.GLCanvas(cap);
-            % % obj.fenetre.add(obj.canvas);
-            % % obj.fenetre.show();
-            % % obj.canvas.setAutoSwapBufferMode(false);
-            % % obj.canvas.display();
-
             obj.fenetre=jOGLframe('GL4',0);
             if nargin==0
                 obj.fenetre.setSize([1280 1280*9/16]);
@@ -48,6 +36,8 @@ classdef Scene3D < handle
             end
             
             obj.canvas=obj.fenetre.canvas.javaObj;
+            % obj.canvas.setAutoSwapBufferMode(false);
+            % obj.canvas.display();
             obj.context = obj.fenetre.canvas.javaObj.getContext();
 
             obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
@@ -196,15 +186,6 @@ classdef Scene3D < handle
             obj.context.release();
         end % fin de ajouterObjet
 
-        function AjouterTexte(obj, elem, fileName)
-            slot = obj.AddTextTexture(fileName);
-            elem.textureId = slot;
-            gl = obj.getGL();
-            elem.Init(gl);
-            obj.listeTextes{ 1 , numel(obj.listeTextes)+1 } = elem;
-            obj.ajouterProg(elem, 'textured');
-        end
-
         function Draw(obj)
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
@@ -226,7 +207,7 @@ classdef Scene3D < handle
                 obj.listeElements{i}.Draw(gl);
             end
             for i= 1:numel(obj.listeTextes)
-            if (i == 1 || progAct ~= obj.listeTextes{i}.shader)
+                if (i == 1 || progAct ~= obj.listeTextes{i}.shader)
                     progAct = obj.listeTextes{i}.shader;
                     progAct.Bind(gl);
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
@@ -309,48 +290,52 @@ classdef Scene3D < handle
             end
         end % fin setCouleurFond
 
-        function slot = AddTextTexture(obj, fileName)
-            if isfile("textes\" + fileName + ".png")
-                slot = numEntries(obj.listeTextures);
+        function AjouterTexte(obj, elem)
+            if isa(elem, "ElementTexte")
+                slot = obj.getTextureId(elem.police.name + ".png", true);
+                elem.textureId = slot;
                 gl = obj.getGL();
-                tex = {Texture(gl,"textes\" + fileName + ".png", slot)};
-                obj.listeTextures(fileName + ".png") = tex;
-                obj.context.release();
+                elem.Init(gl);
+                obj.listeTextes{ 1 , numel(obj.listeTextes)+1 } = elem;
+                obj.ajouterProg(elem, 'textured');
             else
-                slot = -1;
-                warning('Ce fichier texture texte existe pas')
+                warning('l objet donne n est pas un texte');
             end
         end
 
-        function AddTexture(obj, fileName)
-            if isfile("textures\" + fileName)
-                gl = obj.getGL();
-                tex = {Texture(gl,"textures\" + fileName, numEntries(obj.listeTextures))};
-                obj.listeTextures(fileName) = tex;
-                obj.context.release();
+        function slot = getTextureId(obj, fileName, texte)
+            if nargin < 3, texte = false; end
+            if texte
+                dossier = "textes\";
             else
-                warning("le fichier de texture nexiste pas");
+                dossier = "textures\";
             end
-        end % fin de AddTexture
+            if numEntries(obj.listeTextures) ~= 0 && isKey(obj.listeTextures, fileName)
+                %la texture a deja été ajouté :
+                tex = obj.listeTextures(fileName);
+                slot = tex{1}.slot;
+            else
+                if isfile(dossier + fileName)
+                    gl = obj.getGL();
+                    slot = numEntries(obj.listeTextures);
+                    tex = {Texture(gl, dossier + fileName, slot)};
+                    obj.listeTextures(fileName) = tex;
+                    obj.context.release();
+                else
+                    slot = -1;
+                end
+            end
+        end
 
         function ApplyTexture(obj, fileName, elem)
             if (isa(elem, 'ElementFace') && elem.GLGeom.nTextureMapping ~= 0)
-                if (numEntries(obj.listeTextures) ~= 0 && isKey(obj.listeTextures, fileName))
-                    tex = obj.listeTextures(fileName);
-                    texId = tex{1}.slot;
-                    elem.textureId = texId;
-                    obj.ajouterProg(elem, "textured");
-                else
+                if fileName == ""
                     elem.textureId = -1;
                     obj.ajouterProg(elem, "defaut");
-                    if fileName ~= ""
-                        if (isfile("textures\" + fileName))
-                            obj.AddTexture(fileName);
-                            obj.ApplyTexture(fileName, elem);
-                        else
-                            warning('la texture n existe pas');
-                        end
-                    end
+                else
+                    slot = obj.getTextureId(fileName, false);
+                    elem.textureId = slot;
+                    obj.ajouterProg(elem, "textured");
                 end
             else 
                 warning('L objet donne en parametre n est pas texturable');
