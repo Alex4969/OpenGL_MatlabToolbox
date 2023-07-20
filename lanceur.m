@@ -87,16 +87,12 @@ viewer.AjouterObjet(chess);
 chess.setCouleurFaces(rand(1,3));
 
 ravie = Police("ravie");
-texte = ElementTexte('Bonjour\nAlex', ravie, 1, 'droite', 0.5, false, [0.7 0.1 0.2 1.0]);
+texte = ElementTexte('Bonjour Alex', ravie, 0.5, true, [0.7 0.1 0.2 1.0]);
 viewer.AjouterTexte(texte);
 
-
-% dico = readFnt('textes/arial.fnt');
-% [posTexte, indTexte, mappingTexte] = ElementTexte.constructText('Bonjour Alexandre', dico);
-% texteGeom = Geometry(posTexte, indTexte, mappingTexte);
-% texte1 = ElementTexte(texteGeom);
-% texte1.setModelMatrix(MTrans3D([0 0 2]));
-% viewer.AjouterTexte(texte1, "arial");
+texte2 = ElementTexte('Au revoir', ravie, 0.5, true, [0.2 0.8 0.2 1.0]);
+texte2.setModelMatrix(MTrans3D([0 -5 0]))
+viewer.AjouterTexte(texte2);
 
 viewer.lumiere.setParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
 viewer.lumiere.setPosition([0 2 3]);

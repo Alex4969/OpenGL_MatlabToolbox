@@ -112,6 +112,10 @@ classdef Camera < handle
             Mrot = obj.viewMatrix;
         end
 
+        function MProj = getProjMatrix(obj)
+            MProj = obj.projMatrix;
+        end
+
     end %fin des methodes defauts
 
     % special transformations / gestion de la souris

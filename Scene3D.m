@@ -18,9 +18,9 @@ classdef Scene3D < handle
         grille Grid         % instance de la grille lié au repere
 
         cbk_manager javacallbackmanager
-        startX
-        startY
-        mouseButton = -1
+        startX              % position x de la souris lorsque je clique
+        startY              % position y de la souris lorsque je clique
+        mouseButton = -1    % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
     end %fin de propriete defaut
     
 
@@ -36,8 +36,8 @@ classdef Scene3D < handle
             end
             
             obj.canvas=obj.fenetre.canvas.javaObj;
-            % obj.canvas.setAutoSwapBufferMode(false);
-            % obj.canvas.display();
+            obj.canvas.setAutoSwapBufferMode(false);
+            obj.canvas.display();
             obj.context = obj.fenetre.canvas.javaObj.getContext();
 
             obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
@@ -120,7 +120,7 @@ classdef Scene3D < handle
         end
 
         function cbk_KeyPressed(obj,source,event)
-            % disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
+            disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
             redraw = true;
             switch event.getKeyChar()
                 case 'l'
@@ -204,9 +204,15 @@ classdef Scene3D < handle
                 obj.listeElements{i}.Draw(gl);
             end
             for i= 1:numel(obj.listeTextes)
-                if (progAct ~= obj.listeTextes{i}.shader)
+                if i == 1
                     progAct = obj.listeTextes{i}.shader;
                     progAct.Bind(gl);
+                end
+                if (obj.listeTextes{i}.ortho)
+                    viewMatrix = obj.camera.getviewMatrix;
+                    viewMatrix(1:3, 1:3) = eye(3);
+                    progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getProjMatrix * viewMatrix);
+                else
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
                 end
                 obj.listeTextes{i}.Draw(gl);
@@ -355,6 +361,14 @@ classdef Scene3D < handle
             obj.context.release();
         end
 
+        function AddText(obj, elem, str)
+            elem.AddText(obj.getGL(), str);
+        end
+
+
+        function ChangeText(obj, elem, str)
+            elem.ChangeText(obj.getGL(), str);
+        end
     end % fin des methodes defauts
 
     methods (Access = private)

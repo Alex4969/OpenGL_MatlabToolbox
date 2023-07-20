@@ -6,25 +6,21 @@ classdef ElementTexte < VisibleElement
         str
         police Police
         taille              % coefficient multiplicateur (autour de 1)
-        nbLigne
-        align
         ortho logical
         textureId = -1
 
-        couleurTexte % a faire
+        couleurTexte
     end
     
     methods
-        function obj = ElementTexte(str, police, nbLigne, align, taille, ortho, color)
+        function obj = ElementTexte(str, police, taille, ortho, color)
             %TEXTE
-            [pos, ind, mapping] = ElementTexte.constructText(str, police, taille, nbLigne, align);
+            [pos, ind, mapping] = ElementTexte.constructText(str, police, taille);
             geom = Geometry(pos, ind, mapping);
             obj@VisibleElement(geom);
             obj.str = str;
             obj.police = police;
             obj.taille = taille;
-            obj.nbLigne = nbLigne;
-            obj.align = align;
             obj.ortho = ortho;
             obj.couleurTexte = color;
         end
@@ -49,22 +45,25 @@ classdef ElementTexte < VisibleElement
             obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
             obj.setAttributeSize(3, 0, 2, 0);
         end
+
+        function AddText(obj, gl, str)
+            obj.str = [obj.str  str];
+            [pos, ind, mapping] = ElementTexte.constructText(obj.str, obj.police, obj.taille);
+            obj.ChangeGeom(gl, pos, ind, mapping);
+            obj.setAttributeSize(3, 0, 2, 0);
+        end
+
+        function ChangeText(obj, gl, str)
+            obj.str = str;
+            [pos, ind, mapping] = ElementTexte.constructText(obj.str, obj.police, obj.taille);
+            obj.ChangeGeom(gl, pos, ind, mapping);
+            obj.setAttributeSize(3, 0, 2, 0);
+        end
     end
 
     methods(Static = true)
-        function [pos, ind, mapping] = constructText(str, police, taille, nbLigne, align)
-            if (nbLigne > 1)
-                posEsp = strfind(str, ' ');
-                if (numel(posEsp) >= nbLigne)
-                    warning('trop de ligne demandé');
-                else
-                    posCherche = strlength(str)/nbLigne;
-                    %parcourir les position 
-                    %chercher si ecart plus grand avec avant ou apres
-                    %modifier posEsp
-                    %remplacer l'espace par un retour a la ligne
-                end
-            end
+        function [pos, ind, mapping] = constructText(str, police, taille)
+            % str = replace(str, '\n', newline);
             pos = zeros(strlength(str) * 4, 3);
             mapping = zeros(strlength(str) * 4, 2);
             cursor = struct('x', 0, 'y', 0);
