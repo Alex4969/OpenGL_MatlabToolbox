@@ -22,11 +22,11 @@ pyramide1.epaisseurArretes=5;
 viewer.AjouterObjet(pyramide1);
 
 % pyramide avec une couleur par sommet
-couleurPyramide = [ 1 0 0 ; 1 1 0 ; 0 1 0 ; 0 0.6 1 ; 1 1 1];
+couleurPyramide = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
 pyraColorGeom = Geometry(posPyramide, indicesPyramide, couleurPyramide);
 pyraColorGeom.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 pyramide2 = ElementFace(pyraColorGeom);
-viewer.AjouterObjet(pyramide2, 3, 3, 0, 0);
+viewer.AjouterObjet(pyramide2, 3, 4, 0, 0);
 
 % pyramide avec texture
 pyraTexGeom = Geometry(posPyramide, indicesPyramide, mappingPyramide);

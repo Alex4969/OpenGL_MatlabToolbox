@@ -5,12 +5,12 @@ layout (triangle_strip, max_vertices = 3) out;
 
 out vec3 vSurfaceNormal;
 out vec3 vCrntPos;
-out vec3 vColor;
+out vec4 vColor;
 
 in DATA
 {
 	vec3 vCrntPos;
-    vec3 vColor;
+    vec4 vColor;
 	mat4 vProjection;
 } data_in[];
 

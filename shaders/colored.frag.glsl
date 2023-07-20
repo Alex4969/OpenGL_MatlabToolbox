@@ -4,7 +4,7 @@ out vec4 color;             //SORTIE : la couleur de ce pixel
 
 in vec3 vSurfaceNormal;     //ENTREE DEPUIS GEOM : la normale a la surface
 in vec3 vCrntPos;           //ENTREE DEPUIS VERT : la position du point (avant projection!)
-in vec3 vColor;             //ENTREE DEPUIS BUFFER : la couleur du point
+in vec4 vColor;             //ENTREE DEPUIS BUFFER : la couleur du point
 
 uniform vec3 uLightColor;   //couleur de la lumiere
 uniform vec3 uLightPos;     //position de la lumiere
@@ -31,5 +31,5 @@ void main()
         intensiteLumineuse = spotLight(vCrntPos, vSurfaceNormal, uCamPos, uLightPos, uLightDir, uLightData.y, uLightData.z);
     }
     vec3 laCouleur = vColor.xyz * uLightColor * intensiteLumineuse;
-    color = vec4(laCouleur, 1.0);
+    color = vec4(laCouleur, vColor.w);
 }
