@@ -89,12 +89,11 @@ viewer.AjouterObjet(chess);
 chess.setCouleurFaces(rand(1,3));
 
 dico = readFnt('textes/arial.fnt');
-[posTexte, indTexte, mappingTexte] = ElementTexte.constructText('abc', dico);
+[posTexte, indTexte, mappingTexte] = ElementTexte.constructText('Bonjour Alexandre', dico);
 texteGeom = Geometry(posTexte, indTexte, mappingTexte);
 texte1 = ElementTexte(texteGeom);
+texte1.setModelMatrix(MTrans3D([0 0 2]));
 viewer.AjouterTexte(texte1, "arial");
-
-% pos = [0 0 0; 0 1 0; 1 1 0; 1 0 0];s
 
 viewer.lumiere.setParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
 viewer.lumiere.setPosition([0 2 3]);

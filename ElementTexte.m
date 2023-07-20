@@ -23,11 +23,13 @@ classdef ElementTexte < VisibleElement
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
             obj.shader.SetUniform1i(gl, 'uTexture', obj.textureId);
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+            CheckError(gl, 'apres le dessin d un texte');
         end
 
         function Init(obj, gl)
             sommets = [ obj.Geom.listePoints obj.Geom.composanteSupp ];
             obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
+            obj.setAttributeSize(3, 0, 2, 0);
         end
     end
 
@@ -35,24 +37,27 @@ classdef ElementTexte < VisibleElement
         function [pos, ind, mapping] = constructText(str, dico)
             pos = zeros(strlength(str) * 4, 3);
             mapping = zeros(strlength(str) * 4, 2);
-            % curseur = struct('x', 0, 'y', 0);
-            cursor = 0;
+            cursor = struct('x', 0, 'y', 0);
             ind = [];
             for i = 1:strlength(str)
                 base = (i-1)*4;
                 infos = dico(str(i));
-                pos(base + 1, 1:3) = [cursor+infos.xoffset-infos.width cursor+infos.yoffset             0];
-                pos(base + 2, 1:3) = [cursor+infos.xoffset              cursor+infos.yoffset             0];
-                pos(base + 3, 1:3) = [cursor+infos.xoffset              cursor+infos.yoffset+infos.height 0];
-                pos(base + 4, 1:3) = [cursor+infos.xoffset-infos.width cursor+infos.yoffset+infos.height 0];
-                mapping(base + 1, 1:2) = [ (infos.x+infos.width)    infos.y ];
-                mapping(base + 2, 1:2) = [  infos.x                  infos.y ];
-                mapping(base + 3, 1:2) = [  infos.x                 (infos.y+infos.height) ];
-                mapping(base + 4, 1:2) = [ (infos.x+infos.width)   (infos.y+infos.height) ];
-                cursor = cursor + infos.xadvance;
+                cursor.x = cursor.x + infos.xoffset;
+                cursor.y = cursor.y - infos.yoffset;
+                pos(base + 1, 1:3) = [cursor.x              cursor.y               0];
+                pos(base + 2, 1:3) = [cursor.x+infos.width  cursor.y               0];
+                pos(base + 3, 1:3) = [cursor.x+infos.width  cursor.y-infos.height  0];
+                pos(base + 4, 1:3) = [cursor.x              cursor.y-infos.height  0];
+                maxY = 512 - infos.y;
+                mapping(base + 1, 1:2) = [  infos.x                 maxY              ];
+                mapping(base + 2, 1:2) = [  infos.x+infos.width     maxY              ];
+                mapping(base + 3, 1:2) = [  infos.x+infos.width     maxY-infos.height ];
+                mapping(base + 4, 1:2) = [  infos.x                 maxY-infos.height ];
+                cursor.x = cursor.x - infos.xoffset + infos.xadvance;
+                cursor.y = cursor.y + infos.yoffset;
                 ind = [ind base base+1 base+2 base+2 base+3 base];
             end
-            pos = pos / double(cursor);
+            pos = pos / double(30);
             mapping = mapping/512;
         end % fin de constructText
 
