@@ -1,6 +1,5 @@
 clear all
 
-
 addpath('outils\');
 addpath('java\');
 
@@ -59,8 +58,8 @@ boule3 = ElementFace(bouleTexGeom);
 boule3.setModelMatrix(MTrans3D([3 0 0]));
 boule3.ModifyModelMatrix(MRot3D([180 0 0]), 1);
 boule3.ModifyModelMatrix(MScale3D(2), 1);
-viewer.AjouterObjet(boule3, 3, 0, 2, 0);
-viewer.ApplyTexture("monde.jpg", boule3);
+%viewer.AjouterObjet(boule3, 3, 0, 2, 0);
+%viewer.ApplyTexture("monde.jpg", boule3);
 
 % generation du cylindre
 [posCyl, indCyl, mappingCyl, normCyl] = generateCylinder(20, pi, 1, 2, 0);
@@ -87,8 +86,8 @@ chess.setModelMatrix(MTrans3D([7 0 0]) * MScale3D(0.02));
 viewer.AjouterObjet(chess);
 chess.setCouleurFaces(rand(1,3));
 
-arial = Police("arial");
-texte = ElementTexte('Bonjour Alex', arial, 20, 1, 'droite', false);
+ravie = Police("ravie");
+texte = ElementTexte('Bonjour\nAlex', ravie, 1, 'droite', 0.5, false, [0.7 0.1 0.2 1.0]);
 viewer.AjouterTexte(texte);
 
 

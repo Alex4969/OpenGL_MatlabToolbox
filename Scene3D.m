@@ -27,9 +27,9 @@ classdef Scene3D < handle
     methods
         function obj = Scene3D(windowsSize)
             obj.fenetre=jOGLframe('GL4',0);
-            if nargin==0
+            if nargin == 0
                 obj.fenetre.setSize([1280 1280*9/16]);
-            elseif nargin==1
+            elseif nargin == 1
                 obj.fenetre.setSize(windowsSize);
             else
                 error('Bad argument number')
@@ -49,9 +49,6 @@ classdef Scene3D < handle
 
             obj.listeShaders = dictionary;
             obj.listeTextures = dictionary;
-
-                
-            % obj.context = obj.canvas.getContext();
 
             gl = obj.getGL();
             gl.glClearColor(0.0, 0.0, 0.4, 1.0);
@@ -207,15 +204,10 @@ classdef Scene3D < handle
                 obj.listeElements{i}.Draw(gl);
             end
             for i= 1:numel(obj.listeTextes)
-                if (i == 1 || progAct ~= obj.listeTextes{i}.shader)
+                if (progAct ~= obj.listeTextes{i}.shader)
                     progAct = obj.listeTextes{i}.shader;
                     progAct.Bind(gl);
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-                    progAct.SetUniform3f  (gl, 'uCamPos',     obj.camera.getPosition());
-                    progAct.SetUniform3f  (gl, 'uLightPos',   obj.lumiere.getPosition());
-                    progAct.SetUniform3f  (gl, 'uLightColor', obj.lumiere.getColor());
-                    progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
-                    progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
                 end
                 obj.listeTextes{i}.Draw(gl);
             end
@@ -297,13 +289,15 @@ classdef Scene3D < handle
                 gl = obj.getGL();
                 elem.Init(gl);
                 obj.listeTextes{ 1 , numel(obj.listeTextes)+1 } = elem;
-                obj.ajouterProg(elem, 'textured');
+                obj.ajouterProg(elem, "texte");
             else
                 warning('l objet donne n est pas un texte');
             end
         end
 
         function slot = getTextureId(obj, fileName, texte)
+            %GETTEXTUREID Renvoie l'id de la texture correspondant au fichier.
+            % si elle n'existe pas, elle est créée.
             if nargin < 3, texte = false; end
             if texte
                 dossier = "textes\";

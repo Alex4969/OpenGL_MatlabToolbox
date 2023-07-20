@@ -23,6 +23,7 @@ classdef ShaderProgram < handle
 
             gl.glLinkProgram(obj.shaderProgId);
             gl.glValidateProgram(obj.shaderProgId);
+            CheckError(gl, 'erreur de compilation des shaders');
         end % fin du constructeur ShaderProgram
 
         function compileFile(obj, gl, type, nomFichier)
@@ -35,7 +36,7 @@ classdef ShaderProgram < handle
             gl.glShaderSource(shaderId, 1, src, []);
             gl.glCompileShader(shaderId);
             gl.glAttachShader(obj.shaderProgId, shaderId);
-            %gl.glDeleteShader(shaderId);
+            gl.glDeleteShader(shaderId);
         end %fin de compileFile
 
         function Bind(obj, gl)

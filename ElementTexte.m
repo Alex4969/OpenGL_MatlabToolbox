@@ -5,18 +5,17 @@ classdef ElementTexte < VisibleElement
     properties
         str
         police Police
-        taille
+        taille              % coefficient multiplicateur (autour de 1)
         nbLigne
         align
         ortho logical
         textureId = -1
 
         couleurTexte % a faire
-        couleurFond  % a faire
     end
     
     methods
-        function obj = ElementTexte(str, police, taille, nbLigne, align, ortho)
+        function obj = ElementTexte(str, police, nbLigne, align, taille, ortho, color)
             %TEXTE
             [pos, ind, mapping] = ElementTexte.constructText(str, police, taille, nbLigne, align);
             geom = Geometry(pos, ind, mapping);
@@ -27,6 +26,7 @@ classdef ElementTexte < VisibleElement
             obj.nbLigne = nbLigne;
             obj.align = align;
             obj.ortho = ortho;
+            obj.couleurTexte = color;
         end
 
         function Draw(obj, gl)
@@ -39,6 +39,7 @@ classdef ElementTexte < VisibleElement
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
             obj.shader.SetUniform1i(gl, 'uTexture', obj.textureId);
+            obj.shader.SetUniform4f(gl, 'uTextColor', obj.couleurTexte);
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             CheckError(gl, 'apres le dessin d un texte');
         end
@@ -52,6 +53,18 @@ classdef ElementTexte < VisibleElement
 
     methods(Static = true)
         function [pos, ind, mapping] = constructText(str, police, taille, nbLigne, align)
+            if (nbLigne > 1)
+                posEsp = strfind(str, ' ');
+                if (numel(posEsp) >= nbLigne)
+                    warning('trop de ligne demandé');
+                else
+                    posCherche = strlength(str)/nbLigne;
+                    %parcourir les position 
+                    %chercher si ecart plus grand avec avant ou apres
+                    %modifier posEsp
+                    %remplacer l'espace par un retour a la ligne
+                end
+            end
             pos = zeros(strlength(str) * 4, 3);
             mapping = zeros(strlength(str) * 4, 2);
             cursor = struct('x', 0, 'y', 0);
@@ -74,7 +87,7 @@ classdef ElementTexte < VisibleElement
                 cursor.y = cursor.y + infos.yoffset;
                 ind = [ind base base+1 base+2 base+2 base+3 base];
             end
-            pos = pos / double(police.taille);
+            pos = pos / double(police.taille) * taille;
             mapping = mapping/512;
         end % fin de constructText
 
