@@ -98,8 +98,8 @@ classdef Scene3D < handle
 
         function cbk_MouseDragged(obj,source,event)
             obj.cbk_manager.rmCallback('MouseDragged');
-            disp(event.getButton());
-            disp('MouseDragged')
+            %disp(event.getButton());
+            %disp('MouseDragged')
             posX = event.getX();
             dx = posX - obj.startX;
             obj.startX = posX;
@@ -226,8 +226,11 @@ classdef Scene3D < handle
                     progAct.Bind(gl);
                 end
                 if (obj.listeTextes{i}.type == 'N')
-                    %obj.listeTextes{i}.setModelMatrix(MTrans3D([0 -5 0]) * MRot3D(obj.camera.getPosition))
-                    progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getProjMatrix * viewMatrix);
+                    viewMatrix = obj.camera.getviewMatrix;
+                    viewMatrix(1:3, 1:3) = eye(3);
+                    progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix() *  viewMatrix);
+                elseif obj.listeTextes{i}.type == 'F'
+                    progAct.SetUniformMat4(gl, 'uCamMatrix',  eye(4));
                 else
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
                 end

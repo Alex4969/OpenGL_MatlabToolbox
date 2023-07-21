@@ -174,7 +174,17 @@ classdef Camera < handle
             obj.up=[1 0 0];
             obj.target=[0 0 0];
             obj.computeView();
-        end  
+        end
+
+        function mat = getViewWithoutRotation(obj)
+            Mrot = eye(4);
+
+            Mtrans = eye(4);
+            Mtrans(1:3,4) = -obj.position';
+            Mtrans(3, 4) = -Mtrans(3, 4);
+
+            mat = Mrot * Mtrans;
+        end
 
     end
 
