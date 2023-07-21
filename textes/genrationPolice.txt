@@ -1,0 +1,1 @@
+logiciel pour créer le fichier de police : https://libgdx.com/wiki/tools/hiero

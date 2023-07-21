@@ -23,6 +23,7 @@ classdef Camera < handle
         %%% Attributes pour le mouvement
         speed = 0.15;
         %sensibility
+        posCentreMvt = 0;   % 1x3 si pour donner un centre de rotation sinon le centre = target
     end
 
     methods
@@ -51,6 +52,10 @@ classdef Camera < handle
             obj.target = newTarget;
             obj.computeView();
         end % fin de setTarget
+
+        function setCentreMvt(obj, newPos)
+            obj.posCentreMvt = newPos;
+        end % fin de setCentreMvt
 
         function setUp(obj, newUp)
             obj.up = newUp;
@@ -121,7 +126,6 @@ classdef Camera < handle
             R(1:3,2)=R(1:3,2)/sy;
             R(1:3,3)=R(1:3,3)/sz;
             R(4, 4) = 1;
-
             
             thetaY=asin(-R(3,1));
             thetaZ=atan(R(2,1)/R(1,1));
@@ -135,10 +139,6 @@ classdef Camera < handle
             else
                 thetaY = 2*pi - thetaY;
             end
-            % if (abs(thetaX) > pi/2)
-            %     thetaX = -abs(thetaX) + pi;
-            % end
-
         end
 
         function MProj = getProjMatrix(obj)
@@ -158,7 +158,7 @@ classdef Camera < handle
             obj.position = obj.position + translation;
             obj.target   = obj.target   + translation;
             obj.computeView();
-        end
+        end % fin de translatePlanAct
 
         function zoom(obj,signe)
             facteur = 1 + signe*obj.speed;
@@ -169,11 +169,15 @@ classdef Camera < handle
             if obj.type == 0 % recompute la matrice orthonorme car depend de la distance
                 obj.computeProj();
             end
-        end
+        end % fin de zoom
 
         function rotate(obj, dx, dy)
+            if numel(obj.posCentreMvt) == 3
+                centre = obj.posCentreMvt;
+            else
+                centre = obj.target;
+            end
             pos = obj.position;
-            centre = obj.target;
             pos = pos - centre;
             % conversion en coordonné sphérique et application du changement
             % en coordonnée spherique les axes ne sont pas dans le meme ordre : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
@@ -189,7 +193,7 @@ classdef Camera < handle
             pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi) ] * rayon;
             obj.position = pos + centre;
             obj.computeView();
-        end
+        end % fin de rotate
 
         function defaultView(obj)
             obj.position=[0 0 10];
@@ -203,18 +207,6 @@ classdef Camera < handle
             obj.up=[1 0 0];
             obj.target=[0 0 0];
             obj.computeView();
-        end
-
-        function yDep = getYdep(obj)
-            yDep = abs ( (obj.position(2) - obj.target(2)) / norm(obj.position) );
-        end
-
-        function yDep = getXdep(obj)
-            yDep = abs ( (obj.position(1) - obj.target(1)) / norm(obj.position) );
-        end
-
-        function yDep = getZdep(obj)
-            yDep = abs ( (obj.position(3) - obj.target(3)) / norm(obj.position) );
         end
 
     end

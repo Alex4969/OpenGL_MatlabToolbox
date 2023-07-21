@@ -88,21 +88,21 @@ classdef ElementTexte < VisibleElement
                 ind = [ind base base+1 base+2 base+2 base+3 base];
             end
             pos = pos / double(police.taille) * taille;
-            minX = min(pos(:,1))
-            maxX = max(pos(:,1))
-            minY = min(pos(:,2))
-            maxY = max(pos(:,2))
+            minX = min(pos(:,1));
+            maxX = max(pos(:,1));
+            minY = min(pos(:,2));
+            maxY = max(pos(:,2));
             switch ancre
                 case 0 % centre
                     xDep = (maxX - minX) / 2;
                     yDep = (maxY - minY) / 2;
-                case 1 %haut gauche
+                case 1 % haut gauche
                     xDep = minX;
                     yDep = maxY;
-                case 2 %haut droite
+                case 2 % haut droite
                     xDep = maxX;
                     yDep = maxY;
-                case 3 %bas gauche
+                case 3 % bas gauche
                     xDep = -minX;
                     yDep = -minY;
                 case 4 % bas droite
