@@ -25,7 +25,7 @@ classdef ElementTexte < VisibleElement
             obj.couleurTexte = color;
         end
 
-        function Draw(obj, gl, mat)
+        function Draw(obj, gl)
             %DRAW dessine cet objet
             if obj.visible == 0
                 return

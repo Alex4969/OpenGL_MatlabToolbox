@@ -108,8 +108,37 @@ classdef Camera < handle
             camMat = obj.projMatrix * obj.viewMatrix;
         end % fin de getCameraMatrix
 
-        function Mrot = getviewMatrix(obj)
+        function Mrot = getViewMatrix(obj)
             Mrot = obj.viewMatrix;
+        end
+
+        function [thetaX, thetaY, thetaZ] = getRotationAngles(obj)
+            sx=norm(obj.viewMatrix(1:3,1));
+            sy=norm(obj.viewMatrix(1:3,2));
+            sz=norm(obj.viewMatrix(1:3,3));
+            R=obj.viewMatrix(1:3,1:3);
+            R(1:3,1)=R(1:3,1)/sx;
+            R(1:3,2)=R(1:3,2)/sy;
+            R(1:3,3)=R(1:3,3)/sz;
+            R(4, 4) = 1;
+
+            
+            thetaY=asin(-R(3,1));
+            thetaZ=atan(R(2,1)/R(1,1));
+            thetaX=atan(R(3,2)/R(3,3));
+            if (obj.position(1) > 0 && obj.position(3) > 0)
+                thetaY = -thetaY;
+            elseif (obj.position(1) > 0 && obj.position(3) < 0)
+                thetaY = pi + thetaY;
+            elseif obj.position(1) < 0 && obj.position(3) < 0
+                thetaY = pi + thetaY;
+            else
+                thetaY = 2*pi - thetaY;
+            end
+            % if (abs(thetaX) > pi/2)
+            %     thetaX = -abs(thetaX) + pi;
+            % end
+
         end
 
         function MProj = getProjMatrix(obj)
@@ -176,14 +205,16 @@ classdef Camera < handle
             obj.computeView();
         end
 
-        function mat = getViewWithoutRotation(obj)
-            Mrot = eye(4);
+        function yDep = getYdep(obj)
+            yDep = abs ( (obj.position(2) - obj.target(2)) / norm(obj.position) );
+        end
 
-            Mtrans = eye(4);
-            Mtrans(1:3,4) = -obj.position';
-            Mtrans(3, 4) = -Mtrans(3, 4);
+        function yDep = getXdep(obj)
+            yDep = abs ( (obj.position(1) - obj.target(1)) / norm(obj.position) );
+        end
 
-            mat = Mrot * Mtrans;
+        function yDep = getZdep(obj)
+            yDep = abs ( (obj.position(3) - obj.target(3)) / norm(obj.position) );
         end
 
     end

@@ -193,12 +193,12 @@ classdef Scene3D < handle
             gl.glViewport(0, 0, obj.canvas.getHeight()/10, obj.canvas.getHeight()/10);
             progAct = obj.gyroscope.shader;
             progAct.Bind(gl);
-            gyroMatrix = MProj3D('O', [1 1 1 20]) * obj.camera.getviewMatrix();
+            gyroMatrix = MProj3D('O', [1 1 1 20]) * obj.camera.getViewMatrix();
             gyroMatrix(1:3, 4) = 0;
             progAct.SetUniformMat4(gl, 'uCamMatrix', gyroMatrix);
             obj.gyroscope.Draw(gl);
 
-            gl.glViewport(0, 0, obj.canvas.getWidth() , obj.canvas.getHeight());
+            gl.glViewport(0, 0, obj.canvas.getWidth(), obj.canvas.getHeight());
 
             %dessiner les objets interne puis utilisateurs
             obj.drawInternalObject(gl, obj.axes);
@@ -220,21 +220,32 @@ classdef Scene3D < handle
                 end
                 obj.listeElements{i}.Draw(gl);
             end
-            for i= 1:numel(obj.listeTextes)
+            for i=1:numel(obj.listeTextes)
+                elem = obj.listeTextes{i};
                 if i == 1
-                    progAct = obj.listeTextes{i}.shader;
+                    progAct = elem.shader;
                     progAct.Bind(gl);
                 end
-                if (obj.listeTextes{i}.type == 'N')
-                    viewMatrix = obj.camera.getviewMatrix;
-                    viewMatrix(1:3, 1:3) = eye(3);
-                    progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix() *  viewMatrix);
-                elseif obj.listeTextes{i}.type == 'F'
-                    progAct.SetUniformMat4(gl, 'uCamMatrix',  eye(4));
+                if elem.type == 'F'
+                    progAct.SetUniformMat4(gl, 'uCamMatrix',  eye(4)); %%%TODO a refaire
                 else
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
                 end
-                obj.listeTextes{i}.Draw(gl, eye(2));
+                if elem.type == 'N'
+                %     [theta, phi] = obj.camera.getRotationAngles();
+                %     disp("theta" + theta)
+                %     newRot = MRot3D([(theta*180/pi - 90), (-phi*180/pi) , 0]); % 
+                %     elem.setModelMatrix(newRot);
+
+                    [thetaX, thetaY, thetaZ] = obj.camera.getRotationAngles();
+
+                    Angle=[thetaX thetaY thetaZ] * 180 / pi;
+                    disp(['(thetaX = ' num2str(rad2deg(thetaX)) '° | thetaY = ' num2str(rad2deg(thetaY)) '° | thetaZ = ' num2str(rad2deg(thetaZ)) '°)'])
+                    newModel = MRot3D([-Angle(1),-Angle(2), 0]);
+                    elem.setModelMatrix(newModel);
+
+                end
+                elem.Draw(gl);
             end
 
             obj.context.release();

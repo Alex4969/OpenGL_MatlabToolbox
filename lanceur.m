@@ -75,27 +75,27 @@ viewer.ApplyTexture("couleurs.jpg", cyl2);
 planGeom = Geometry(posPlan, indPlan, mappingPlan);
 plan1 = ElementFace(planGeom);
 plan1.setModelMatrix(MTrans3D([0 0 -4]));
-viewer.AjouterObjet(plan1, 3, 0, 2, 0);
-viewer.ApplyTexture("monde.jpg", plan1);
+%viewer.AjouterObjet(plan1, 3, 0, 2, 0);
+%viewer.ApplyTexture("monde.jpg", plan1);
 
 % piece d'echec depuis un fichier
 chessGeom = Geometry();
 chessGeom.CreateFromFile('objets3D/chess4_ascii.stl');
 chess = ElementFace(chessGeom);
-chess.setModelMatrix(MTrans3D([7 0 0]) * MScale3D(0.02));
+chess.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02));
 viewer.AjouterObjet(chess);
 chess.setCouleurFaces(rand(1,3));
 
-ravie = Police("ravie");
-texte1 = ElementTexte('Hello World !', ravie, 0.5, 'P', [0.7 0.1 0.2 1.0]);
-viewer.AjouterTexte(texte1);
+% ravie = Police("ravie");
+% texte1 = ElementTexte('Hello World !', ravie, 0.5, 'N', [0.7 0.1 0.2 1.0]);
+% viewer.AjouterTexte(texte1);
+% 
+% texte2 = ElementTexte('Bienvenue', ravie, 0.08, 'F', [0.2 0.8 0.2 1.0]);
+% texte2.setModelMatrix(MTrans3D([-1 1 0]))
+% viewer.AjouterTexte(texte2);
 
-texte2 = ElementTexte('Bienvenue', ravie, 0.08, 'F', [0.2 0.8 0.2 1.0]);
-texte2.setModelMatrix(MTrans3D([-1 1 0]))
-viewer.AjouterTexte(texte2);
-
-texte3 = ElementTexte('Je suis un texte', ravie, 0.4, 'N', [1 0.5 0.7 1.0]);
-texte3.setModelMatrix(MTrans3D([0 -1 0]))
+texte3 = ElementTexte('Je suis un texte', ravie, 0.4, 'P', [1 0.5 0.7 1.0]);
+texte3.setModelMatrix(MTrans3D([2 2 2]))
 viewer.AjouterTexte(texte3);
 
 viewer.lumiere.setParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
@@ -104,6 +104,10 @@ viewer.lumiere.setColor([1 1 1]);
 [posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.2);
 bouleLightGeom = Geometry(posBoule, indBoule);
 viewer.AddGeomToLight(bouleLightGeom);
+
+texteX = ElementTexte('X', ravie, 1, 'P', [1 1 0 1]);
+texteX.setModelMatrix(MTrans3D([5, 0, 0]))
+viewer.AjouterTexte(texteX);
 
 %%%%  affichage  %%%%
 viewer.Draw();
