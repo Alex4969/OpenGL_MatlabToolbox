@@ -86,7 +86,7 @@ chess.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02));
 viewer.AjouterObjet(chess);
 chess.setCouleurFaces(rand(1,3));
 
-% ravie = Police("ravie");
+ravie = Police("ravie");
 % texte1 = ElementTexte('Hello World !', ravie, 0.5, 'N', [0.7 0.1 0.2 1.0]);
 % viewer.AjouterTexte(texte1);
 % 
@@ -94,8 +94,8 @@ chess.setCouleurFaces(rand(1,3));
 % texte2.setModelMatrix(MTrans3D([-1 1 0]))
 % viewer.AjouterTexte(texte2);
 
-texte3 = ElementTexte('Je suis un texte', ravie, 0.4, 'P', [1 0.5 0.7 1.0]);
-texte3.setModelMatrix(MTrans3D([2 2 2]))
+texte3 = ElementTexte('Je suis un texte', ravie, 0.4, 'P', [1 0.5 0.7 1.0], [0 0 0], 0);
+%texte3.setModelMatrix(MTrans3D([2 2 2]))
 viewer.AjouterTexte(texte3);
 
 viewer.lumiere.setParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
@@ -105,8 +105,8 @@ viewer.lumiere.setColor([1 1 1]);
 bouleLightGeom = Geometry(posBoule, indBoule);
 viewer.AddGeomToLight(bouleLightGeom);
 
-texteX = ElementTexte('X', ravie, 1, 'P', [1 1 0 1]);
-texteX.setModelMatrix(MTrans3D([5, 0, 0]))
+texteX = ElementTexte('X', ravie, 1, 'P', [1 1 0 1], [5 0 0], 0);
+%texteX.setModelMatrix(MTrans3D([5, 0, 0]))
 viewer.AjouterTexte(texteX);
 
 %%%%  affichage  %%%%

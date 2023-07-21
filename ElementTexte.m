@@ -8,14 +8,16 @@ classdef ElementTexte < VisibleElement
         taille              % coefficient multiplicateur (autour de 1)
         type                % 'P' : perspective, 'N' : normal, de face, 'F' : Fixe
         textureId = -1
+        pos
+        ancre
 
         couleurTexte
     end
     
     methods
-        function obj = ElementTexte(str, police, taille, type, color)
+        function obj = ElementTexte(str, police, taille, type, color, posAncre, ancre)
             %TEXTE
-            [pos, ind, mapping] = ElementTexte.constructText(str, police, taille);
+            [pos, ind, mapping] = ElementTexte.constructText(str, police, taille, posAncre, ancre);
             geom = Geometry(pos, ind, mapping);
             obj@VisibleElement(geom);
             obj.str = str;
@@ -62,8 +64,7 @@ classdef ElementTexte < VisibleElement
     end
 
     methods(Static = true)
-        function [pos, ind, mapping] = constructText(str, police, taille)
-            % str = replace(str, '\n', newline);
+        function [pos, ind, mapping] = constructText(str, police, taille, posAncre, ancre)
             pos = zeros(strlength(str) * 4, 3);
             mapping = zeros(strlength(str) * 4, 2);
             cursor = struct('x', 0, 'y', 0);
@@ -87,6 +88,30 @@ classdef ElementTexte < VisibleElement
                 ind = [ind base base+1 base+2 base+2 base+3 base];
             end
             pos = pos / double(police.taille) * taille;
+            minX = min(pos(:,1))
+            maxX = max(pos(:,1))
+            minY = min(pos(:,2))
+            maxY = max(pos(:,2))
+            switch ancre
+                case 0 % centre
+                    xDep = (maxX - minX) / 2;
+                    yDep = (maxY - minY) / 2;
+                case 1 %haut gauche
+                    xDep = minX;
+                    yDep = maxY;
+                case 2 %haut droite
+                    xDep = maxX;
+                    yDep = maxY;
+                case 3 %bas gauche
+                    xDep = -minX;
+                    yDep = -minY;
+                case 4 % bas droite
+                    xDep = maxX;
+                    yDep = -minY;
+            end
+            pos(:, 1) = posAncre(1) + pos(:, 1) - xDep;
+            pos(:, 2) = posAncre(2) + pos(:, 2) + yDep;
+            pos(:, 3) = posAncre(3) + pos(:, 3);
             mapping = mapping/512;
         end % fin de constructText
 
