@@ -12,9 +12,13 @@ classdef Texture < handle
     methods
         function obj = Texture(gl, fileName, slot)
             %TEXTURE 
-            obj.filePath = fileName;
             obj.slot = slot;
-            obj.generateTexture(gl);
+            if slot == 0
+                warning('slot 0 reservé pour le frameBuffer !')
+            else
+                obj.filePath = fileName;
+                obj.generateTexture(gl);
+            end
         end % fin du constructeur Texture
 
         function Bind(obj, gl)
