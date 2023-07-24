@@ -2,6 +2,7 @@ classdef (Abstract) VisibleElement < handle
     %VISIBLEELEMENT 
     
     properties
+        id int16
         Geom Geometry
         GLGeom GLGeometry
         shader ShaderProgram
@@ -56,11 +57,16 @@ classdef (Abstract) VisibleElement < handle
             end
         end % fin de changeGeom
 
+        function pos = getPosition(obj)
+            pos = obj.Geom.modelMatrix(1:3, 4);
+            pos = pos';
+        end
+
     end % fin des methodes defauts
 
     methods (Abstract = true)
         
-        Init(obj, gl)
+        Init(obj, gl, id)
         Draw(obj, gl)
 
     end % fin des methodes abstraites

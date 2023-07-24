@@ -42,7 +42,8 @@ classdef ElementTexte < VisibleElement
             CheckError(gl, 'apres le dessin d un texte');
         end
 
-        function Init(obj, gl)
+        function Init(obj, gl, id)
+            obj.id = id;
             sommets = [ obj.Geom.listePoints obj.Geom.composanteSupp ];
             obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
             obj.setAttributeSize(3, 0, 2, 0);

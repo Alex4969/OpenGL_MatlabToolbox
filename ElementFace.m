@@ -23,7 +23,8 @@ classdef ElementFace < VisibleElement
             obj.textureId = -1;
         end
 
-        function Init(obj, gl)
+        function Init(obj, gl, id)
+            obj.id = id;
             sommets = [ obj.Geom.listePoints obj.Geom.composanteSupp ];
             obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
         end

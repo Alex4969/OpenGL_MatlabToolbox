@@ -43,7 +43,7 @@ bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);
 boule1 = ElementFace(bouleNormalesGeom);
 boule1.setModelMatrix(MTrans3D([-0.5 1.8 0]));
 boule1.couleurArretes = [1 0 1 1];
-%viewer.AjouterObjet(boule1, 3, 0, 0, 3);
+viewer.AjouterObjet(boule1, 3, 0, 0, 3);
 
 % sphere classique
 bouleGeom = Geometry(posBoule, indBoule);
@@ -58,8 +58,8 @@ boule3 = ElementFace(bouleTexGeom);
 boule3.setModelMatrix(MTrans3D([3 0 0]));
 boule3.ModifyModelMatrix(MRot3D([180 0 0]), 1);
 boule3.ModifyModelMatrix(MScale3D(2), 1);
-%viewer.AjouterObjet(boule3, 3, 0, 2, 0);
-%viewer.ApplyTexture("monde.jpg", boule3);
+viewer.AjouterObjet(boule3, 3, 0, 2, 0);
+viewer.ApplyTexture("monde.jpg", boule3);
 
 % generation du cylindre
 [posCyl, indCyl, mappingCyl, normCyl] = generateCylinder(20, pi, 1, 2, 0);

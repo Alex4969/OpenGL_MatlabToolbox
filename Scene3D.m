@@ -6,6 +6,7 @@ classdef Scene3D < handle
         canvas              % GLCanvas dans lequel on peut utiliser les fonction openGL
         context             % GLContext
         framebuffer Framebuffer
+        idADonner = 1;
 
         listeElements       % cell Array contenant les objets 3D de la scenes
         listeShaders        % dictionnaire qui lie le nom du fichier glsl a son programme
@@ -58,18 +59,18 @@ classdef Scene3D < handle
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
             gl.glEnable(gl.GL_LINE_SMOOTH);
 
-            obj.axes.Init(gl);
+            obj.axes.Init(gl, -1);
             obj.ajouterProg(obj.axes, "axis");
-            obj.gyroscope.Init(gl);
+            obj.gyroscope.Init(gl, -2);
             obj.ajouterProg(obj.gyroscope, "axis");
-            obj.grille.Init(gl);
+            obj.grille.Init(gl, -3);
             obj.ajouterProg(obj.grille, "grille");
 
             obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
             [pos, idx, mapping] = generatePlan(2, 2);
             planGeom = Geometry(pos, idx, mapping);
             frameBufferPlan = ElementFace(planGeom);
-            frameBufferPlan.Init(gl);
+            frameBufferPlan.Init(gl, 0);
             frameBufferPlan.textureId = 0;
             frameBufferPlan.setAttributeSize(3, 0, 2, 0);
             obj.ajouterProg(frameBufferPlan, "framebuffer");
@@ -88,132 +89,6 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
 
         end % fin du constructeur de Scene3D
-    end
-
-    % callback
-    methods
-
-        function cbk_MousePressed(obj,source,event)
-            %disp('MousePressed')
-            obj.startX=event.getPoint.getX();
-            obj.startY=event.getPoint.getY();
-            obj.mouseButton = event.getButton();
-            
-            gl = obj.getGL();
-            obj.framebuffer.Bind(gl);
-
-            r = 2; % click radius (square box) px
-            w = 2*r+1; % square side length px
-
-            buffer = java.nio.FloatBuffer.allocate(w*w);
-
-            sz = [obj.canvas.getWidth() ; obj.canvas.getHeight()];
-            clickPos = [obj.startX ; sz(2) - obj.startY];
-            gl.glReadPixels(clickPos(1) - r, clickPos(2)-r, w, w, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
-            profondeur = typecast(buffer.array(), 'single');
-
-            n = (profondeur == 1);
-
-            if all(n, "all")
-                % pas de point selectionné
-                disp('le lancer n a pas touché de cible');
-            else
-                profondeur(n) = nan; % pourquoi ?
-                profondeur = rot90(profondeur);
-
-                [~, k] = min(profondeur(:));
-                [y, x] = ind2sub([w, w], k);
-
-                %normalized device coord
-                NDC = [ (clickPos + [x-r-0.5 ; r-y+1.5])./sz ; profondeur(k) ; 1 ].*2 - 1;
-
-                %world coord
-                disp(NDC')
-                WC = obj.camera.getProjMatrix * obj.camera.getViewMatrix \ NDC;
-                WC = WC(1:3)./WC(4);
-                disp(WC')
-
-                if any(isnan(WC))
-                    disp('erreur de calcul');
-                    return
-                end
-            end
-        end
-
-        function cbk_MouseReleased(obj,source,event)
-            disp('MouseReleased')
-        end
-
-        function cbk_MouseDragged(obj,source,event)
-            obj.cbk_manager.rmCallback('MouseDragged');
-            %disp(event.getButton());
-            %disp('MouseDragged')
-            posX = event.getX();
-            dx = posX - obj.startX;
-            obj.startX = posX;
-            posY = event.getY();
-            dy = posY - obj.startY;
-            obj.startY = posY;
-            mod = event.getModifiers();
-            ctrlPressed = bitand(mod,event.CTRL_MASK);
-            if ctrlPressed
-                obj.camera.translatePlanAct(3 * dx/obj.canvas.getWidth(), 3 * dy/obj.canvas.getHeight());
-            else
-                if (obj.mouseButton == 3)
-                    obj.camera.rotate(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
-                end
-            end
-            obj.Draw();
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
-        end
-
-        function cbk_KeyPressed(obj,source,event)
-            disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
-            redraw = true;
-            switch event.getKeyChar()
-                case 'l'
-                    obj.camera.setPosition(obj.camera.getPosition-[obj.camera.speed 0 0]);
-                case 'r'
-                    obj.camera.setPosition(obj.camera.getPosition+[obj.camera.speed 0 0]);
-                case 'u'
-                    obj.camera.setPosition(obj.camera.getPosition+[0 obj.camera.speed 0]);
-                case 'd'
-                    obj.camera.setPosition(obj.camera.getPosition-[0 obj.camera.speed 0]);                    
-                case 'o' %origin
-                    obj.camera.defaultView;
-                case 'f' %origin
-                    obj.camera.upView;                    
-                case 'p' %perspective/ortho
-                    obj.camera.switchProjType;
-                otherwise
-                    redraw = false;
-            end
-            if redraw
-                obj.Draw();
-            end
-        end
-
-        function cbk_MouseWheelMoved(obj,source,event)
-            obj.cbk_manager.rmCallback('MouseWheelMoved');
-            disp ('MouseWheelMoved')
-            obj.camera.zoom(event.getWheelRotation());
-            obj.Draw();
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
-        end
-    
-        function cbk_ComponentResized(obj,source,event)
-            obj.cbk_manager.rmCallback('ComponentResized');
-            w=source.getSize.getWidth;
-            h=source.getSize.getHeight;
-            disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
-            obj.camera.setRatio(w/h);
-            obj.framebuffer.Resize(obj.getGL(), w, h);
-            obj.Draw();
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
-        end
-    end
-
-    methods
 
         function AjouterObjet(obj, elem, nPos, nColor, nTextureMapping, nNormals)
             %AJOUTEROBJET Initialise l'objet avec les fonction gl
@@ -223,14 +98,29 @@ classdef Scene3D < handle
                 return
             end
             gl = obj.getGL();
-            elem.Init(gl);
+            elem.Init(gl, obj.idADonner);
+            obj.idADonner = obj.idADonner + 1;
             if (nargin > 2)
                 elem.setAttributeSize(nPos, nColor, nTextureMapping, nNormals);
             end
-            obj.listeElements{ 1 , numel(obj.listeElements)+1 } = elem;
+            obj.listeElements{ 1 , numel(obj.listeElements)+1 } = elem; %TODO : placer au bon endroit
             obj.choixProg(elem);
             obj.context.release();
         end % fin de ajouterObjet
+
+        function AjouterTexte(obj, elem)
+            if isa(elem, "ElementTexte")
+                slot = obj.getTextureId(elem.police.name + ".png", true);
+                elem.textureId = slot;
+                gl = obj.getGL();
+                elem.Init(gl, obj.idADonner);
+                obj.idADonner = obj.idADonner + 1;
+                obj.listeTextes{ 1 , numel(obj.listeTextes)+1 } = elem;
+                obj.ajouterProg(elem, "texte");
+            else
+                warning('l objet donne n est pas un texte');
+            end
+        end
 
         function Draw(obj)
             %DRAW dessine la scene avec tous ses objets
@@ -312,12 +202,6 @@ classdef Scene3D < handle
         end % fin de Draw
 
 
-        function drawInternalObject(obj, gl, elem)
-            progAct = elem.shader;
-            progAct.Bind(gl);
-            progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-            elem.Draw(gl);
-        end
 
         function delete(obj)
             %DELETE Supprime les objets de la scene
@@ -361,19 +245,6 @@ classdef Scene3D < handle
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
         end % fin setCouleurFond
-
-        function AjouterTexte(obj, elem)
-            if isa(elem, "ElementTexte")
-                slot = obj.getTextureId(elem.police.name + ".png", true);
-                elem.textureId = slot;
-                gl = obj.getGL();
-                elem.Init(gl);
-                obj.listeTextes{ 1 , numel(obj.listeTextes)+1 } = elem;
-                obj.ajouterProg(elem, "texte");
-            else
-                warning('l objet donne n est pas un texte');
-            end
-        end
 
         function slot = getTextureId(obj, fileName, texte)
             %GETTEXTUREID Renvoie l'id de la texture correspondant au fichier.
@@ -419,7 +290,8 @@ classdef Scene3D < handle
         function AddGeomToLight(obj, geom)
             gl = obj.getGL();
             elem = ElementFace(geom);
-            elem.Init(gl);
+            elem.Init(gl, obj.idADonner);
+            obj.idADonner = obj.idADonner + 1;
             obj.ajouterProg(elem, "grille");
             obj.lumiere.setForme(elem);
             obj.context.release();
@@ -438,7 +310,6 @@ classdef Scene3D < handle
         function AddText(obj, elem, str)
             elem.AddText(obj.getGL(), str);
         end
-
 
         function ChangeText(obj, elem, str)
             elem.ChangeText(obj.getGL(), str);
@@ -477,13 +348,158 @@ classdef Scene3D < handle
             end
         end % fin de ajouterProg
 
-        function drawIntenalObject(obj, gl, elem)
+        function drawInternalObject(obj, gl, elem)
             progAct = elem.shader;
             progAct.Bind(gl);
             progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
             elem.Draw(gl);
         end % fin de drawInternalObject
 
+        function worldCoord = getWorldCoord(obj, clickPos)
+            gl = obj.getGL();
+            obj.framebuffer.Bind(gl);
+
+            r = 1; % click radius (square box) px
+            w = 2*r+1; % square side length px
+
+            buffer = java.nio.FloatBuffer.allocate(w*w);
+
+            sz = [obj.canvas.getWidth() ; obj.canvas.getHeight()];
+            clickPos(2) = sz(2) - clickPos(2);
+            gl.glReadPixels(clickPos(1)-r, clickPos(2)-r, w, w, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
+            profondeur = typecast(buffer.array(), 'single');
+
+            n = (profondeur == 1);
+
+            if all(n, "all")
+                worldCoord = 0;
+                disp('le lancer n a pas touché de cible');
+            else
+                profondeur(n) = nan; % pourquoi ?
+                profondeur = rot90(profondeur);
+
+                [m, k] = min(profondeur(:));
+                [y, x] = ind2sub([w, w], k);
+                NDC = [ (clickPos + [x-r-0.5 ; r-y+1.5])./sz ; m ; 1 ].*2 - 1; % coordonnées dans un cube -1 -> 1
+
+                worldCoord = obj.camera.getProjMatrix * obj.camera.getViewMatrix \ NDC;
+                worldCoord = worldCoord(1:3)./worldCoord(4);
+                worldCoord = worldCoord';
+            end
+            obj.context.release();
+        end % fin de getWorldCoord
+
+        function reOrderElem(obj)
+            distance = zeros(1, numel(obj.listeElements));
+            for i=1:numel(obj.listeElements)
+                distance(i) = norm(obj.listeElements{i}.getPosition() - obj.camera.getPosition());
+            end
+            [~, newOrder] = sort(distance, 'descend');
+            obj.listeElements = obj.listeElements(newOrder);
+        end % fin de reOrderElem
+
+        function elem = getPointedObject(obj, mouseCoord)
+            distance = zeros(1, numel(obj.listeElements));
+            for i=1:numel(obj.listeElements)
+                distance(i) = norm(obj.listeElements{i}.getPosition() - mouseCoord);
+            end
+            [~, idx] = min(distance);
+            elem = obj.listeElements{idx};
+        end % fin de getPointedObject
+                
     end % fin des methodes privees
+
+    % callback
+    methods
+        function cbk_MousePressed(obj,source,event)
+            %disp('MousePressed')
+            obj.startX=event.getPoint.getX();
+            obj.startY=event.getPoint.getY();
+            obj.mouseButton = event.getButton();
+            
+            if obj.mouseButton == 1
+                worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
+                disp(worldCoord)
+                if numel(worldCoord) == 3
+                    elem = obj.getPointedObject(worldCoord);
+                    disp(elem.id)
+                end
+            end
+        end
+
+        function cbk_MouseReleased(obj,source,event)
+            disp('MouseReleased')
+        end
+
+        function cbk_MouseDragged(obj,source,event)
+            obj.cbk_manager.rmCallback('MouseDragged');
+            %disp(event.getButton());
+            %disp('MouseDragged')
+            posX = event.getX();
+            dx = posX - obj.startX;
+            obj.startX = posX;
+            posY = event.getY();
+            dy = posY - obj.startY;
+            obj.startY = posY;
+
+            mod = event.getModifiers();
+            ctrlPressed = bitand(mod,event.CTRL_MASK);
+            if ctrlPressed
+                obj.camera.translatePlanAct(3 * dx/obj.canvas.getWidth(), 3 * dy/obj.canvas.getHeight());
+            else
+                if (obj.mouseButton == 3)
+                    obj.camera.rotate(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
+                end
+            end
+            obj.reOrderElem();
+            obj.Draw();
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
+        end
+
+        function cbk_KeyPressed(obj,source,event)
+            disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
+            redraw = true;
+            switch event.getKeyChar()
+                case 'l'
+                    obj.camera.setPosition(obj.camera.getPosition-[obj.camera.speed 0 0]);
+                case 'r'
+                    obj.camera.setPosition(obj.camera.getPosition+[obj.camera.speed 0 0]);
+                case 'u'
+                    obj.camera.setPosition(obj.camera.getPosition+[0 obj.camera.speed 0]);
+                case 'd'
+                    obj.camera.setPosition(obj.camera.getPosition-[0 obj.camera.speed 0]);                    
+                case 'o' %origin
+                    obj.camera.defaultView;
+                case 'f' %origin
+                    obj.camera.upView;                    
+                case 'p' %perspective/ortho
+                    obj.camera.switchProjType;
+                otherwise
+                    redraw = false;
+            end
+            if redraw
+                obj.Draw();
+            end
+        end
+
+        function cbk_MouseWheelMoved(obj,source,event)
+            obj.cbk_manager.rmCallback('MouseWheelMoved');
+            disp ('MouseWheelMoved')
+            obj.camera.zoom(event.getWheelRotation());
+            obj.Draw();
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
+        end
+    
+        function cbk_ComponentResized(obj,source,event)
+            obj.cbk_manager.rmCallback('ComponentResized');
+            w=source.getSize.getWidth;
+            h=source.getSize.getHeight;
+            disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
+            obj.camera.setRatio(w/h);
+            obj.framebuffer.Resize(obj.getGL(), w, h);
+            obj.Draw();
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
+        end
+    end % fin des methodes callback
 
 end % fin de la classe Scene3D

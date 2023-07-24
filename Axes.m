@@ -19,7 +19,8 @@ classdef Axes < ElementLigne
             obj.fin = fin;
         end % fin du constructeur Axes
 
-        function Init(obj, gl)
+        function Init(obj, gl, id)
+            obj.id = id;
             sommets = [ obj.Geom.listePoints obj.Geom.composanteSupp ];
             obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
             obj.setAttributeSize(3, 3, 0, 0);
