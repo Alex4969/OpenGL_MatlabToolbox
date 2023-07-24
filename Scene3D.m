@@ -5,6 +5,12 @@ classdef Scene3D < handle
         fenetre jOGLframe   % jOGLframe contient la fenetre, un panel, le canvas, la toolbar ...
         canvas              % GLCanvas dans lequel on peut utiliser les fonction openGL
         context             % GLContext
+        FBOId
+        FBOBuffer
+        TexBuffer
+        TexId
+        RBOId
+        RBOBuffer
 
         listeElements       % cell Array contenant les objets 3D de la scenes
         listeShaders        % dictionnaire qui lie le nom du fichier glsl a son programme
@@ -65,7 +71,51 @@ classdef Scene3D < handle
             obj.grille.Init(gl);
             obj.ajouterProg(obj.grille, "grille");
 
+            %generation du framebuffer
+            obj.FBOBuffer = java.nio.IntBuffer.allocate(1);
+            gl.glGenFramebuffers(1, obj.FBOBuffer);
+            obj.FBOId = typecast(obj.FBOBuffer.array, 'uint32');
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, obj.FBOId);
+
+            obj.TexBuffer = java.nio.IntBuffer.allocate(1);
+            gl.glGenTextures(1, obj.TexBuffer);
+            obj.TexId = typecast(obj.TexBuffer.array(), 'uint32');
+            gl.glActiveTexture(gl.GL_TEXTURE0 + 10);
+            gl.glBindTexture(gl.GL_TEXTURE_2D, obj.TexId);
+            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, obj.canvas.getWidth(), obj.canvas.getHeight(), 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
+
+        	gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR);	
+            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR);	
+            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE);
+            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE);
+
+            gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_TEXTURE_2D, obj.TexId, 0);
+
+            CheckError(gl, 'Erreur de la texture frameBuffer');
+
+            obj.RBOBuffer = java.nio.IntBuffer.allocate(1);
+            gl.glGenRenderbuffers(1, obj.RBOBuffer);
+            obj.RBOId = typecast(obj.RBOBuffer.array, 'uint32');
+            gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, obj.FBOId);
+
+            gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, obj.canvas.getWidth(), obj.canvas.getHeight());
+            gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_STENCIL_ATTACHMENT, gl.GL_RENDERBUFFER, obj.RBOId);
+
+            fboStatus = gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER);
+            if (fboStatus ~= gl.GL_FRAMEBUFFER_COMPLETE)
+                warning('frame buffer pas pret')
+            else
+                disp('le frameBuffer est OK');
+            end
+
+            gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, 0);
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
+            %fin du frame buffer
+
             obj.context.release();
+
+
+
 
             %Listeners
             obj.cbk_manager=javacallbackmanager(obj.canvas);
