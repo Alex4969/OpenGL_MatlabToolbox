@@ -11,6 +11,7 @@ classdef Scene3D < handle
         TexId
         RBOId
         RBOBuffer
+        frameElement
 
         listeElements       % cell Array contenant les objets 3D de la scenes
         listeShaders        % dictionnaire qui lie le nom du fichier glsl a son programme
@@ -111,6 +112,15 @@ classdef Scene3D < handle
             gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, 0);
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
             %fin du frame buffer
+
+            [pos, idx, mapping] = generatePlan(2, 2);
+            planGeom = Geometry(pos, idx, mapping);
+            obj.frameElement = ElementFace(planGeom);
+            obj.frameElement.Init(gl);
+            obj.frameElement.textureId = 10;
+            obj.frameElement.setAttributeSize(3, 0, 2, 0);
+
+            obj.ajouterProg(obj.frameElement, "framebuffer");
 
             obj.context.release();
 
@@ -237,7 +247,10 @@ classdef Scene3D < handle
             %DRAW dessine la scene avec tous ses objets
             % ordre pour le draw afin de garder la transparence : objets opaque, trie des objets transp, objets transp
             gl = obj.getGL();
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, obj.FBOId);
+
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
+            gl.glEnable(gl.GL_DEPTH_TEST);
 
             %%afficher le gysmo
             gl.glViewport(0, 0, obj.canvas.getHeight()/10, obj.canvas.getHeight()/10);
@@ -297,6 +310,11 @@ classdef Scene3D < handle
                 end
                 elem.Draw(gl);
             end
+
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
+            gl.glDisable(gl.GL_DEPTH_TEST);
+            obj.drawIntenalObject(gl, obj.frameElement);
+
 
             obj.context.release();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
