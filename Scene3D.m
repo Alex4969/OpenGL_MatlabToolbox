@@ -167,6 +167,7 @@ classdef Scene3D < handle
             h=source.getSize.getHeight;
             disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
             obj.camera.setRatio(w/h);
+            obj.framebuffer.Resize(obj.getGL(), w, h);
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end

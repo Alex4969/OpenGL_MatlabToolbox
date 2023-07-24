@@ -14,7 +14,6 @@ classdef Framebuffer < handle
 
     methods
         function obj = Framebuffer(gl, width, height)
-
             obj.generateFramebuffer(gl);
             CheckError(gl, 'Erreur lors de la création du frameBuffer');
 
@@ -27,6 +26,17 @@ classdef Framebuffer < handle
             obj.checkFrameBuffer(gl);
 
             obj.UnBind(gl);
+        end
+
+        function Resize(obj, gl, width, height)
+            obj.Bind(gl);
+            gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, obj.FBOId);
+            gl.glActiveTexture(gl.GL_TEXTURE0);
+            gl.glBindTexture(gl.GL_TEXTURE_2D, obj.TexId);
+
+            gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, width, height);
+            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, width, height, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
+
         end
 
         function Bind(obj, gl)
