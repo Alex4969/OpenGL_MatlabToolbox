@@ -95,9 +95,49 @@ classdef Scene3D < handle
 
         function cbk_MousePressed(obj,source,event)
             %disp('MousePressed')
-            obj.startX=event.getPoint.getX;
-            obj.startY=event.getPoint.getY;
+            obj.startX=event.getPoint.getX();
+            obj.startY=event.getPoint.getY();
             obj.mouseButton = event.getButton();
+            
+            gl = obj.getGL();
+            obj.framebuffer.Bind(gl);
+
+            r = 2; % click radius (square box) px
+            w = 2*r+1; % square side length px
+
+            buffer = java.nio.FloatBuffer.allocate(w*w);
+
+            sz = [obj.canvas.getWidth() ; obj.canvas.getHeight()];
+            clickPos = [obj.startX ; sz(2) - obj.startY];
+            gl.glReadPixels(clickPos(1) - r, clickPos(2)-r, w, w, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
+            profondeur = typecast(buffer.array(), 'single');
+
+            n = (profondeur == 1);
+
+            if all(n, "all")
+                % pas de point selectionné
+                disp('le lancer n a pas touché de cible');
+            else
+                profondeur(n) = nan; % pourquoi ?
+                profondeur = rot90(profondeur);
+
+                [~, k] = min(profondeur(:));
+                [y, x] = ind2sub([w, w], k);
+
+                %normalized device coord
+                NDC = [ (clickPos + [x-r-0.5 ; r-y+1.5])./sz ; profondeur(k) ; 1 ].*2 - 1;
+
+                %world coord
+                disp(NDC')
+                WC = obj.camera.getProjMatrix * obj.camera.getViewMatrix \ NDC;
+                WC = WC(1:3)./WC(4);
+                disp(WC')
+
+                if any(isnan(WC))
+                    disp('erreur de calcul');
+                    return
+                end
+            end
         end
 
         function cbk_MouseReleased(obj,source,event)
