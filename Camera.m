@@ -24,6 +24,8 @@ classdef Camera < handle
         speed = 0.15;
         %sensibility
         posCentreMvt = 0;   % 1x3 si pour donner un centre de rotation sinon le centre = target
+
+        constraint logical  % 1x3 pour chaque axe
     end
 
     methods
@@ -41,6 +43,7 @@ classdef Camera < handle
             obj.fov = 60;
             obj.type = 1;
             obj.computeProj();
+            obj.constraint = [false, false, false];
         end % fin du constructeur camera
 
         function setPosition(obj, newPosition)
@@ -150,11 +153,23 @@ classdef Camera < handle
     % special transformations / gestion de la souris
     methods
         function translatePlanAct(obj,dx,dy)
-            translation = dy * obj.up;
-            left = cross(obj.position - obj.target, obj.up);
-            left = left/norm(left);
-            translation = translation + dx * left;
-            translation = translation * (1 + obj.speed);
+            if any(obj.constraint)
+                dz = 0;
+                if obj.constraint(3)
+                    if obj.constraint(2)
+                        dz = dx;
+                    else
+                        dz = -dy;
+                    end
+                end
+                translation =  [-dx, dy, dz] .* obj.constraint;
+            else
+                translation = dy * obj.up;
+                left = cross(obj.position - obj.target, obj.up);
+                left = left/norm(left);
+                translation = translation + dx * left;
+                translation = translation * (1 + obj.speed);
+            end
             obj.position = obj.position + translation;
             obj.target   = obj.target   + translation;
             obj.computeView();
@@ -207,6 +222,17 @@ classdef Camera < handle
             obj.up=[1 0 0];
             obj.target=[0 0 0];
             obj.computeView();
+        end
+
+        function xorConstraint(obj, l)
+            obj.constraint = bitxor(obj.constraint, l);
+            if all(obj.constraint)
+                obj.constraint = l;
+            end
+        end
+
+        function resetConstraint(obj)
+            obj.constraint = [false false false];
         end
 
     end

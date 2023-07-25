@@ -455,20 +455,18 @@ classdef Scene3D < handle
         end
 
         function cbk_KeyPressed(obj,source,event)
-            disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
+            %disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
             redraw = true;
             switch event.getKeyChar()
-                case 'l'
-                    obj.camera.setPosition(obj.camera.getPosition-[obj.camera.speed 0 0]);
-                case 'r'
-                    obj.camera.setPosition(obj.camera.getPosition+[obj.camera.speed 0 0]);
-                case 'u'
-                    obj.camera.setPosition(obj.camera.getPosition+[0 obj.camera.speed 0]);
-                case 'd'
-                    obj.camera.setPosition(obj.camera.getPosition-[0 obj.camera.speed 0]);                    
+                case 'x'
+                    obj.camera.xorConstraint([true false false])
+                case 'y'
+                    obj.camera.xorConstraint([false true false])
+                case 'z'
+                    obj.camera.xorConstraint([false false true])
                 case 'o' %origin
                     obj.camera.defaultView;
-                case 'f' %origin
+                case 'u' %up
                     obj.camera.upView;                    
                 case 'p' %perspective/ortho
                     obj.camera.switchProjType;
