@@ -39,7 +39,9 @@ viewer.ApplyTexture(pyramide3, "briques.jpg")
 [posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
 
 % sphere avec des normales par sommet
-bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);
+%bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);
+bouleNormalesGeom = Geometry(posBoule, indBoule);
+bouleNormalesGeom.GenerateNormales();
 boule1 = ElementFace(bouleNormalesGeom);
 boule1.setModelMatrix(MTrans3D([-0.5 1.8 0]));
 boule1.couleurArretes = [1 0 1 1];
@@ -80,10 +82,12 @@ plan1.setModelMatrix(MTrans3D([0 0 -4]));
 
 % piece d'echec depuis un fichier
 chessGeom = Geometry();
-chessGeom.CreateFromFile('objets3D/chess4_ascii.stl');
+chessGeom.CreateFromFile('objets3D/wolf.stl');
+chessGeom.GenerateNormales();
 chess = ElementFace(chessGeom);
-chess.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02));
-viewer.AjouterObjet(chess);
+%chess.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02));
+chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2));
+viewer.AjouterObjet(chess, 3, 0, 0, 3);
 chess.setCouleurFaces(rand(1,3));
 
 ravie = Police("ravie");

@@ -12,7 +12,6 @@ classdef Geometry < handle
     end
     
     methods
-
         function obj = Geometry(points, index, supp)
             %GEOMETRIE sans argument, le modele est ensuite donné en stl
             %recupere la liste de pointe et sa connectivité
@@ -56,6 +55,11 @@ classdef Geometry < handle
                 obj.modelMatrix = model * obj.modelMatrix;
             end
         end % fin de addToModelMatrix
+
+        function GenerateNormales(obj)
+            normales = calculVertexNormals(obj.listePoints, obj.listeConnection);
+            obj.composanteSupp = [obj.composanteSupp normales];
+        end
 
         function setModelMatrix(obj, model)
             obj.modelMatrix = model;
