@@ -2,7 +2,6 @@ classdef (Abstract) VisibleElement < handle
     %VISIBLEELEMENT 
     
     properties
-        id int16
         Geom Geometry
         GLGeom GLGeometry
         shader ShaderProgram
@@ -58,13 +57,21 @@ classdef (Abstract) VisibleElement < handle
             pos = pos';
         end % fin de getPosition
 
+        function id = getId(obj)
+            id = obj.Geom.id;
+        end
+
+        function setId(obj, newId)
+            obj.Geom.id = newId;
+        end
+
         function delete(obj, gl)
             obj.GLGeom.delete(gl);
         end % fin de delete
     end % fin des methodes defauts
 
     methods (Abstract = true)
-        Init(obj, gl, id)
+        Init(obj, gl)
         Draw(obj, gl)
     end % fin des methodes abstraites
 

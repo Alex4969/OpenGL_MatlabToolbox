@@ -18,8 +18,7 @@ classdef ElementLigne < VisibleElement
             obj.couleurLignes   = couleur;
         end % fin du constructeur ElementLigne
 
-        function Init(obj, gl, id)
-            obj.id = id;
+        function Init(obj, gl)
             sommets = [ obj.Geom.listePoints obj.Geom.composanteSupp ];
             obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
         end % fin de Init

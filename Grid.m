@@ -13,10 +13,10 @@ classdef Grid < ElementLigne
     
     methods
 
-        function obj = Grid(aBorne, aEcart)
+        function obj = Grid(id, aBorne, aEcart)
             %GRID construit la géometrie et en fait un ElementVisible
             [mat, ind] = Grid.generateGrid(aBorne, aEcart);
-            grilleGeom = Geometry(mat, ind);
+            grilleGeom = Geometry(id, mat, ind);
             obj@ElementLigne(grilleGeom)
             obj.borne = aBorne;
             obj.ecart = aEcart;

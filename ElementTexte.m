@@ -15,10 +15,10 @@ classdef ElementTexte < VisibleElement
     end
     
     methods
-        function obj = ElementTexte(str, police, taille, type, color, posAncre, ancre)
+        function obj = ElementTexte(id, str, police, taille, type, color, posAncre, ancre)
             %TEXTE
             [pos, ind, mapping] = ElementTexte.constructText(str, police, taille, ancre);
-            geom = Geometry(pos, ind, mapping);
+            geom = Geometry(id, pos, ind, mapping);
             obj@VisibleElement(geom);
             obj.str = str;
             obj.police = police;
@@ -43,8 +43,7 @@ classdef ElementTexte < VisibleElement
             CheckError(gl, 'apres le dessin d un texte');
         end
 
-        function Init(obj, gl, id)
-            obj.id = id;
+        function Init(obj, gl)
             sommets = [ obj.Geom.listePoints obj.Geom.composanteSupp ];
             obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
             obj.setAttributeSize(3, 0, 2, 0);

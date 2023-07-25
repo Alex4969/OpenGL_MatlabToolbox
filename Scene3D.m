@@ -6,7 +6,6 @@ classdef Scene3D < handle
         canvas              % GLCanvas dans lequel on peut utiliser les fonction openGL
         context             % GLContext
         framebuffer Framebuffer
-        idADonner = 1;
 
         listeElements       % cell Array contenant les objets 3D de la scenes
         listeShaders        % dictionnaire qui lie le nom du fichier glsl a son programme
@@ -44,10 +43,10 @@ classdef Scene3D < handle
 
             obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light([0, 3, 3], [1 1 1]);
-            obj.axes = Axes(-100, 100);
-            obj.gyroscope = Axes(0, 0.6);
+            obj.axes = Axes(-1, -100, 100);
+            obj.gyroscope = Axes(-2, 0, 0.6);
             obj.gyroscope.setEpaisseur(4);
-            obj.grille = Grid(obj.axes.getFin(), 2);
+            obj.grille = Grid(-3, obj.axes.getFin(), 2);
 
             obj.listeShaders = dictionary;
             obj.listeTextures = dictionary;
@@ -59,18 +58,18 @@ classdef Scene3D < handle
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
             gl.glEnable(gl.GL_LINE_SMOOTH);
 
-            obj.axes.Init(gl, -1);
+            obj.axes.Init(gl);
             obj.ajouterProg(obj.axes, "axis");
-            obj.gyroscope.Init(gl, -2);
+            obj.gyroscope.Init(gl);
             obj.ajouterProg(obj.gyroscope, "axis");
-            obj.grille.Init(gl, -3);
+            obj.grille.Init(gl);
             obj.ajouterProg(obj.grille, "grille");
 
             obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
             [pos, idx, mapping] = generatePlan(2, 2);
-            planGeom = Geometry(pos, idx, mapping);
+            planGeom = Geometry(0, pos, idx, mapping);
             frameBufferPlan = ElementFace(planGeom);
-            frameBufferPlan.Init(gl, 0);
+            frameBufferPlan.Init(gl);
             frameBufferPlan.textureId = 0;
             frameBufferPlan.setAttributeSize(3, 0, 2, 0);
             obj.ajouterProg(frameBufferPlan, "framebuffer");
@@ -98,8 +97,7 @@ classdef Scene3D < handle
                 return
             end
             gl = obj.getGL();
-            elem.Init(gl, obj.idADonner);
-            obj.idADonner = obj.idADonner + 1;
+            elem.Init(gl);
             if (nargin > 2)
                 elem.setAttributeSize(nPos, nColor, nTextureMapping, nNormals);
             end
@@ -113,8 +111,7 @@ classdef Scene3D < handle
                 slot = obj.getTextureId(elem.police.name + ".png", true);
                 elem.textureId = slot;
                 gl = obj.getGL();
-                elem.Init(gl, obj.idADonner);
-                obj.idADonner = obj.idADonner + 1;
+                elem.Init(gl);
                 obj.listeTextes{ 1 , numel(obj.listeTextes)+1 } = elem;
                 obj.ajouterProg(elem, "texte");
             else
@@ -124,7 +121,6 @@ classdef Scene3D < handle
 
         function Draw(obj)
             %DRAW dessine la scene avec tous ses objets
-            % ordre pour le draw afin de garder la transparence : objets opaque, trie des objets transp, objets transp
             gl = obj.getGL();
             obj.framebuffer.Bind(gl);
 
@@ -169,7 +165,8 @@ classdef Scene3D < handle
                     progAct.Bind(gl);
                 end
                 if elem.type == 'F'
-                    progAct.SetUniformMat4(gl, 'uCamMatrix',  eye(4)); %%%TODO a refaire
+                    %progAct.SetUniformMat4(gl, 'uCamMatrix',  eye(4)); %%%TODO a refaire
+                    progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix);
                 else
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
                 end
@@ -262,8 +259,7 @@ classdef Scene3D < handle
         function AddGeomToLight(obj, geom)
             gl = obj.getGL();
             elem = ElementFace(geom);
-            elem.Init(gl, obj.idADonner);
-            obj.idADonner = obj.idADonner + 1;
+            elem.Init(gl);
             obj.ajouterProg(elem, "grille");
             obj.lumiere.setForme(elem);
             obj.context.release();
@@ -388,6 +384,7 @@ classdef Scene3D < handle
         end % fin de getWorldCoord
 
         function reOrderElem(obj)
+            %REORDERELEM : trie les objet du plus loin au plus pres, indispensable pour la transparence
             distance = zeros(1, numel(obj.listeElements));
             for i=1:numel(obj.listeElements)
                 distance(i) = norm(obj.listeElements{i}.getPosition() - obj.camera.getPosition());
@@ -420,7 +417,7 @@ classdef Scene3D < handle
                 disp(worldCoord)
                 if numel(worldCoord) == 3
                     elem = obj.getPointedObject(worldCoord);
-                    disp(elem.id)
+                    disp(elem.getId());
                 end
             end
         end

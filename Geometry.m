@@ -4,6 +4,7 @@ classdef Geometry < handle
     %vrai classe Geometrie en fin de projet
     
     properties
+        id  int16           % id unique pour chaque géometrie
         enable logical      % contribu ou non au lancer de ratoyon
         listePoints         % matrice nx3 ou nx2 contenant les points dans l'espace
         listeConnection     % matrice ligne donne la connectivité en triangle des points de la liste de points
@@ -12,16 +13,17 @@ classdef Geometry < handle
     end
     
     methods
-        function obj = Geometry(points, index, supp)
+        function obj = Geometry(id, points, index, supp)
             %GEOMETRIE sans argument, le modele est ensuite donné en stl
             %recupere la liste de pointe et sa connectivité
-            if (nargin == 0)
+            obj.id = id;
+            if (nargin == 1)
                 obj.enable = 0;
             else
                 obj.enable = 1;
                 obj.listePoints = points;
                 obj.listeConnection = index;
-                if nargin == 3
+                if nargin == 4
                     if size(points, 1) ~= size(supp, 1)
                         warning('le nombre de ligne de supp et points doit etre similaire !')
                     else
