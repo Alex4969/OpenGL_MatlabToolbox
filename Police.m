@@ -2,10 +2,10 @@ classdef Police < handle
     %POLICE enregiste le style de police
     
     properties
-        letterProperties
-        name
-        taille
-        textureSlot = -1;
+        letterProperties    % dictionary caractère (int) -> struct
+        name                % le nom de la police
+        taille              % la taille de la police dans le fichier donné
+        textureSlot = -1;   % le slot de texture dans lequelle la police est rendu
     end
     
     methods
@@ -17,7 +17,6 @@ classdef Police < handle
     end
 
     methods (Access = private)
-
         function dico = readFnt(obj, fileName)
             %READFNT lit le fichier et construit un dictionnaire
             % caractère -> propriété de ce caractère
@@ -59,7 +58,6 @@ classdef Police < handle
             tmp = ligne(89:91);
             infos.xadvance = int16(str2double(tmp));
         end % fin de readLigne
-
     end % fin des methodes privées
 
 end % fin classe Police

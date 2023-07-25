@@ -40,12 +40,8 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom.AddToModelMatrix(matrix, after);
         end
 
-        function Delete(obj, gl)
-            obj.GLGeom.Delete(gl);
-        end % fin de Delete
-
         function ChangeGeom(obj, gl, pos, ind, supp)
-            obj.GLGeom.Delete(gl);
+            obj.GLGeom.delete(gl);
             delete(obj.GLGeom);
             delete(obj.Geom);
             if nargin < 5
@@ -60,15 +56,16 @@ classdef (Abstract) VisibleElement < handle
         function pos = getPosition(obj)
             pos = obj.Geom.modelMatrix(1:3, 4);
             pos = pos';
-        end
+        end % fin de getPosition
 
+        function delete(obj, gl)
+            obj.GLGeom.delete(gl);
+        end % fin de delete
     end % fin des methodes defauts
 
     methods (Abstract = true)
-        
         Init(obj, gl, id)
         Draw(obj, gl)
-
     end % fin des methodes abstraites
 
 end % fin de la classe VisibleElement

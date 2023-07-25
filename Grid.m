@@ -90,8 +90,8 @@ classdef Grid < ElementLigne
                 ajout = [4+i 4+taille+i   4+t+i 4+t+taille+i   4+2*taille+i 4+2*taille+taille+i   4+2*taille+t+i 4+2*taille+taille+t+i];
                 ind = [ind ajout];
             end
-        end
-    end
+        end % fin de generateGrid
+    end % fin des methodes static
 
 end % fin classe Grid
 

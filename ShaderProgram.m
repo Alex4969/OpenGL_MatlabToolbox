@@ -43,10 +43,10 @@ classdef ShaderProgram < handle
             gl.glUseProgram(obj.shaderProgId);
         end
 
-        function Delete(obj, gl)
+        function delete(obj, gl)
             %DELETE Supprime l'objet de la mémoire
             gl.glDeleteProgram(obj.shaderProgId);
-        end % fin de Delete
+        end % fin de delete
 
         function SetUniform4f(obj, gl, nom, attrib)
             location = obj.findLocation(gl, nom);

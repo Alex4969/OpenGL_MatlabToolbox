@@ -53,7 +53,7 @@ classdef ElementLigne < VisibleElement
             end
             if numel(newColor) == 4
                 obj.couleurLignes = newColor;
-            else 
+            else
                 warning('mauvaise matrice de couleur, annulation');
             end
         end % fin de setCouleur

@@ -33,7 +33,7 @@ pyraTexGeom = Geometry(posPyramide, indicesPyramide, mappingPyramide);
 pyraTexGeom.setModelMatrix(MTrans3D([-4 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 pyramide3 = ElementFace(pyraTexGeom);
 viewer.AjouterObjet(pyramide3, 3, 0, 2, 0);
-viewer.ApplyTexture("briques.jpg", pyramide3)
+viewer.ApplyTexture(pyramide3, "briques.jpg")
 
 % generation d'une sphere
 [posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
@@ -59,7 +59,7 @@ boule3.setModelMatrix(MTrans3D([3 0 0]));
 boule3.ModifyModelMatrix(MRot3D([180 0 0]), 1);
 boule3.ModifyModelMatrix(MScale3D(2), 1);
 viewer.AjouterObjet(boule3, 3, 0, 2, 0);
-viewer.ApplyTexture("monde.jpg", boule3);
+viewer.ApplyTexture(boule3, "monde.jpg");
 
 % generation du cylindre
 [posCyl, indCyl, mappingCyl, normCyl] = generateCylinder(20, pi, 1, 2, 0);
@@ -68,7 +68,7 @@ cylTexGeom = Geometry(posCyl, indCyl, mappingCyl);
 cyl2 = ElementFace(cylTexGeom);
 cyl2.setModelMatrix(MTrans3D([3 3 0]));
 viewer.AjouterObjet(cyl2, 3, 0, 2, 0);
-viewer.ApplyTexture("couleurs.jpg", cyl2);
+viewer.ApplyTexture(cyl2, "couleurs.jpg");
 
 %generation du plan
 [posPlan, indPlan, mappingPlan] = generatePlan(16, 9);
@@ -76,7 +76,7 @@ planGeom = Geometry(posPlan, indPlan, mappingPlan);
 plan1 = ElementFace(planGeom);
 plan1.setModelMatrix(MTrans3D([0 0 -4]));
 %viewer.AjouterObjet(plan1, 3, 0, 2, 0);
-%viewer.ApplyTexture("monde.jpg", plan1);
+%viewer.ApplyTexture(plan1, "monde.jpg");
 
 % piece d'echec depuis un fichier
 chessGeom = Geometry();

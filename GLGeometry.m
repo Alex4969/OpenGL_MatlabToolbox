@@ -70,12 +70,12 @@ classdef GLGeometry < handle
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0);
         end % fin de unbind
 
-        function Delete(obj, gl)
+        function delete(obj, gl)
             %DELETE Supprime l'objet de la mémoire
             gl.glDeleteBuffers(1, obj.VAOBuffer);
             gl.glDeleteBuffers(1, obj.VBOBuffer);
             gl.glDeleteBuffers(1, obj.EBOBuffer);
-        end % fin de Delete
+        end % fin de delete
 
     end % fin des methodes defauts
 

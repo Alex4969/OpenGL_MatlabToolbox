@@ -3,21 +3,21 @@ classdef ElementTexte < VisibleElement
     %   Detailed explanation goes here
     
     properties
-        str
+        str                 % le texte a afficher
         police Police
         taille              % coefficient multiplicateur (autour de 1)
         type                % 'P' : perspective, 'N' : normal, de face, 'F' : Fixe
         textureId = -1
-        pos
-        ancre
+        ancre               % définit le point d'accroche du texte 
+                            % 0:centre, 1:haut gauche, 2:haut droite, 3:bas gauche, 4:bas droite
 
-        couleurTexte
+        couleurTexte        % 1x4 double entre 0 et 1
     end
     
     methods
         function obj = ElementTexte(str, police, taille, type, color, posAncre, ancre)
             %TEXTE
-            [pos, ind, mapping] = ElementTexte.constructText(str, police, taille, posAncre, ancre);
+            [pos, ind, mapping] = ElementTexte.constructText(str, police, taille, ancre);
             geom = Geometry(pos, ind, mapping);
             obj@VisibleElement(geom);
             obj.str = str;
@@ -25,6 +25,7 @@ classdef ElementTexte < VisibleElement
             obj.taille = taille;
             obj.type = type;
             obj.couleurTexte = color;
+            obj.setModelMatrix(MTrans3D(posAncre));
         end
 
         function Draw(obj, gl)
@@ -65,7 +66,7 @@ classdef ElementTexte < VisibleElement
     end
 
     methods(Static = true)
-        function [pos, ind, mapping] = constructText(str, police, taille, posAncre, ancre)
+        function [pos, ind, mapping] = constructText(str, police, taille, ancre)
             pos = zeros(strlength(str) * 4, 3);
             mapping = zeros(strlength(str) * 4, 2);
             cursor = struct('x', 0, 'y', 0);
@@ -110,9 +111,8 @@ classdef ElementTexte < VisibleElement
                     xDep = maxX;
                     yDep = -minY;
             end
-            pos(:, 1) = posAncre(1) + pos(:, 1) - xDep;
-            pos(:, 2) = posAncre(2) + pos(:, 2) + yDep;
-            pos(:, 3) = posAncre(3) + pos(:, 3);
+            pos(:, 1) = pos(:, 1) - xDep;
+            pos(:, 2) = pos(:, 2) + yDep;
             mapping = mapping/512;
         end % fin de constructText
 

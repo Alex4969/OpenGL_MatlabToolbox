@@ -1,15 +1,15 @@
 classdef Framebuffer < handle
-    %FRAMEBUFFER Summary of this class goes here
-    %   Detailed explanation goes here
+    %FRAMEBUFFER Un frame buffer permet de généré une image dans une texture avant d'afficher la-dite texture
+    %Cette methode permet de récupéré la projection de la souris dans la scène 3D
 
     properties
-        FBOBuffer
-        FBOId
-        RBOBuffer
-        RBOId
-        TexBuffer
-        TexId
-        forme ElementFace
+        FBOBuffer           %Frame Buffer Object
+        FBOId               %Frame Buffer Id
+        RBOBuffer           %Render Buffer Object
+        RBOId               %Render Buffer Id
+        TexBuffer           %Texture Buffer
+        TexId               %Texture Id
+        forme ElementFace   %Le carré sur lequel on affiche la texture=la scène
     end
 
     methods
@@ -36,7 +36,6 @@ classdef Framebuffer < handle
 
             gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, width, height);
             gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, width, height, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
-
         end
 
         function Bind(obj, gl)

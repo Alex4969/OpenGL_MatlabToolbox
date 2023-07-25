@@ -40,7 +40,7 @@ classdef Axes < ElementLigne
             obj.setAttributeSize(3, 3, 0, 0);
             obj.debut = newDeb;
             obj.fin = newFin;
-        end
+        end % fin de setAxes
     
     end % fin des methdoes defauts
 
@@ -54,8 +54,8 @@ classdef Axes < ElementLigne
                                 0.0   0.0   fin ];  % 5
             sommetsCouleur = [1.0 0.0 0.0 ; 1.0 0.0 0.0 ; 0.0 1.0 0.0 ; 0.0 1.0 0.0 ; 0.0 0.0 1.0 ; 0.0 0.0 1.0 ];
             indices = [0 1 2 3 4 5];
-        end
-    end
+        end %fin de generateAxes
+    end % fin des methodes static
 
 end % fin classe Axes
 

@@ -27,12 +27,12 @@ classdef Scene3D < handle
     
 
     methods
-        function obj = Scene3D(windowsSize)
+        function obj = Scene3D(windowSize)
             obj.fenetre=jOGLframe('GL4',0);
             if nargin == 0
                 obj.fenetre.setSize([1280 1280*9/16]);
             elseif nargin == 1
-                obj.fenetre.setSize(windowsSize);
+                obj.fenetre.setSize(windowSize);
             else
                 error('Bad argument number')
             end
@@ -201,35 +201,33 @@ classdef Scene3D < handle
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
 
-
-
         function delete(obj)
             %DELETE Supprime les objets de la scene
             disp('deleting Scene3D...')
             gl = obj.getGL();
             for i=1:numel(obj.listeElements)
-                obj.listeElements{i}.Delete(gl);
+                obj.listeElements{i}.delete(gl);
             end
             if numEntries(obj.listeShaders) ~= 0
                 progs = values(obj.listeShaders);
                 for i=1:numel(progs)
-                    progs{1}.Delete(gl);
+                    progs{1}.delete(gl);
                 end
             end
             if numEntries(obj.listeTextures) ~= 0
                 textures = values(obj.listeTextures);
                 for i=1:numel(textures)
-                    textures{1}.Delete(gl);
+                    textures{1}.delete(gl);
                 end
             end
-            obj.axes.Delete(gl);
-            obj.grille.Delete(gl);
-            obj.gyroscope.Delete(gl);
+            obj.axes.delete(gl);
+            obj.grille.delete(gl);
+            obj.gyroscope.delete(gl);
             if ~isempty(obj.lumiere.forme)
-                obj.lumiere.forme.Delete(gl);
+                obj.lumiere.forme.delete(gl);
             end
             obj.context.release();
-        end % fin de Delete
+        end % fin de delete
 
         function setCouleurFond(obj, newColor)
             %SETCOULEURFOND change la couleur du fond de l'écran.
@@ -246,33 +244,7 @@ classdef Scene3D < handle
             end
         end % fin setCouleurFond
 
-        function slot = getTextureId(obj, fileName, texte)
-            %GETTEXTUREID Renvoie l'id de la texture correspondant au fichier.
-            % si elle n'existe pas, elle est créée.
-            if nargin < 3, texte = false; end
-            if texte
-                dossier = "textes\";
-            else
-                dossier = "textures\";
-            end
-            if numEntries(obj.listeTextures) ~= 0 && isKey(obj.listeTextures, fileName)
-                %la texture a deja été ajouté :
-                tex = obj.listeTextures(fileName);
-                slot = tex{1}.slot;
-            else
-                if isfile(dossier + fileName)
-                    gl = obj.getGL();
-                    slot = numEntries(obj.listeTextures) + 1;
-                    tex = {Texture(gl, dossier + fileName, slot)};
-                    obj.listeTextures(fileName) = tex;
-                    obj.context.release();
-                else
-                    slot = -1;
-                end
-            end
-        end
-
-        function ApplyTexture(obj, fileName, elem)
+        function ApplyTexture(obj, elem, fileName)
             if (isa(elem, 'ElementFace') && elem.GLGeom.nTextureMapping ~= 0)
                 if fileName == ""
                     elem.textureId = -1;
@@ -354,6 +326,32 @@ classdef Scene3D < handle
             progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
             elem.Draw(gl);
         end % fin de drawInternalObject
+
+        function slot = getTextureId(obj, fileName, texte)
+            %GETTEXTUREID Renvoie l'id de la texture correspondant au fichier.
+            % si elle n'existe pas, elle est créée.
+            if nargin < 3, texte = false; end
+            if texte
+                dossier = "textes\";
+            else
+                dossier = "textures\";
+            end
+            if numEntries(obj.listeTextures) ~= 0 && isKey(obj.listeTextures, fileName)
+                %la texture a deja été ajouté :
+                tex = obj.listeTextures(fileName);
+                slot = tex{1}.slot;
+            else
+                if isfile(dossier + fileName)
+                    gl = obj.getGL();
+                    slot = numEntries(obj.listeTextures) + 1;
+                    tex = {Texture(gl, dossier + fileName, slot)};
+                    obj.listeTextures(fileName) = tex;
+                    obj.context.release();
+                else
+                    slot = -1;
+                end
+            end
+        end
 
         function worldCoord = getWorldCoord(obj, clickPos)
             gl = obj.getGL();

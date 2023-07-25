@@ -30,7 +30,7 @@ classdef Texture < handle
             gl.glBindTexture(gl.GL_TEXTURE_2D, 0);
         end
 
-        function Delete(obj, gl)
+        function delete(obj, gl)
             gl.glDeleteTextures(1, obj.texBuffer);
         end
     end % fin des methodes defauts
