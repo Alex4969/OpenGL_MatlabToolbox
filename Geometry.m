@@ -9,11 +9,11 @@ classdef Geometry < handle
         listePoints         % matrice nx3 ou nx2 contenant les points dans l'espace
         listeConnection     % matrice ligne donne la connectivité en triangle des points de la liste de points
         modelMatrix         % transformation du modèle dans la scène 3D (translation, rotation, homothétie)
-        composanteSupp      % matrice nxm contenant des indications supplémentaires sur les sommets (couleurs, normales...)
+        %composanteSupp      % matrice nxm contenant des indications supplémentaires sur les sommets (couleurs, normales...)
     end
     
     methods
-        function obj = Geometry(id, points, index, supp)
+        function obj = Geometry(id, points, index)
             %GEOMETRIE sans argument, le modele est ensuite donné en stl
             %recupere la liste de pointe et sa connectivité
             obj.id = id;
@@ -23,13 +23,13 @@ classdef Geometry < handle
                 obj.enable = 1;
                 obj.listePoints = points;
                 obj.listeConnection = index;
-                if nargin == 4
-                    if size(points, 1) ~= size(supp, 1)
-                        warning('le nombre de ligne de supp et points doit etre similaire !')
-                    else
-                        obj.composanteSupp = supp;
-                    end
-                end
+%                if nargin == 4
+ %                   if size(points, 1) ~= size(supp, 1)
+  %                      warning('le nombre de ligne de supp et points doit etre similaire !')
+   %                 else
+    %                    obj.composanteSupp = supp;
+     %               end
+      %          end
             end
             obj.modelMatrix = eye(4);
         end % fin du constructeur
@@ -58,10 +58,10 @@ classdef Geometry < handle
             end
         end % fin de addToModelMatrix
 
-        function GenerateNormales(obj)
-            normales = calculVertexNormals(obj.listePoints, obj.listeConnection);
-            obj.composanteSupp = [obj.composanteSupp normales];
-        end
+%        function GenerateNormales(obj)
+ %           normales = calculVertexNormals(obj.listePoints, obj.listeConnection);
+  %          obj.composanteSupp = [obj.composanteSupp normales];
+   %     end
 
         function setModelMatrix(obj, model)
             obj.modelMatrix = model;

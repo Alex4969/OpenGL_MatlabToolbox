@@ -7,6 +7,8 @@ classdef (Abstract) VisibleElement < handle
         shader ShaderProgram
 
         visible logical
+        graphicData             % doit etre de la meme hauteur que Geom.listePoints
+                                % contient les composantes de couleurs
     end
     
     methods
@@ -56,6 +58,18 @@ classdef (Abstract) VisibleElement < handle
             pos = obj.Geom.modelMatrix(1:3, 4);
             pos = pos';
         end % fin de getPosition
+
+        function AddColor(obj, matColor)
+        end
+
+        function AddNormales(obj, matNormales)
+        end
+
+        function generateNormales(obj)
+        end
+
+        function AddMapping(obj, matMapping)
+        end
 
         function id = getId(obj)
             id = obj.Geom.id;
