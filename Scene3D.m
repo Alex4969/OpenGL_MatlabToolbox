@@ -9,7 +9,7 @@ classdef Scene3D < handle
 
         mapElements         % map contenant les objets 3D de la scenes
         listeShaders        % dictionnaire qui lie le nom du fichier glsl a son programme
-        listeTextures       % dictionnaire qui lie le nom de l'image a sa texture
+        mapTextures         % dictionnaire qui lie le nom de l'image a sa texture
         listeTextes         % cellArray contenant les textes a afficher
 
         camera Camera       % instance de la camera
@@ -22,6 +22,7 @@ classdef Scene3D < handle
         startX              % position x de la souris lorsque je clique
         startY              % position y de la souris lorsque je clique
         mouseButton = -1    % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
+        selectObject
     end %fin de propriete defaut
     
 
@@ -47,8 +48,9 @@ classdef Scene3D < handle
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
             obj.mapElements = containers.Map('KeyType','int32','ValueType','any');
+            obj.mapTextures = containers.Map('KeyType','char', 'ValueType', 'any');
+            obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
             obj.listeShaders = dictionary;
-            obj.listeTextures = dictionary;
 
             gl = obj.getGL();
             gl.glClearColor(0.0, 0.0, 0.4, 1.0);
@@ -204,8 +206,8 @@ classdef Scene3D < handle
                     progs{1}.delete(gl);
                 end
             end
-            if numEntries(obj.listeTextures) ~= 0
-                textures = values(obj.listeTextures);
+            if numEntries(obj.mapTextures) ~= 0
+                textures = values(obj.mapTextures);
                 for i=1:numel(textures)
                     textures{1}.delete(gl);
                 end
@@ -235,13 +237,14 @@ classdef Scene3D < handle
         end % fin setCouleurFond
 
         function ApplyTexture(obj, elem, fileName)
+            %APPLYTEXTURE ajoute la texture avec le nom de fichier donné a
+            %l'element. si le fichier n'existe pas, la texture est retiré.
             if (isa(elem, 'ElementFace') && elem.GLGeom.nLayout(3) ~= 0)
-                if fileName == ""
-                    elem.textureId = -1;
+                slot = obj.getTextureId(fileName, false);
+                elem.textureId = slot;
+                if slot == -1
                     obj.ajouterProg(elem, "defaut");
                 else
-                    slot = obj.getTextureId(fileName, false);
-                    elem.textureId = slot;
                     obj.ajouterProg(elem, "textured");
                 end
             else 
@@ -325,16 +328,14 @@ classdef Scene3D < handle
             else
                 dossier = "textures\";
             end
-            if numEntries(obj.listeTextures) ~= 0 && isKey(obj.listeTextures, fileName)
+            if isKey(obj.mapTextures, fileName)
                 %la texture a deja été ajouté :
-                tex = obj.listeTextures(fileName);
-                slot = tex{1}.slot;
+                slot = obj.mapTextures(fileName).slot;
             else
                 if isfile(dossier + fileName)
-                    gl = obj.getGL();
-                    slot = numEntries(obj.listeTextures) + 1;
-                    tex = {Texture(gl, dossier + fileName, slot)};
-                    obj.listeTextures(fileName) = tex;
+                    slot = length(obj.mapTextures) + 1;
+                    tex = Texture(obj.getGL(), dossier + fileName, slot);
+                    obj.mapTextures(fileName) = tex;
                     obj.context.release();
                 else
                     slot = -1;
@@ -421,6 +422,17 @@ classdef Scene3D < handle
             [~, idx] = min(distance);
             elem = listeElem{idx};
         end % fin de getPointedObject
+
+        function colorSelection(obj, elem)
+            if obj.selectObject.id ~= 0
+                obj.selectObject = obj.mapElements(obj.selectObject.id).reverseSelect(obj.selectObject);
+            end
+            if elem.getId() == obj.selectObject.id
+                obj.selectObject.id = 0;
+            else
+                obj.selectObject = elem.reverseSelect(obj.selectObject);
+            end
+        end
                 
     end % fin des methodes privees
 
@@ -437,7 +449,8 @@ classdef Scene3D < handle
                 disp(worldCoord)
                 if numel(worldCoord) == 3
                     elem = obj.getPointedObject(worldCoord);
-                    disp(['id de l element touche : ' num2str(elem.getId())]);
+                    obj.colorSelection(elem);
+                    obj.Draw();
                 end
             end
         end
@@ -486,6 +499,11 @@ classdef Scene3D < handle
                     obj.camera.upView;                    
                 case 'p' %perspective/ortho
                     obj.camera.switchProjType;
+                case char(27)
+                    if obj.selectObject.id ~= 0
+                        obj.selectObject = obj.mapElements(obj.selectObject.id).reverseSelect(obj.selectObject);
+                        obj.selectObject.id = 0;
+                    end
                 otherwise
                     redraw = false;
             end

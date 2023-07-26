@@ -38,28 +38,25 @@ classdef ElementFace < VisibleElement
             elseif obj.GLGeom.nLayout(2) ~= 0
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
                 gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-            else 
-
+            else
                 if (numel(obj.couleurFaces) == 4)
                     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
                     obj.shader.SetUniform4f(gl, 'uColor', obj.couleurFaces);
                     gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
                 end
+            end
+            if (numel(obj.couleurArretes) == 4)
+                gl.glLineWidth(obj.epaisseurArretes);
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
+                obj.shader.SetUniform4f(gl, 'uColor', obj.couleurArretes);
+                gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+            end
                 
-                if (numel(obj.couleurArretes) == 4)
-                    gl.glLineWidth(obj.epaisseurArretes);
-                    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
-                    obj.shader.SetUniform4f(gl, 'uColor', obj.couleurArretes);
-                    gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-                end
-                    
-                if (numel(obj.couleurPoints) == 4)
-                    gl.glPointSize(obj.epaisseurPoints);
-                    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_POINT);
-                    obj.shader.SetUniform4f(gl, 'uColor', obj.couleurPoints);
-                    gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-                end
-
+            if (numel(obj.couleurPoints) == 4)
+                gl.glPointSize(obj.epaisseurPoints);
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_POINT);
+                obj.shader.SetUniform4f(gl, 'uColor', obj.couleurPoints);
+                gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             end
             CheckError(gl, 'apres le dessin');
             obj.GLGeom.Unbind(gl);
@@ -83,6 +80,14 @@ classdef ElementFace < VisibleElement
 
         function setCouleurPoints(obj, newCol)
             obj.couleurPoints = obj.testNewCol(newCol);
+        end
+
+        function sNew = reverseSelect(obj, s)
+            sNew.id        = obj.getId();
+            sNew.couleur   = obj.couleurArretes;
+            sNew.epaisseur = obj.epaisseurArretes;
+            obj.couleurArretes   = s.couleur;
+            obj.epaisseurArretes = s.epaisseur;
         end
 
     end % fin de methodes defauts

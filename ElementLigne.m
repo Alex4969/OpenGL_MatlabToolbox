@@ -52,6 +52,14 @@ classdef ElementLigne < VisibleElement
             end
         end % fin de setCouleur
 
+        function sNew = reverseSelect(obj, s)
+            sNew.id        = obj.getId();
+            sNew.couleur   = obj.couleurLignes;
+            sNew.epaisseur = obj.epaisseurLignes;
+            obj.couleurLignes   = s.couleur;
+            obj.epaisseurLignes = s.epaisseur;
+        end
+
     end % fin des methodes defauts
 
 end  % fin classe ElementLigne

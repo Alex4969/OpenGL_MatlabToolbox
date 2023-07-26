@@ -98,6 +98,7 @@ classdef (Abstract) VisibleElement < handle
 
     methods (Abstract = true)
         Draw(obj, gl)
+        sNew = reverseSelect(obj, s)
     end % fin des methodes abstraites
 
 end % fin de la classe VisibleElement
