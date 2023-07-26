@@ -504,6 +504,8 @@ classdef Scene3D < handle
                         obj.selectObject = obj.mapElements(obj.selectObject.id).reverseSelect(obj.selectObject);
                         obj.selectObject.id = 0;
                     end
+                case 'i'
+                    obj.framebuffer.screenShot(obj.getGL, obj.canvas.getWidth(), obj.canvas.getHeight());
                 otherwise
                     redraw = false;
             end

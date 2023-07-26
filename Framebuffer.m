@@ -49,6 +49,17 @@ classdef Framebuffer < handle
         function UnBind(~, gl)
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
         end
+
+        function screenShot(obj, gl, w, h)
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,obj.FBOId);
+            buffer = java.nio.ByteBuffer.allocate(3 * w * h);
+            gl.glReadPixels(0, 0, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer);
+            img = typecast(buffer.array, 'uint8');
+            img = reshape(img, [3 w h]);
+            img = permute(img,[2 3 1]);
+            img = rot90(img);
+            imshow(img);
+        end
     end % fin des methodes defauts
 
     methods (Access = private)
