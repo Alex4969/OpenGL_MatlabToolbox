@@ -25,6 +25,9 @@ classdef Scene3D < handle
         selectObject
     end %fin de propriete defaut
     
+    events
+        evt_update
+    end
 
     methods
         function obj = Scene3D(windowSize)
@@ -80,6 +83,7 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'KeyPressed');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
 
+            addlistener(obj,'evt_update',@obj.cbk_update);
         end % fin du constructeur de Scene3D
 
         function AjouterObjet(obj, elem)
@@ -241,6 +245,7 @@ classdef Scene3D < handle
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
+            notify(obj,'evt_update');
         end % fin setCouleurFond
 
         function ApplyTexture(obj, elem, fileName)
@@ -437,6 +442,7 @@ classdef Scene3D < handle
             if obj.mouseButton == 1
                 worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
                 disp(worldCoord)
+                obj.camera.setTarget(worldCoord);
                 if numel(worldCoord) == 3
                     elem = obj.getPointedObject(worldCoord);
                     obj.colorSelection(elem);
@@ -467,6 +473,7 @@ classdef Scene3D < handle
             else
                 if (obj.mouseButton == 3)
                     obj.camera.rotate(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
+                    % obj.lumiere.setPosition([obj.camera.getPosition]);
                 end
             end
             obj.Draw();
@@ -521,6 +528,10 @@ classdef Scene3D < handle
             obj.framebuffer.Resize(obj.getGL(), w, h);
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
+        end
+
+        function cbk_update(obj,source,event)
+            obj.Draw;
         end
     end % fin des methodes callback
 end % fin de la classe Scene3D
