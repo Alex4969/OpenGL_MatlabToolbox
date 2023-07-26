@@ -13,17 +13,21 @@ classdef Framebuffer < handle
     end
 
     methods
-        function obj = Framebuffer(gl, width, height)
+        function obj = Framebuffer(forme)
+            obj.forme = forme;
+            obj.forme.textureId = 0;
+        end
+
+        function Init(obj, gl, width, height)
             obj.generateFramebuffer(gl);
             CheckError(gl, 'Erreur lors de la création du frameBuffer');
-
             obj.addTextureBuffer(gl, width, height);
             CheckError(gl, 'Erreur de la texture frameBuffer');
-
             obj.addRenderBuffer(gl, width, height);
             CheckError(gl, 'Erreur du renderbuffer du frameBuffer');
-
             obj.checkFrameBuffer(gl);
+
+            obj.forme.Init(gl);
 
             obj.UnBind(gl);
         end

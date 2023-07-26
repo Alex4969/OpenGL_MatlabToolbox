@@ -62,8 +62,8 @@ classdef Scene3D < handle
             obj.ajouterProg(obj.gyroscope, "axis");
             obj.grille.Init(gl);
             obj.ajouterProg(obj.grille, "grille");
-            obj.framebuffer.forme.Init(gl);
-            obj.ajouterProg(frameBufferPlan, "framebuffer");
+            obj.framebuffer.Init(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
+            obj.ajouterProg(obj.framebuffer.forme, "framebuffer");
 
             obj.context.release();
 
@@ -356,13 +356,11 @@ classdef Scene3D < handle
             grilleGeom = Geometry(-3, pos, idx);
             obj.grille = Grid(grilleGeom, obj.axes.getFin(), 2);
 
-            obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
             [pos, idx, mapping] = generatePlan(2, 2);
             planGeom = Geometry(0, pos, idx);
             frameBufferPlan = ElementFace(planGeom);
             frameBufferPlan.AddMapping(mapping);
-            frameBufferPlan.textureId = 0;
-            obj.framebuffer.forme = frameBufferPlan;
+            obj.framebuffer = Framebuffer(frameBufferPlan);
         end
 
         function worldCoord = getWorldCoord(obj, clickPos)
