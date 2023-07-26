@@ -111,7 +111,7 @@ chess.setCouleurFaces(rand(1,3));
 % % %texteX.setModelMatrix(MTrans3D([5, 0, 0]))
 % % viewer.AjouterTexte(texteX);
 
-viewer.lumiere.setParam([1 0.01 0.005]); % lumiere ponctuelle d'intensité 1 / (0.01 * dist² + 0.005 * dist + 1)
+viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
 viewer.lumiere.setPosition([0 2 3]);
 viewer.lumiere.setColor([1 1 1]);
 [posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.2);

@@ -46,8 +46,9 @@ float direcLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
 
 float spotLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
     in vec3 lightPos, in vec3 lightDir, in float coneInterne, in float coneExterne)
-// cone de lumière (= projecteur)
+// cone de lumiï¿½re (= projecteur)
 {
+    lightDir = normalize(lightDir);
     //ambient lighting
     float ambient = 0.3f;
 

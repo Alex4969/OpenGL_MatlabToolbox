@@ -10,8 +10,9 @@ classdef Light < handle
 
         directionLumiere    % 1x3 direction souhaité de la lumière (pour la lumière directionel ou spot)
         paramsLumiere       % [t a b] t = type (0 : desactivé, 1 : pointLight, 2 : directionel, 3 : spotLight)
-                            % a et b sont les parametre d'intensité pour le pointLight
+                            % a et b sont les parametre d'intensité pour le pointLight.
                             % a et b sont les cos des angles pour la spotLight
+        oldType             % sauvegarde le type de lumière avant de désactiver
     end
     
     methods
@@ -71,6 +72,42 @@ classdef Light < handle
             param = obj.paramsLumiere;
         end
 
-    end % fin des methodes defauts
+        function desactivate(obj)
+            if obj.paramsLumiere(1) > 0
+                obj.oldType = obj.paramsLumiere(1);
+            end
+            obj.paramsLumiere(1) = 0;
+        end % fin de desactivate
 
+        function activate(obj)
+            if obj.oldType > 0
+                obj.paramsLumiere(1) = obj.oldType;
+            end
+        end % fin de activate
+
+        function dotLight(obj, a, b)
+            if nargin == 1
+                a = 0.01; b = 0;
+            end
+            obj.paramsLumiere = [1 a b];
+        end % fin de dot light
+
+        function directionalLight(obj, direction)
+            if nargin == 1
+                direction = [0 -1 0];
+            end
+            obj.paramsLumiere = [2 0 0];
+            obj.directionLumiere = direction;
+        end % fin de directionalLight
+
+        function spotLight(obj, angle, direction)
+            if nargin == 1
+                angle = 20; direction = [0 -1 0];
+            end
+            angles = [angle angle*1.3];
+            angles = cos(deg2rad(angles));
+            obj.paramsLumiere = [3 angles];
+            obj.directionLumiere = direction;
+        end % fin de spotLight
+    end % fin des methodes defauts
 end % fin classe light
