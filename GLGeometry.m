@@ -11,25 +11,45 @@ classdef GLGeometry < handle
 
         %%% Definition des Vertex Attribute
         %%% Contient le nombre de valeurs pour cet attribut ou 0 si il n'y est pas
-        nPos                    % nombre de valeur utile pour définir la position (généralement 2 ou 3, défaut 3)
-        nColor                  % nombre de valeur utile pour définir la couleur (généralement 3 ou 4, défaut 0)
-        nTextureMapping         % nombre de valeur utile pour définir le mapping (généralement 2, défaut 0)
-        nNormals                % nombre de valeur utile pour définir les normales (généralement 3, défaut 0)
-        newLayout logical       % vrai s'il faut changer le layout OpenGL. le changement se fait dans le bind si besoin.
-                                % definir un nouveau layout pour OpenGL necessite un contexte
+        vertexData              % doit etre de la meme hauteur que Geom.listePoints
+                                % contient les composantes de couleurs / mapping / normales
+        nLayout
     end
     
     methods
 
-        function obj = GLGeometry(gl, sommets, indices)
-            %GLGEOMETRIE
+        function obj = GLGeometry(sommets)
+            obj.vertexData = sommets;
+            nPos = size(sommets, 2);
+            obj.nLayout = [nPos, 0, 0, 0];
+        end
 
-            obj.SetVertexAttribSize(3, 0, 0, 0); %taille des vertex attribute par defaut
-            obj.newLayout = true;
-
+        function addDataToBuffer(obj, mat, pos)
+            % ADDDATATOBUFFER : modifie vertexData pour qu'il continnent les informations ajouter dans l'ordre :
+            % pos, couleur, mapping, normales. Si on ajoute une composant qui existe deja, elle est remplacé par la nouvelle
+            if size(obj.vertexData, 1) ~= size(mat, 1)
+                warning('dimension incompatible')
+                return
+            end
+            nAvant = 0;
+            for i=1:(pos-1)
+                nAvant = nAvant + obj.nLayout(i);
+            end
+            if obj.nLayout(pos) ~= 0
+                obj.vertexData = [obj.vertexData(:,1:nAvant) obj.vertexData(:,(nAvant+obj.nLayout(pos)+1):size(obj.vertexData, 2))];
+            end
+            obj.vertexData = [obj.vertexData(:,1:nAvant) mat obj.vertexData(:,(nAvant+1):size(obj.vertexData, 2))];
+            obj.nLayout(pos) = size(mat, 2);
+            if ~isempty(obj.VBOId)
+                warning('lobjet doit etre redefini')
+            end
+        end
+        
+        function CreateGLObject(obj, gl, indices)
+            %INIT
             obj.generateVertexArray(gl);
             CheckError(gl, 'Erreur pour la creation du vao');
-            obj.generateSommets(gl, sommets);
+            obj.generateSommets(gl, obj.vertexData);
             CheckError(gl, 'Erreur pour la creation du arrayBuffer');
             obj.generateIndices(gl, indices);
             CheckError(gl, 'Erreur pour la creation de l indexBuffer');
@@ -39,28 +59,11 @@ classdef GLGeometry < handle
             obj.Unbind(gl);
         end % fin du constructeur de GLgeometry
 
-        function SetVertexAttribSize(obj, nPos, nColor, nTextureMapping, nNormals)
-            if nargin < 2, nPos = 3; end
-            if nargin < 3, nColor = 0; end
-            if nargin < 4, nTextureMapping = 0; end
-            if nargin < 5, nNormals = 0; end
-            obj.nPos = nPos;
-            obj.nColor = nColor;
-            obj.nTextureMapping = nTextureMapping;
-            obj.nNormals = nNormals;
-            obj.newLayout = true;
-        end % fin de setAttribSize
-
         function Bind(obj, gl)
             gl.glBindVertexArray(obj.VAOId);
-            CheckError(gl, '1');
+            CheckError(gl, 'erreur Bind VAO');
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
-            CheckError(gl, '2');
-            if (obj.newLayout == true)
-                obj.declareVertexAttrib(gl);
-            end
-            CheckError(gl, '3');
-            %gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0);
+            CheckError(gl, 'erreur Bind VBO');
         end % fin de bing
 
         function Unbind(~, gl)
@@ -117,15 +120,11 @@ classdef GLGeometry < handle
 
         function declareVertexAttrib(obj, gl)
             %DECLAREVERTEXATTRIB : definit les vertex attribute pour OpenGL. Fait plusieurs appel a setVertexAttrib
-            taille = obj.nPos + obj.nColor + obj.nTextureMapping + obj.nNormals;
-            taille = taille * 4;
-            index = 0;
-            offset = 0;
-            [index, offset] = obj.setVertexAttrib(gl, obj.nPos, index, offset, taille);
-            [index, offset] = obj.setVertexAttrib(gl, obj.nColor, index, offset, taille);
-            [index, offset] = obj.setVertexAttrib(gl, obj.nTextureMapping, index, offset, taille);
-            [~, ~] = obj.setVertexAttrib(gl, obj.nNormals, index, offset, taille);
-            obj.newLayout = false;
+            nbOctet = sum(obj.nLayout) * 4;
+            index = 0; offset = 0;
+            for i=1:4
+                [index, offset] = obj.setVertexAttrib(gl, obj.nLayout(i), index, offset, nbOctet);
+            end
         end % fin de declareVertexAttrib
 
         function [index, offset] = setVertexAttrib(~, gl, nAttrib, index, offset, taille)

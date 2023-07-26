@@ -23,11 +23,6 @@ classdef ElementFace < VisibleElement
             obj.textureId = -1;
         end
 
-        function Init(obj, gl)
-            sommets = [ obj.Geom.listePoints obj.Geom.composanteSupp ];
-            obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
-        end
-
         function Draw(obj, gl)
             %DRAW dessine cet objet
             if obj.visible == 0
@@ -40,7 +35,7 @@ classdef ElementFace < VisibleElement
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
                 obj.shader.SetUniform1i(gl, 'uTexture', obj.textureId);
                 gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-            elseif obj.GLGeom.nColor ~= 0
+            elseif obj.GLGeom.nLayout(2) ~= 0
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
                 gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             else 

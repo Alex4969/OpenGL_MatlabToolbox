@@ -61,6 +61,7 @@ classdef Grid < ElementLigne
         end % fin de setAxes
 
         function setGrid(obj, gl, newBorne, newEcart)
+            disp('deprecated') % A REFAIRE
             [mat, ind] = Grid.generateGrid(newBorne, newEcart);
             obj.ChangeGeom(gl, mat, ind);
         end % fin de setGrid

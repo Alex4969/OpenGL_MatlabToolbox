@@ -18,11 +18,6 @@ classdef ElementLigne < VisibleElement
             obj.couleurLignes   = couleur;
         end % fin du constructeur ElementLigne
 
-        function Init(obj, gl)
-            sommets = [ obj.Geom.listePoints obj.Geom.composanteSupp ];
-            obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
-        end % fin de Init
-
         function Draw(obj, gl)
             %DRAW dessine cet objet
             if obj.visible == 0
@@ -33,7 +28,7 @@ classdef ElementLigne < VisibleElement
 
             gl.glLineWidth(obj.epaisseurLignes);
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
-            if (obj.GLGeom.nColor == 0)
+            if (obj.GLGeom.nLayout(2) == 0)
                 obj.shader.SetUniform4f(gl, 'uColor', obj.couleurLignes);
             end
             gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);

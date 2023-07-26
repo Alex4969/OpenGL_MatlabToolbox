@@ -12,18 +12,12 @@ classdef Axes < ElementLigne
         function obj = Axes(id, deb, fin)
             %AXES Construct an instance of this class
             [pos, ind, col] = Axes.generateAxes(deb, fin);
-            
-            axesGeom = Geometry(id, pos, ind, col);
+            axesGeom = Geometry(id, pos, ind);
             obj@ElementLigne(axesGeom);
+            obj.AddColor(col);
             obj.debut = deb;
             obj.fin = fin;
         end % fin du constructeur Axes
-
-        function Init(obj, gl)
-            sommets = [ obj.Geom.listePoints obj.Geom.composanteSupp ];
-            obj.GLGeom = GLGeometry(gl, sommets, obj.Geom.listeConnection);
-            obj.setAttributeSize(3, 3, 0, 0);
-        end % fin de Init
 
         function deb = getDebut(obj)
             deb = obj.debut;
@@ -34,9 +28,9 @@ classdef Axes < ElementLigne
         end
 
         function setAxes(obj, gl, newDeb, newFin)
+            disp('Cette fonction doit etre refaite') %% A REFAIRE
             [pos, ind, col] = Axes.generateAxes(newDeb, newFin);
             obj.ChangeGeom(gl, pos, ind, col);
-            obj.setAttributeSize(3, 3, 0, 0);
             obj.debut = newDeb;
             obj.fin = newFin;
         end % fin de setAxes

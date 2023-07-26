@@ -67,11 +67,11 @@ classdef Scene3D < handle
 
             obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
             [pos, idx, mapping] = generatePlan(2, 2);
-            planGeom = Geometry(0, pos, idx, mapping);
+            planGeom = Geometry(0, pos, idx);
             frameBufferPlan = ElementFace(planGeom);
+            frameBufferPlan.AddMapping(mapping);
             frameBufferPlan.Init(gl);
             frameBufferPlan.textureId = 0;
-            frameBufferPlan.setAttributeSize(3, 0, 2, 0);
             obj.ajouterProg(frameBufferPlan, "framebuffer");
             obj.framebuffer.forme = frameBufferPlan;
 
@@ -89,7 +89,7 @@ classdef Scene3D < handle
 
         end % fin du constructeur de Scene3D
 
-        function AjouterObjet(obj, elem, nPos, nColor, nTextureMapping, nNormals)
+        function AjouterObjet(obj, elem)
             %AJOUTEROBJET Initialise l'objet avec les fonction gl
             %puis l'ajoute a la liste d'objet a dessiner
             if (~isa(elem, 'VisibleElement'))
@@ -98,15 +98,14 @@ classdef Scene3D < handle
             end
             gl = obj.getGL();
             elem.Init(gl);
-            if (nargin > 2)
-                elem.setAttributeSize(nPos, nColor, nTextureMapping, nNormals);
-            end
             obj.listeElements{ 1 , numel(obj.listeElements)+1 } = elem; %TODO : placer au bon endroit
+            obj.reOrderElem();
             obj.choixProg(elem);
             obj.context.release();
         end % fin de ajouterObjet
 
         function AjouterTexte(obj, elem)
+            disp('depracated') % a refaire
             if isa(elem, "ElementTexte")
                 slot = obj.getTextureId(elem.police.name + ".png", true);
                 elem.textureId = slot;
@@ -242,7 +241,7 @@ classdef Scene3D < handle
         end % fin setCouleurFond
 
         function ApplyTexture(obj, elem, fileName)
-            if (isa(elem, 'ElementFace') && elem.GLGeom.nTextureMapping ~= 0)
+            if (isa(elem, 'ElementFace') && elem.GLGeom.nLayout(3) ~= 0)
                 if fileName == ""
                     elem.textureId = -1;
                     obj.ajouterProg(elem, "defaut");
@@ -295,9 +294,9 @@ classdef Scene3D < handle
 
         function choixProg(obj, elem)
             attrib = elem.getAttrib(); % 1x3 logical : color, mapping, normal
-            if (attrib(1) == 1)
+            if (attrib(2) == 1)
                 choix = "colored";
-            elseif attrib(3) == 1
+            elseif attrib(4) == 1
                 choix = "normed";
             else
                 choix = "defaut";
@@ -417,7 +416,7 @@ classdef Scene3D < handle
                 disp(worldCoord)
                 if numel(worldCoord) == 3
                     elem = obj.getPointedObject(worldCoord);
-                    disp(elem.getId());
+                    disp(['id de l element touche : ' num2str(elem.getId())]);
                 end
             end
         end

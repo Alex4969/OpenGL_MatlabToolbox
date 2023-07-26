@@ -7,8 +7,6 @@ classdef (Abstract) VisibleElement < handle
         shader ShaderProgram
 
         visible logical
-        graphicData             % doit etre de la meme hauteur que Geom.listePoints
-                                % contient les composantes de couleurs
     end
     
     methods
@@ -16,16 +14,12 @@ classdef (Abstract) VisibleElement < handle
         function obj = VisibleElement(aGeom)
             %VISIBLEELEMENT
             obj.Geom = aGeom;
+            obj.GLGeom = GLGeometry(obj.Geom.listePoints);
             obj.visible = true;
         end % fin du constructeur de VisibleElement
 
-        function setAttributeSize(obj, nPos, nColor, nTextureMapping, nNormals)
-            obj.GLGeom.SetVertexAttribSize(nPos, nColor, nTextureMapping, nNormals);
-        end
-
         function res = getAttrib(obj)
-            res = [obj.GLGeom.nColor obj.GLGeom.nTextureMapping obj.GLGeom.nNormals];
-            res = logical(res);
+            res = logical(obj.GLGeom.nLayout);
         end
 
         function model = getModelMatrix(obj)
@@ -60,15 +54,20 @@ classdef (Abstract) VisibleElement < handle
         end % fin de getPosition
 
         function AddColor(obj, matColor)
-        end
-
-        function AddNormales(obj, matNormales)
-        end
-
-        function generateNormales(obj)
+            obj.GLGeom.addDataToBuffer(matColor, 2);
         end
 
         function AddMapping(obj, matMapping)
+            obj.GLGeom.addDataToBuffer(matMapping, 3);
+        end
+
+        function AddNormales(obj, matNormales)
+            obj.GLGeom.addDataToBuffer(matNormales, 4);
+        end
+
+        function GenerateNormales(obj)
+            normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
+            obj.GLGeom.addDataToBuffer(normales, 4);
         end
 
         function id = getId(obj)
@@ -79,13 +78,23 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom.id = newId;
         end
 
+        function toString(obj)
+            nbPoint = size(obj.Geom.listePoints, 1);
+            nbTriangle = numel(obj.Geom.listeConnection)/3;
+            disp(['L objet contient ' num2str(nbPoint) ' points et ' num2str(nbTriangle) ' triangles']);
+            disp(['Le vertex Buffer contient : ' obj.GLGeom.nLayout(1) ' valeurs pour la position, ' obj.GLGeom.nLayout(2) ' valeurs pour la couleur, ' obj.GLGeom.nLayout(3) ' valeurs pour le texture mapping, ' obj.GLGeom.nLayout(4) ' valeurs pour les normales'])
+        end
+
         function delete(obj, gl)
             obj.GLGeom.delete(gl);
         end % fin de delete
+
+        function Init(obj, gl)
+            obj.GLGeom.CreateGLObject(gl, obj.Geom.listeConnection);
+        end
     end % fin des methodes defauts
 
     methods (Abstract = true)
-        Init(obj, gl)
         Draw(obj, gl)
     end % fin des methodes abstraites
 
