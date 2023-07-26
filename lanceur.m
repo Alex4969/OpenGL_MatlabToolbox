@@ -18,7 +18,7 @@ pyramide1 = ElementFace(pyraGeom);
 pyramide1.setModelMatrix(MTrans3D([-10 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 pyramide1.couleurArretes = [1 0 0 1];
 pyramide1.couleurFaces = [1 1 1 1];
-pyramide1.epaisseurArretes=5;
+pyramide1.setEpaisseurArretes(5);
 viewer.AjouterObjet(pyramide1);
 
 % pyramide avec une couleur par sommet

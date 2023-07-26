@@ -117,7 +117,11 @@ classdef Scene3D < handle
             obj.framebuffer.Bind(gl);
 
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
+            gl.glClear(gl.GL_STENCIL_BUFFER_BIT);
             gl.glEnable(gl.GL_DEPTH_TEST);
+            gl.glEnable(gl.GL_STENCIL_TEST);
+            gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, gl.GL_KEEP);
+            gl.glStencilMask(255);
 
             %%afficher le gysmo
             gl.glViewport(0, 0, obj.canvas.getHeight()/10, obj.canvas.getHeight()/10);
@@ -150,8 +154,10 @@ classdef Scene3D < handle
                     progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
                     progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
                 end
+                gl.glStencilFunc(gl.GL_ALWAYS, elem.getId(), 255);
                 elem.Draw(gl);
             end
+            gl.glStencilFunc(gl.GL_ALWAYS, 0, 255);
             for i=1:numel(obj.listeTextes)
                 elem = obj.listeTextes{i};
                 if i == 1
@@ -183,6 +189,7 @@ classdef Scene3D < handle
 
             obj.framebuffer.UnBind(gl);
             gl.glDisable(gl.GL_DEPTH_TEST);
+            gl.glDisable(gl.GL_STENCIL_TEST);
             progAct = obj.framebuffer.forme.shader;
             progAct.Bind(gl);
             obj.framebuffer.forme.Draw(gl);
@@ -259,24 +266,6 @@ classdef Scene3D < handle
             obj.ajouterProg(elem, "grille");
             obj.lumiere.setForme(elem);
             obj.context.release();
-        end
-
-        function ModifyGrid(obj, newBorne, newEcart)
-            obj.grille.setGrid(obj.getGL(), newBorne, newEcart);
-            obj.context.release();
-        end
-
-        function ModifyAxes(obj, newDeb, nexFin)
-            obj.axes.setAxes(obj.getGL(), newDeb, nexFin);
-            obj.context.release();
-        end
-
-        function AddText(obj, elem, str)
-            elem.AddText(obj.getGL(), str);
-        end
-
-        function ChangeText(obj, elem, str)
-            elem.ChangeText(obj.getGL(), str);
         end
     end % fin des methodes defauts
 
@@ -372,17 +361,20 @@ classdef Scene3D < handle
             gl = obj.getGL();
             obj.framebuffer.Bind(gl);
 
-            r = 1; % click radius (square box) px
+            r = 2; % click radius (square box) px
             w = 2*r+1; % square side length px
 
             buffer = java.nio.FloatBuffer.allocate(w*w);
+            bufferStencil = java.nio.ByteBuffer.allocate(1);
 
             sz = [obj.canvas.getWidth() ; obj.canvas.getHeight()];
             clickPos(2) = sz(2) - clickPos(2);
             gl.glReadPixels(clickPos(1)-r, clickPos(2)-r, w, w, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
+            gl.glReadPixels(clickPos(1), clickPos(2), 1, 1, gl.GL_STENCIL_INDEX, gl.GL_BYTE, bufferStencil);
             profondeur = typecast(buffer.array(), 'single');
-
             n = (profondeur == 1);
+
+            stencil = typecast(bufferStencil.array(), 'int8')
 
             if all(n, "all")
                 worldCoord = 0;
@@ -432,12 +424,10 @@ classdef Scene3D < handle
             else
                 obj.selectObject = elem.reverseSelect(obj.selectObject);
             end
-        end
-                
+        end % fin de colorSelection  
     end % fin des methodes privees
 
-    % callback
-    methods
+    methods % callback
         function cbk_MousePressed(obj,source,event)
             %disp('MousePressed')
             obj.startX=event.getPoint.getX();
@@ -533,5 +523,4 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
     end % fin des methodes callback
-
 end % fin de la classe Scene3D

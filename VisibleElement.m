@@ -35,19 +35,6 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom.AddToModelMatrix(matrix, after);
         end
 
-        function ChangeGeom(obj, gl, pos, ind, supp)
-            obj.GLGeom.delete(gl);
-            delete(obj.GLGeom);
-            delete(obj.Geom);
-            if nargin < 5
-                obj.Geom = Geometry(pos, ind);
-                obj.GLGeom = GLGeometry(gl, pos, ind);
-            else
-                obj.Geom = Geometry(pos, ind, supp);
-                obj.GLGeom = GLGeometry(gl, [pos supp], ind);
-            end
-        end % fin de changeGeom
-
         function pos = getPosition(obj)
             pos = obj.Geom.modelMatrix(1:3, 4);
             pos = pos';
