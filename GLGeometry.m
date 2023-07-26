@@ -13,7 +13,8 @@ classdef GLGeometry < handle
         %%% Contient le nombre de valeurs pour cet attribut ou 0 si il n'y est pas
         vertexData              % doit etre de la meme hauteur que Geom.listePoints
                                 % contient les composantes de couleurs / mapping / normales
-        nLayout
+        nLayout                 % [nPos, nColor, NTextureMapping, nNormales] : compte le nombre de valeurs pour chaque attribut
+        updateNeeded logical
     end
     
     methods
@@ -22,7 +23,8 @@ classdef GLGeometry < handle
             obj.vertexData = sommets;
             nPos = size(sommets, 2);
             obj.nLayout = [nPos, 0, 0, 0];
-        end
+            obj.updateNeeded = false;
+        end % fin du constructeur GLGeometry
 
         function addDataToBuffer(obj, mat, pos)
             % ADDDATATOBUFFER : modifie vertexData pour qu'il continnent les informations ajouter dans l'ordre :
@@ -40,10 +42,10 @@ classdef GLGeometry < handle
             end
             obj.vertexData = [obj.vertexData(:,1:nAvant) mat obj.vertexData(:,(nAvant+1):size(obj.vertexData, 2))];
             obj.nLayout(pos) = size(mat, 2);
-            if ~isempty(obj.VBOId)
-                warning('lobjet doit etre redefini')
+            if ~isempty(obj.VBOId) % les modifications seront visibles au prochain draw de scene3D
+                obj.updateNeeded = true;
             end
-        end
+        end % fin de addDataToBuffer
         
         function CreateGLObject(obj, gl, indices)
             %INIT
@@ -57,13 +59,20 @@ classdef GLGeometry < handle
             CheckError(gl, 'Erreur pour la declaration des vertex attributes');
 
             obj.Unbind(gl);
-        end % fin du constructeur de GLgeometry
+        end % fin de createGLObject
 
         function Bind(obj, gl)
+            %BIND Met en contexte le vertexBuffer. S'il a été modifié, applique la modification
             gl.glBindVertexArray(obj.VAOId);
             CheckError(gl, 'erreur Bind VAO');
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
             CheckError(gl, 'erreur Bind VBO');
+            if obj.updateNeeded
+                obj.declareVertexAttrib(gl);
+                CheckError(gl, 'Erreur pour la redefinition des vertex attributes');
+                obj.modifyVertexBuffer(gl, obj.vertexData);
+                obj.updateNeeded = false;
+            end
         end % fin de bing
 
         function Unbind(~, gl)
@@ -94,16 +103,20 @@ classdef GLGeometry < handle
 
         function generateSommets(obj, gl, sommets)
             %GENERATESOMMETS : Creer le VBO a partir de la liste de sommets de la géometrie
-            sommetsData = java.nio.FloatBuffer.allocate(numel(sommets));
-            sommets = sommets';
-            sommetsData.put(sommets(:));
-            sommetsData.rewind();
             obj.VBOBuffer = java.nio.IntBuffer.allocate(1);
             gl.glGenBuffers(1, obj.VBOBuffer);
             obj.VBOId = typecast(obj.VBOBuffer.array(), 'uint32');
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
-            gl.glBufferData(gl.GL_ARRAY_BUFFER, numel(sommets) * 4, sommetsData, gl.GL_STATIC_DRAW);
+            obj.modifyVertexBuffer(gl, sommets);
         end % fin de generateSommets
+
+        function modifyVertexBuffer(~, gl, sommets)
+            sommetsData = java.nio.FloatBuffer.allocate(numel(sommets));
+            sommets = sommets';
+            sommetsData.put(sommets(:));
+            sommetsData.rewind();
+            gl.glBufferData(gl.GL_ARRAY_BUFFER, numel(sommets) * 4, sommetsData, gl.GL_STATIC_DRAW);
+        end
 
         function generateIndices(obj, gl, indices)
             %GENERATEINDICIES : Creer le EBO a partir de la liste de connectivité de la géometrie
