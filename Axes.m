@@ -9,12 +9,9 @@ classdef Axes < ElementLigne
     
     methods
 
-        function obj = Axes(id, deb, fin)
+        function obj = Axes(aGeom, deb, fin)
             %AXES Construct an instance of this class
-            [pos, ind, col] = Axes.generateAxes(deb, fin);
-            axesGeom = Geometry(id, pos, ind);
-            obj@ElementLigne(axesGeom);
-            obj.AddColor(col);
+            obj@ElementLigne(aGeom);
             obj.debut = deb;
             obj.fin = fin;
         end % fin du constructeur Axes

@@ -43,10 +43,8 @@ classdef Scene3D < handle
 
             obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light([0, 3, 3], [1 1 1]);
-            obj.axes = Axes(-1, -100, 100);
-            obj.gyroscope = Axes(-2, 0, 0.6);
-            obj.gyroscope.setEpaisseur(4);
-            obj.grille = Grid(-3, obj.axes.getFin(), 2);
+            
+            obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
             obj.listeShaders = dictionary;
             obj.listeTextures = dictionary;
@@ -64,16 +62,8 @@ classdef Scene3D < handle
             obj.ajouterProg(obj.gyroscope, "axis");
             obj.grille.Init(gl);
             obj.ajouterProg(obj.grille, "grille");
-
-            obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
-            [pos, idx, mapping] = generatePlan(2, 2);
-            planGeom = Geometry(0, pos, idx);
-            frameBufferPlan = ElementFace(planGeom);
-            frameBufferPlan.AddMapping(mapping);
-            frameBufferPlan.Init(gl);
-            frameBufferPlan.textureId = 0;
+            obj.framebuffer.forme.Init(gl);
             obj.ajouterProg(frameBufferPlan, "framebuffer");
-            obj.framebuffer.forme = frameBufferPlan;
 
             obj.context.release();
 
@@ -346,6 +336,33 @@ classdef Scene3D < handle
                     slot = -1;
                 end
             end
+        end
+
+        function generateInternalObject(obj)
+            tailleAxe = 50;
+            [pos, idx, color] = Axes.generateAxes(-tailleAxe, tailleAxe);
+            axesGeom = Geometry(-1, pos, idx);
+            obj.axes = Axes(axesGeom, -tailleAxe, tailleAxe);
+            obj.axes.AddColor(color);
+
+            tailleGysmo = 0.5;
+            [pos, idx, color] = Axes.generateAxes(0, tailleGysmo);
+            gysmoGeom = Geometry(-2, pos, idx);
+            obj.gyroscope = Axes(gysmoGeom, 0, tailleGysmo);
+            obj.gyroscope.setEpaisseur(4);
+            obj.gyroscope.AddColor(color);
+
+            [pos, idx] = Grid.generateGrid(obj.axes.getFin(), 2);
+            grilleGeom = Geometry(-3, pos, idx);
+            obj.grille = Grid(grilleGeom, obj.axes.getFin(), 2);
+
+            obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
+            [pos, idx, mapping] = generatePlan(2, 2);
+            planGeom = Geometry(0, pos, idx);
+            frameBufferPlan = ElementFace(planGeom);
+            frameBufferPlan.AddMapping(mapping);
+            frameBufferPlan.textureId = 0;
+            obj.framebuffer.forme = frameBufferPlan;
         end
 
         function worldCoord = getWorldCoord(obj, clickPos)
