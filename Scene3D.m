@@ -7,7 +7,7 @@ classdef Scene3D < handle
         context             % GLContext
         framebuffer Framebuffer
 
-        listeElements       % cell Array contenant les objets 3D de la scenes
+        mapElements         % map contenant les objets 3D de la scenes
         listeShaders        % dictionnaire qui lie le nom du fichier glsl a son programme
         listeTextures       % dictionnaire qui lie le nom de l'image a sa texture
         listeTextes         % cellArray contenant les textes a afficher
@@ -46,6 +46,7 @@ classdef Scene3D < handle
             
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
+            obj.mapElements = containers.Map('KeyType','int32','ValueType','any');
             obj.listeShaders = dictionary;
             obj.listeTextures = dictionary;
 
@@ -88,8 +89,8 @@ classdef Scene3D < handle
             end
             gl = obj.getGL();
             elem.Init(gl);
-            obj.listeElements{ 1 , numel(obj.listeElements)+1 } = elem; %TODO : placer au bon endroit
-            obj.reOrderElem();
+            obj.mapElements(elem.getId()) = elem;
+            %obj.listeElements{ 1 , numel(obj.listeElements)+1 } = elem;
             obj.choixProg(elem);
             obj.context.release();
         end % fin de ajouterObjet
@@ -134,9 +135,11 @@ classdef Scene3D < handle
                 obj.drawInternalObject(gl, obj.lumiere.forme);
             end
             
-            for i= 1:numel(obj.listeElements)
-                if (i == 1 || progAct ~= obj.listeElements{i}.shader)
-                    progAct = obj.listeElements{i}.shader;
+            listeElem = obj.orderElem();
+            for i= 1:numel(listeElem)
+                elem = listeElem{i};
+                if (i == 1 || progAct ~= elem.shader)
+                    progAct = elem.shader;
                     progAct.Bind(gl);
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
                     progAct.SetUniform3f  (gl, 'uCamPos',     obj.camera.getPosition());
@@ -145,7 +148,7 @@ classdef Scene3D < handle
                     progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
                     progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
                 end
-                obj.listeElements{i}.Draw(gl);
+                elem.Draw(gl);
             end
             for i=1:numel(obj.listeTextes)
                 elem = obj.listeTextes{i};
@@ -191,8 +194,9 @@ classdef Scene3D < handle
             %DELETE Supprime les objets de la scene
             disp('deleting Scene3D...')
             gl = obj.getGL();
-            for i=1:numel(obj.listeElements)
-                obj.listeElements{i}.delete(gl);
+            listeElem = values(obj.mapElements);
+            for i=1:numel(listeElem)
+                listeElem{i}.delete(gl);
             end
             if numEntries(obj.listeShaders) ~= 0
                 progs = values(obj.listeShaders);
@@ -361,7 +365,7 @@ classdef Scene3D < handle
             frameBufferPlan = ElementFace(planGeom);
             frameBufferPlan.AddMapping(mapping);
             obj.framebuffer = Framebuffer(frameBufferPlan);
-        end
+        end % fin de generateInternalObject
 
         function worldCoord = getWorldCoord(obj, clickPos)
             gl = obj.getGL();
@@ -397,23 +401,25 @@ classdef Scene3D < handle
             obj.context.release();
         end % fin de getWorldCoord
 
-        function reOrderElem(obj)
-            %REORDERELEM : trie les objet du plus loin au plus pres, indispensable pour la transparence
-            distance = zeros(1, numel(obj.listeElements));
-            for i=1:numel(obj.listeElements)
-                distance(i) = norm(obj.listeElements{i}.getPosition() - obj.camera.getPosition());
+        function listeTrie = orderElem(obj)
+            %ORDERELEM : trie les objet du plus loin au plus pres, indispensable pour la transparence
+            listeTrie = values(obj.mapElements);
+            distance  = zeros(1, numel(listeTrie));
+            for i=1:numel(listeTrie)
+                distance(i) = norm(listeTrie{i}.getPosition() - obj.camera.getPosition());
             end
             [~, newOrder] = sort(distance, 'descend');
-            obj.listeElements = obj.listeElements(newOrder);
-        end % fin de reOrderElem
+            listeTrie = listeTrie(newOrder);
+        end % fin de orderElem
 
         function elem = getPointedObject(obj, mouseCoord)
-            distance = zeros(1, numel(obj.listeElements));
-            for i=1:numel(obj.listeElements)
-                distance(i) = norm(obj.listeElements{i}.getPosition() - mouseCoord);
+            listeElem = values(obj.mapElements);
+            distance = zeros(1, numel(listeElem));
+            for i=1:numel(listeElem)
+                distance(i) = norm(listeElem{i}.getPosition() - mouseCoord);
             end
             [~, idx] = min(distance);
-            elem = obj.listeElements{idx};
+            elem = listeElem{idx};
         end % fin de getPointedObject
                 
     end % fin des methodes privees
@@ -460,7 +466,6 @@ classdef Scene3D < handle
                     obj.camera.rotate(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
                 end
             end
-            obj.reOrderElem();
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end

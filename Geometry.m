@@ -4,7 +4,7 @@ classdef Geometry < handle
     %vrai classe Geometrie en fin de projet
     
     properties
-        id  int16           % id unique pour chaque géometrie
+        id int32            % id unique pour chaque géometrie, defini par le programmeur
         enable logical      % contribu ou non au lancer de ratoyon
         listePoints         % matrice nx3 ou nx2 contenant les points dans l'espace
         listeConnection     % matrice ligne donne la connectivité en triangle des points de la liste de points

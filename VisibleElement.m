@@ -82,8 +82,10 @@ classdef (Abstract) VisibleElement < handle
             nbPoint = size(obj.Geom.listePoints, 1);
             nbTriangle = numel(obj.Geom.listeConnection)/3;
             disp(['L objet contient ' num2str(nbPoint) ' points et ' num2str(nbTriangle) ' triangles']);
-            disp(['Le vertex Buffer contient : ' obj.GLGeom.nLayout(1) ' valeurs pour la position, ' obj.GLGeom.nLayout(2) ' valeurs pour la couleur, ' obj.GLGeom.nLayout(3) ' valeurs pour le texture mapping, ' obj.GLGeom.nLayout(4) ' valeurs pour les normales'])
-        end
+            disp(['Le vertex Buffer contient : ' num2str(obj.GLGeom.nLayout(1)) ' valeurs pour la position, ' ...
+                num2str(obj.GLGeom.nLayout(2)) ' valeurs pour la couleur, ' num2str(obj.GLGeom.nLayout(3)) ...
+                ' valeurs pour le texture mapping, ' num2str(obj.GLGeom.nLayout(4)) ' valeurs pour les normales'])
+        end % fin de toString
 
         function delete(obj, gl)
             obj.GLGeom.delete(gl);
