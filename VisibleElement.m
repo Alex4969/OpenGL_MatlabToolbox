@@ -48,11 +48,11 @@ classdef (Abstract) VisibleElement < handle
             obj.GLGeom.addDataToBuffer(matMapping, 3);
         end
 
-        function AddNormales(obj, matNormales)
+        function AddNormals(obj, matNormales)
             obj.GLGeom.addDataToBuffer(matNormales, 4);
         end
 
-        function GenerateNormales(obj)
+        function GenerateNormals(obj)
             normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
             obj.GLGeom.addDataToBuffer(normales, 4);
         end

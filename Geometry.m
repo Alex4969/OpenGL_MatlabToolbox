@@ -23,13 +23,6 @@ classdef Geometry < handle
                 obj.enable = 1;
                 obj.listePoints = points;
                 obj.listeConnection = index;
-%                if nargin == 4
- %                   if size(points, 1) ~= size(supp, 1)
-  %                      warning('le nombre de ligne de supp et points doit etre similaire !')
-   %                 else
-    %                    obj.composanteSupp = supp;
-     %               end
-      %          end
             end
             obj.modelMatrix = eye(4);
         end % fin du constructeur
@@ -57,11 +50,6 @@ classdef Geometry < handle
                 obj.modelMatrix = model * obj.modelMatrix;
             end
         end % fin de addToModelMatrix
-
-%        function GenerateNormales(obj)
- %           normales = calculVertexNormals(obj.listePoints, obj.listeConnection);
-  %          obj.composanteSupp = [obj.composanteSupp normales];
-   %     end
 
         function setModelMatrix(obj, model)
             obj.modelMatrix = model;
