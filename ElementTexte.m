@@ -35,6 +35,8 @@ classdef ElementTexte < VisibleElement
                 mod(2, 4) = mod(2, 4) * camAttrib.maxY;
                 mod(3, 4) = -camAttrib.near;
                 mod  = mod * MScale3D(camAttrib.coef);
+            elseif obj.type == 'N'
+                mod = mod / camAttrib.rot;
             end
             obj.shader.SetUniformMat4(gl, 'uModelMatrix', mod);
 
@@ -48,7 +50,7 @@ classdef ElementTexte < VisibleElement
         function sNew = reverseSelect(obj, s)
             sNew.id        = obj.getId();
             sNew.couleur   = obj.couleurTexte;
-            sNew.epaisseur = 6;
+            sNew.epaisseur = s.epaisseur;
             obj.couleurTexte = s.couleur;
         end % fin de reverseSlect
     end

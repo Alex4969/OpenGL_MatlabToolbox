@@ -148,6 +148,17 @@ classdef Camera < handle
             end
         end
 
+        function R = getRotation(obj)
+            sx=norm(obj.viewMatrix(1:3,1));
+            sy=norm(obj.viewMatrix(1:3,2));
+            sz=norm(obj.viewMatrix(1:3,3));
+            R=obj.viewMatrix(1:3,1:3);
+            R(1:3,1)=R(1:3,1)/sx;
+            R(1:3,2)=R(1:3,2)/sy;
+            R(1:3,3)=R(1:3,3)/sz;
+            R(4, 4) = 1;
+        end
+
         function MProj = getProjMatrix(obj)
             MProj = obj.projMatrix;
         end
@@ -164,7 +175,8 @@ classdef Camera < handle
             maxX = maxY * obj.ratio;
             att.maxX  = maxX;
             att.maxY = maxY;
-            
+            att.pos = norm(obj.position - obj.target);
+            att.rot = obj.getRotation();
         end % fin de getAttribute
 
     end %fin des methodes defauts

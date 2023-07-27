@@ -21,7 +21,7 @@ classdef Scene3D < handle
         startX              % position x de la souris lorsque je clique
         startY              % position y de la souris lorsque je clique
         mouseButton = -1    % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
-        selectObject
+        selectObject        % struct qui contient les données de l'objets selectionné 
     end %fin de propriete defaut
     
     events
@@ -148,7 +148,6 @@ classdef Scene3D < handle
                             progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
                         case 'N'
                             progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-                            disp('fonctionnalité non developpé')
                         case 'F'
                             progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix());
                     end
