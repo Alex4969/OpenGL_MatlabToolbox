@@ -96,32 +96,23 @@ classdef Scene3D < handle
             gl = obj.getGL();
             elem.Init(gl);
             obj.mapElements(elem.getId()) = elem;
-            %obj.listeElements{ 1 , numel(obj.listeElements)+1 } = elem;
-            obj.choixProg(elem);
+            if isa(elem, 'ElementTexte')
+                slot = obj.getTextureId(elem.police.name + ".png", true);
+                elem.textureId = slot;
+                obj.ajouterProg(elem, "texte");
+            else 
+                obj.choixProg(elem);
+            end
             obj.context.release();
         end % fin de ajouterObjet
 
-        function RetirerObjet(obj, elemId)
+        function RetirerObjet(obj, elemId) % element et texte
             if isKey(obj.mapElements, elemId)
                 remove(obj.mapElements, elemId);
             else
                 disp('objet a supprimé n existe pas');
             end
-        end
-
-        function AjouterTexte(obj, elem)
-            disp('depracated') % a refaire
-            if isa(elem, "ElementTexte")
-                slot = obj.getTextureId(elem.police.name + ".png", true);
-                elem.textureId = slot;
-                gl = obj.getGL();
-                elem.Init(gl);
-                obj.listeTextes{ 1 , numel(obj.listeTextes)+1 } = elem;
-                obj.ajouterProg(elem, "texte");
-            else
-                warning('l objet donne n est pas un texte');
-            end
-        end
+        end % fin de retirerObjet
 
         function Draw(obj)
             %DRAW dessine la scene avec tous ses objets
@@ -155,6 +146,18 @@ classdef Scene3D < handle
                 if (i == 1 || progAct ~= elem.shader)
                     progAct = elem.shader;
                     progAct.Bind(gl);
+                end
+                if isa(elem, 'ElementTexte')
+                    switch elem.type
+                        case 'P'
+                            progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
+                        case 'N'
+                            progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
+                            disp('fonctionnalité non developpé')
+                        case 'F'
+                            progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix());
+                    end
+                else
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
                     progAct.SetUniform3f  (gl, 'uCamPos',     obj.camera.getPosition());
                     progAct.SetUniform3f  (gl, 'uLightPos',   obj.lumiere.getPosition());
@@ -164,34 +167,34 @@ classdef Scene3D < handle
                 end
                 elem.Draw(gl);
             end
-            for i=1:numel(obj.listeTextes)
-                elem = obj.listeTextes{i};
-                if i == 1
-                    progAct = elem.shader;
-                    progAct.Bind(gl);
-                end
-                if elem.type == 'F'
-                    %progAct.SetUniformMat4(gl, 'uCamMatrix',  eye(4)); %%%TODO a refaire
-                    progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix);
-                else
-                    progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-                end
-                if elem.type == 'N'
-                %     [theta, phi] = obj.camera.getRotationAngles();
-                %     disp("theta" + theta)
-                %     newRot = MRot3D([(theta*180/pi - 90), (-phi*180/pi) , 0]); % 
-                %     elem.setModelMatrix(newRot);
-
-                    [thetaX, thetaY, thetaZ] = obj.camera.getRotationAngles();
-
-                    Angle=[thetaX thetaY thetaZ] * 180 / pi;
-                    disp(['(thetaX = ' num2str(rad2deg(thetaX)) '° | thetaY = ' num2str(rad2deg(thetaY)) '° | thetaZ = ' num2str(rad2deg(thetaZ)) '°)'])
-                    newModel = MRot3D([-Angle(1),-Angle(2), 0]);
-                    elem.setModelMatrix(newModel);
-
-                end
-                elem.Draw(gl);
-            end
+            % for i=1:numel(obj.listeTextes)
+            %     elem = obj.listeTextes{i};
+            %     if i == 1
+            %         progAct = elem.shader;
+            %         progAct.Bind(gl);
+            %     end
+            %     if elem.type == 'F'
+            %         %progAct.SetUniformMat4(gl, 'uCamMatrix',  eye(4)); %%%TODO a refaire
+            %         progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix());
+            %     else
+            %         progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
+            %     end
+            %     if elem.type == 'N'
+            %     %     [theta, phi] = obj.camera.getRotationAngles();
+            %     %     disp("theta" + theta)
+            %     %     newRot = MRot3D([(theta*180/pi - 90), (-phi*180/pi) , 0]); % 
+            %     %     elem.setModelMatrix(newRot);
+            % 
+            %         [thetaX, thetaY, thetaZ] = obj.camera.getRotationAngles();
+            % 
+            %         Angle=[thetaX thetaY thetaZ] * 180 / pi;
+            %         disp(['(thetaX = ' num2str(rad2deg(thetaX)) '° | thetaY = ' num2str(rad2deg(thetaY)) '° | thetaZ = ' num2str(rad2deg(thetaZ)) '°)'])
+            %         newModel = MRot3D([-Angle(1),-Angle(2), 0]);
+            %         elem.setModelMatrix(newModel);
+            % 
+            %     end
+            %     elem.Draw(gl);
+            % end
 
             obj.framebuffer.UnBind(gl);
             gl.glDisable(gl.GL_DEPTH_TEST);
@@ -440,6 +443,7 @@ classdef Scene3D < handle
                 obj.camera.setTarget(worldCoord);
                 if numel(worldCoord) == 3
                     elem = obj.getPointedObject(worldCoord);
+                    disp(['element toutche : ' num2str(elem.getId())]);
                     obj.colorSelection(elem);
                     obj.Draw();
                 end
