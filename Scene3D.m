@@ -117,20 +117,16 @@ classdef Scene3D < handle
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
             obj.framebuffer.Bind(gl);
-
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             gl.glEnable(gl.GL_DEPTH_TEST);
 
             %%afficher le gysmo
-            gl.glViewport(0, 0, obj.canvas.getHeight()/10, obj.canvas.getHeight()/10);
             progAct = obj.gyroscope.shader;
             progAct.Bind(gl);
-            gyroMatrix = MProj3D('O', [1 1 1 20]) * obj.camera.getViewMatrix();
-            gyroMatrix(1:3, 4) = 0;
+            gyroMatrix = MProj3D('O', [obj.camera.getRatio() 1 1 20]) * obj.camera.getViewMatrix();
+            gyroMatrix(1:3, 4) = [-0.97+0.1/obj.camera.getRatio, -0.9, 0]; %on remplace la position par le coin gauche de l'ecran
             progAct.SetUniformMat4(gl, 'uCamMatrix', gyroMatrix);
             obj.gyroscope.Draw(gl);
-
-            gl.glViewport(0, 0, obj.canvas.getWidth(), obj.canvas.getHeight());
 
             %dessiner les objets interne puis utilisateurs
             obj.drawInternalObject(gl, obj.axes);
@@ -347,7 +343,7 @@ classdef Scene3D < handle
             obj.axes = Axes(axesGeom, -tailleAxe, tailleAxe);
             obj.axes.AddColor(color);
 
-            tailleGysmo = 0.5;
+            tailleGysmo = 0.06;
             [pos, idx, color] = Axes.generateAxes(0, tailleGysmo);
             gysmoGeom = Geometry(-2, pos, idx);
             obj.gyroscope = Axes(gysmoGeom, 0, tailleGysmo);
@@ -527,8 +523,10 @@ classdef Scene3D < handle
             w=source.getSize.getWidth;
             h=source.getSize.getHeight;
             disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
+            gl = obj.getGL();
+            gl.glViewport(0, 0, w, h);
             obj.camera.setRatio(w/h);
-            obj.framebuffer.Resize(obj.getGL(), w, h);
+            obj.framebuffer.Resize(gl, w, h);
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end

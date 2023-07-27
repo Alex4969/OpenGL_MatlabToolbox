@@ -108,6 +108,10 @@ classdef Camera < handle
             obj.computeProj();
         end % fin de setFov
         
+        function ratio = getRatio(obj)
+            ratio = obj.ratio;
+        end
+
         function pos = getPosition(obj)
             pos = obj.position;
         end % fin de getPosition
