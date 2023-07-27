@@ -55,6 +55,7 @@ classdef Scene3D < handle
             obj.listeShaders = dictionary;
 
             gl = obj.getGL();
+            gl.glViewport(0, 0, obj.canvas.getWidth(), obj.canvas.getHeight());
             gl.glClearColor(0.0, 0.0, 0.4, 1.0);
             gl.glDepthFunc(gl.GL_LESS);
             gl.glEnable(gl.GL_BLEND);
@@ -92,8 +93,7 @@ classdef Scene3D < handle
                 disp('l objet a ajouter n est pas un VisibleElement');
                 return
             end
-            gl = obj.getGL();
-            elem.Init(gl);
+            elem.Init(obj.getGL());
             obj.mapElements(elem.getId()) = elem;
             if isa(elem, 'ElementTexte')
                 slot = obj.getTextureId(elem.police.name + ".png", true);
@@ -124,11 +124,11 @@ classdef Scene3D < handle
             progAct = obj.gyroscope.shader;
             progAct.Bind(gl);
             gyroMatrix = MProj3D('O', [obj.camera.getRatio() 1 1 20]) * obj.camera.getViewMatrix();
-            gyroMatrix(1:3, 4) = [-0.97+0.1/obj.camera.getRatio, -0.9, 0]; %on remplace la position par le coin gauche de l'ecran
+            gyroMatrix(1:3, 4) = [-0.97+0.1/obj.camera.getRatio, -0.87, 0]; %on remplace la position par le coin gauche de l'ecran
             progAct.SetUniformMat4(gl, 'uCamMatrix', gyroMatrix);
             obj.gyroscope.Draw(gl);
 
-            %dessiner les objets interne puis utilisateurs
+            %dessiner les objets interne
             obj.drawInternalObject(gl, obj.axes);
             obj.drawInternalObject(gl, obj.grille);
             if ~isempty(obj.lumiere.forme)
@@ -143,13 +143,10 @@ classdef Scene3D < handle
                     progAct.Bind(gl);
                 end
                 if isa(elem, 'ElementTexte')
-                    switch elem.type
-                        case 'P'
-                            progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-                        case 'N'
-                            progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-                        case 'F'
-                            progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix());
+                    if (elem.type == 'P' || elem.type == 'N')
+                        progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
+                    elseif elem.type == 'F'
+                        progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix());
                     end
                     elem.Draw(gl, obj.camera.getAttributes);
                 else
@@ -162,34 +159,6 @@ classdef Scene3D < handle
                     elem.Draw(gl);
                 end
             end
-            % for i=1:numel(obj.listeTextes)
-            %     elem = obj.listeTextes{i};
-            %     if i == 1
-            %         progAct = elem.shader;
-            %         progAct.Bind(gl);
-            %     end
-            %     if elem.type == 'F'
-            %         %progAct.SetUniformMat4(gl, 'uCamMatrix',  eye(4)); %%%TODO a refaire
-            %         progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix());
-            %     else
-            %         progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-            %     end
-            %     if elem.type == 'N'
-            %     %     [theta, phi] = obj.camera.getRotationAngles();
-            %     %     disp("theta" + theta)
-            %     %     newRot = MRot3D([(theta*180/pi - 90), (-phi*180/pi) , 0]); % 
-            %     %     elem.setModelMatrix(newRot);
-            % 
-            %         [thetaX, thetaY, thetaZ] = obj.camera.getRotationAngles();
-            % 
-            %         Angle=[thetaX thetaY thetaZ] * 180 / pi;
-            %         disp(['(thetaX = ' num2str(rad2deg(thetaX)) '° | thetaY = ' num2str(rad2deg(thetaY)) '° | thetaZ = ' num2str(rad2deg(thetaZ)) '°)'])
-            %         newModel = MRot3D([-Angle(1),-Angle(2), 0]);
-            %         elem.setModelMatrix(newModel);
-            % 
-            %     end
-            %     elem.Draw(gl);
-            % end
 
             obj.framebuffer.UnBind(gl);
             gl.glDisable(gl.GL_DEPTH_TEST);
@@ -451,7 +420,6 @@ classdef Scene3D < handle
 
         function cbk_MouseDragged(obj,source,event)
             obj.cbk_manager.rmCallback('MouseDragged');
-            %disp(event.getButton());
             %disp('MouseDragged')
             posX = event.getX();
             dx = posX - obj.startX;
@@ -467,9 +435,9 @@ classdef Scene3D < handle
             else
                 if (obj.mouseButton == 3)
                     obj.camera.rotate(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
-                    % obj.lumiere.setPosition([obj.camera.getPosition]);
                 end
             end
+            obj.lumiere.setPosition([obj.camera.getPosition]);
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
@@ -513,6 +481,7 @@ classdef Scene3D < handle
         function cbk_MouseWheelMoved(obj,source,event)
             obj.cbk_manager.rmCallback('MouseWheelMoved');
             obj.camera.zoom(event.getWheelRotation());
+            obj.lumiere.setPosition([obj.camera.getPosition]);
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
         end
@@ -521,7 +490,7 @@ classdef Scene3D < handle
             obj.cbk_manager.rmCallback('ComponentResized');
             w=source.getSize.getWidth;
             h=source.getSize.getHeight;
-            disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
+            %disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
             gl = obj.getGL();
             gl.glViewport(0, 0, w, h);
             obj.camera.setRatio(w/h);

@@ -124,46 +124,11 @@ classdef Camera < handle
             Mrot = obj.viewMatrix;
         end
 
-        function [thetaX, thetaY, thetaZ] = getRotationAngles(obj)
-            sx=norm(obj.viewMatrix(1:3,1));
-            sy=norm(obj.viewMatrix(1:3,2));
-            sz=norm(obj.viewMatrix(1:3,3));
-            R=obj.viewMatrix(1:3,1:3);
-            R(1:3,1)=R(1:3,1)/sx;
-            R(1:3,2)=R(1:3,2)/sy;
-            R(1:3,3)=R(1:3,3)/sz;
-            R(4, 4) = 1;
-            
-            thetaY=asin(-R(3,1));
-            thetaZ=atan(R(2,1)/R(1,1));
-            thetaX=atan(R(3,2)/R(3,3));
-            if (obj.position(1) > 0 && obj.position(3) > 0)
-                thetaY = -thetaY;
-            elseif (obj.position(1) > 0 && obj.position(3) < 0)
-                thetaY = pi + thetaY;
-            elseif obj.position(1) < 0 && obj.position(3) < 0
-                thetaY = pi + thetaY;
-            else
-                thetaY = 2*pi - thetaY;
-            end
-        end
-
-        function R = getRotation(obj)
-            sx=norm(obj.viewMatrix(1:3,1));
-            sy=norm(obj.viewMatrix(1:3,2));
-            sz=norm(obj.viewMatrix(1:3,3));
-            R=obj.viewMatrix(1:3,1:3);
-            R(1:3,1)=R(1:3,1)/sx;
-            R(1:3,2)=R(1:3,2)/sy;
-            R(1:3,3)=R(1:3,3)/sz;
-            R(4, 4) = 1;
-        end
-
         function MProj = getProjMatrix(obj)
             MProj = obj.projMatrix;
         end
 
-        function att = getAttributes(obj)
+        function att = getAttributes(obj) % contient near, maxY, maxX, coef, rot
             att.near = obj.near;
             if obj.type % perpective
                 maxY = obj.near * tan(deg2rad(obj.fov/2));
@@ -175,8 +140,7 @@ classdef Camera < handle
             maxX = maxY * obj.ratio;
             att.maxX  = maxX;
             att.maxY = maxY;
-            att.pos = norm(obj.position - obj.target);
-            att.rot = obj.getRotation();
+            att.rot = obj.viewMatrix(1:3, 1:3);
         end % fin de getAttribute
 
     end %fin des methodes defauts
@@ -269,7 +233,6 @@ classdef Camera < handle
     end
 
     methods (Access = private)
-        
         function computeView(obj)
             Mrot = obj.computeRotationCamera();
 
@@ -301,7 +264,5 @@ classdef Camera < handle
                 obj.projMatrix = MProj3D('P', [obj.ratio, obj.fov, obj.near, obj.far]);
             end
         end % fin de computeProj
-
     end % fin des methodes privées
-
 end %fin classe Camera

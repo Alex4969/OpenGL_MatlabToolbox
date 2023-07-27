@@ -104,7 +104,7 @@ texteF = ElementTexte(12, 'Texte Fixe', ravie, 'F', [0.2 0.8 0.2 1.0], 1);
 texteF.setModelMatrix(MTrans3D([-1 1 0]));
 viewer.AjouterObjet(texteF);
 
-texteN = ElementTexte(13, 'Texte ancre', ravie, 'N', [0.8 0.1 0.65 1.0], 0);
+texteN = ElementTexte(13, 'Texte Ancre', ravie, 'N', [0.8 0.1 0.65 1.0], 0);
 texteN.setModelMatrix(MTrans3D([2 2 2]));
 viewer.AjouterObjet(texteN);
 
@@ -115,9 +115,9 @@ viewer.AjouterObjet(texteN);
 viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
 viewer.lumiere.setPosition([0 2 3]);
 viewer.lumiere.setColor([1 1 1]);
-[posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.2);
-bouleLightGeom = Geometry(100, posBoule, indBoule);
-viewer.AddGeomToLight(bouleLightGeom);
+% [posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.2);
+% bouleLightGeom = Geometry(100, posBoule, indBoule);
+% viewer.AddGeomToLight(bouleLightGeom);
 
 %%%%  affichage  %%%%
 viewer.Draw();

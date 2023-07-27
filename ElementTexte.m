@@ -29,16 +29,16 @@ classdef ElementTexte < VisibleElement
                 return
             end
             obj.GLGeom.Bind(gl);
-            mod = obj.getModelMatrix();
-            if obj.type == 'F'
-                mod(1, 4) = mod(1, 4) * camAttrib.maxX;
-                mod(2, 4) = mod(2, 4) * camAttrib.maxY;
-                mod(3, 4) = -camAttrib.near;
-                mod  = mod * MScale3D(camAttrib.coef);
-            elseif obj.type == 'N'
-                mod = mod / camAttrib.rot;
+            model = obj.getModelMatrix();
+            if obj.type == 'F' % On plaque le texte sur le premier plan du cube de projection
+                model(1, 4) = model(1, 4) * camAttrib.maxX;
+                model(2, 4) = model(2, 4) * camAttrib.maxY;
+                model(3, 4) = -camAttrib.near;
+                model  = model * MScale3D(camAttrib.coef);
+            elseif obj.type == 'N' % On inverse l'effet de rotation de la caméra
+                model(1:3, 1:3) = model(1:3, 1:3) / camAttrib.rot;
             end
-            obj.shader.SetUniformMat4(gl, 'uModelMatrix', mod);
+            obj.shader.SetUniformMat4(gl, 'uModelMatrix', model);
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
             obj.shader.SetUniform1i(gl, 'uTexture', obj.textureId);
@@ -48,12 +48,12 @@ classdef ElementTexte < VisibleElement
         end % fin de Draw
 
         function sNew = reverseSelect(obj, s)
-            sNew.id        = obj.getId();
-            sNew.couleur   = obj.couleurTexte;
-            sNew.epaisseur = s.epaisseur;
+            sNew.id          = obj.getId();
+            sNew.couleur     = obj.couleurTexte;
+            sNew.epaisseur   = s.epaisseur;
             obj.couleurTexte = s.couleur;
         end % fin de reverseSlect
-    end
+    end % fin des methodes defauts
 
     methods(Static = true)
         function [pos, ind, mapping] = constructText(str, police, ancre)
@@ -105,8 +105,5 @@ classdef ElementTexte < VisibleElement
             pos(:, 2) = pos(:, 2) + yDep;
             mapping = mapping/512;
         end % fin de constructText
-
     end % fin des methodes statiques
-
 end % fin classe Texte
-
