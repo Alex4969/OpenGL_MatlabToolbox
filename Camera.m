@@ -148,6 +148,21 @@ classdef Camera < handle
             MProj = obj.projMatrix;
         end
 
+        function att = getAttributes(obj)
+            att.near = obj.near;
+            if obj.type % perpective
+                maxY = obj.near * tan(deg2rad(obj.fov/2));
+                att.coef = 0.01;
+            else
+                maxY = norm(obj.position - obj.target)/2;
+                att.coef = 0.173 * maxY; % 0.173 trouvé par essaies
+            end
+            maxX = maxY * obj.ratio;
+            att.maxX  = maxX;
+            att.maxY = maxY;
+            
+        end % fin de getAttribute
+
     end %fin des methodes defauts
 
     % special transformations / gestion de la souris

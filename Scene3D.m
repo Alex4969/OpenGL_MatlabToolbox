@@ -10,7 +10,6 @@ classdef Scene3D < handle
         mapElements         % map contenant les objets 3D de la scenes
         listeShaders        % dictionnaire qui lie le nom du fichier glsl a son programme
         mapTextures         % dictionnaire qui lie le nom de l'image a sa texture
-        listeTextes         % cellArray contenant les textes a afficher
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
@@ -157,6 +156,7 @@ classdef Scene3D < handle
                         case 'F'
                             progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix());
                     end
+                    elem.Draw(gl, obj.camera.getAttributes);
                 else
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
                     progAct.SetUniform3f  (gl, 'uCamPos',     obj.camera.getPosition());
@@ -164,8 +164,8 @@ classdef Scene3D < handle
                     progAct.SetUniform3f  (gl, 'uLightColor', obj.lumiere.getColor());
                     progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
                     progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
+                    elem.Draw(gl);
                 end
-                elem.Draw(gl);
             end
             % for i=1:numel(obj.listeTextes)
             %     elem = obj.listeTextes{i};
@@ -517,7 +517,6 @@ classdef Scene3D < handle
 
         function cbk_MouseWheelMoved(obj,source,event)
             obj.cbk_manager.rmCallback('MouseWheelMoved');
-            disp ('MouseWheelMoved')
             obj.camera.zoom(event.getWheelRotation());
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');

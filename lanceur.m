@@ -100,12 +100,14 @@ texte3 = ElementTexte(11, 'Je suis un texte', ravie, 'P', [1 0.5 0.7 1.0], 0);
 texte3.setModelMatrix(MTrans3D([-2 -2 -2]));
 viewer.AjouterObjet(texte3);
 
+texte2 = ElementTexte(12, 'Je reste ici', ravie, 'F', [0.2 0.8 0.2 1.0], 1);
+texte2.setModelMatrix(MTrans3D([-1 1 0]));
+viewer.AjouterObjet(texte2);
+
 % % % texte1 = ElementTexte('Hello World !', ravie, 0.5, 'N', [0.7 0.1 0.2 1.0]);
 % % % viewer.AjouterTexte(texte1);
 % % % 
-% % texte2 = ElementTexte(10, 'Bienvenue', ravie, 0.4, 'F', [0.2 0.8 0.2 1.0], [0 0 0], 1);
-% % texte2.setModelMatrix(MTrans3D([-1 1 0]))
-% % viewer.AjouterTexte(texte2);
+
 % % 
 % % 
 % % texteX = ElementTexte(12, 'X', ravie, 1, 'P', [1 1 0 1], [5 0 0], 0);

@@ -23,13 +23,20 @@ classdef ElementTexte < VisibleElement
             obj.couleurTexte = color;
         end % fin du constructeur Texte
 
-        function Draw(obj, gl)
+        function Draw(obj, gl, camAttrib)
             %DRAW dessine cet objet
             if obj.visible == 0
                 return
             end
             obj.GLGeom.Bind(gl);
-            obj.shader.SetUniformMat4(gl, 'uModelMatrix', obj.Geom.modelMatrix);
+            mod = obj.getModelMatrix();
+            if obj.type == 'F'
+                mod(1, 4) = mod(1, 4) * camAttrib.maxX;
+                mod(2, 4) = mod(2, 4) * camAttrib.maxY;
+                mod(3, 4) = -camAttrib.near;
+                mod  = mod * MScale3D(camAttrib.coef);
+            end
+            obj.shader.SetUniformMat4(gl, 'uModelMatrix', mod);
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
             obj.shader.SetUniform1i(gl, 'uTexture', obj.textureId);
