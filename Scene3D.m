@@ -101,6 +101,14 @@ classdef Scene3D < handle
             obj.context.release();
         end % fin de ajouterObjet
 
+        function RetirerObjet(obj, elemId)
+            if isKey(obj.mapElements, elemId)
+                remove(obj.mapElements, elemId);
+            else
+                disp('objet a supprimé n existe pas');
+            end
+        end
+
         function AjouterTexte(obj, elem)
             disp('depracated') % a refaire
             if isa(elem, "ElementTexte")
@@ -121,11 +129,7 @@ classdef Scene3D < handle
             obj.framebuffer.Bind(gl);
 
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
-            gl.glClear(gl.GL_STENCIL_BUFFER_BIT);
             gl.glEnable(gl.GL_DEPTH_TEST);
-            gl.glEnable(gl.GL_STENCIL_TEST);
-            gl.glStencilOp(gl.GL_KEEP, gl.GL_KEEP, gl.GL_KEEP);
-            gl.glStencilMask(255);
 
             %%afficher le gysmo
             gl.glViewport(0, 0, obj.canvas.getHeight()/10, obj.canvas.getHeight()/10);
@@ -158,10 +162,8 @@ classdef Scene3D < handle
                     progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
                     progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
                 end
-                gl.glStencilFunc(gl.GL_ALWAYS, elem.getId(), 255);
                 elem.Draw(gl);
             end
-            gl.glStencilFunc(gl.GL_ALWAYS, 0, 255);
             for i=1:numel(obj.listeTextes)
                 elem = obj.listeTextes{i};
                 if i == 1
@@ -193,11 +195,9 @@ classdef Scene3D < handle
 
             obj.framebuffer.UnBind(gl);
             gl.glDisable(gl.GL_DEPTH_TEST);
-            gl.glDisable(gl.GL_STENCIL_TEST);
             progAct = obj.framebuffer.forme.shader;
             progAct.Bind(gl);
             obj.framebuffer.forme.Draw(gl);
-
 
             obj.context.release();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
@@ -366,20 +366,15 @@ classdef Scene3D < handle
             gl = obj.getGL();
             obj.framebuffer.Bind(gl);
 
-            r = 2; % click radius (square box) px
-            w = 2*r+1; % square side length px
+            r = 2;      % click radius (square box) px
+            w = 2*r+1;  % square side length px
 
             buffer = java.nio.FloatBuffer.allocate(w*w);
-            bufferStencil = java.nio.ByteBuffer.allocate(1);
-
             sz = [obj.canvas.getWidth() ; obj.canvas.getHeight()];
             clickPos(2) = sz(2) - clickPos(2);
             gl.glReadPixels(clickPos(1)-r, clickPos(2)-r, w, w, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
-            gl.glReadPixels(clickPos(1), clickPos(2), 1, 1, gl.GL_STENCIL_INDEX, gl.GL_BYTE, bufferStencil);
             profondeur = typecast(buffer.array(), 'single');
             n = (profondeur == 1);
-
-            stencil = typecast(bufferStencil.array(), 'int8')
 
             if all(n, "all")
                 worldCoord = 0;
@@ -439,7 +434,7 @@ classdef Scene3D < handle
             obj.startY=event.getPoint.getY();
             obj.mouseButton = event.getButton();
             
-            if obj.mouseButton == 1
+            if obj.mouseButton == 1 && ~isempty(obj.mapElements)
                 worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
                 disp(worldCoord)
                 obj.camera.setTarget(worldCoord);
@@ -496,10 +491,15 @@ classdef Scene3D < handle
                     obj.camera.upView;                    
                 case 'p' %perspective/ortho
                     obj.camera.switchProjType;
-                case char(27)
+                case char(27) % ECHAP
                     if obj.selectObject.id ~= 0
                         obj.selectObject = obj.mapElements(obj.selectObject.id).reverseSelect(obj.selectObject);
                         obj.selectObject.id = 0;
+                    end
+                case char(127) % SUPPR
+                    if obj.selectObject.id ~= 0
+                        obj.RetirerObjet(obj.selectObject.id);
+                        obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
                     end
                 case 'i'
                     obj.framebuffer.screenShot(obj.getGL, obj.canvas.getWidth(), obj.canvas.getHeight());
