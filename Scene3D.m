@@ -58,9 +58,9 @@ classdef Scene3D < handle
             gl.glViewport(0, 0, obj.canvas.getWidth(), obj.canvas.getHeight());
             gl.glClearColor(0.0, 0.0, 0.4, 1.0);
             gl.glDepthFunc(gl.GL_LESS);
+            gl.glEnable(gl.GL_LINE_SMOOTH);
             gl.glEnable(gl.GL_BLEND);
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
-            gl.glEnable(gl.GL_LINE_SMOOTH);
 
             obj.axes.Init(gl);
             obj.ajouterProg(obj.axes, "axis");
@@ -134,9 +134,9 @@ classdef Scene3D < handle
             if ~isempty(obj.lumiere.forme)
                 obj.drawInternalObject(gl, obj.lumiere.forme);
             end
-            
+
             listeElem = obj.orderElem();
-            for i= 1:numel(listeElem)
+            for i=1:numel(listeElem)
                 elem = listeElem{i};
                 if (i == 1 || progAct ~= elem.shader)
                     progAct = elem.shader;
@@ -212,7 +212,7 @@ classdef Scene3D < handle
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
-            notify(obj,'evt_update');
+            %notify(obj,'evt_update');
         end % fin setCouleurFond
 
         function ApplyTexture(obj, elem, fileName)
@@ -404,12 +404,12 @@ classdef Scene3D < handle
             if obj.mouseButton == 1 && ~isempty(obj.mapElements)
                 worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
                 disp(worldCoord)
-                obj.camera.setTarget(worldCoord);
                 if numel(worldCoord) == 3
                     elem = obj.getPointedObject(worldCoord);
                     disp(['element toutche : ' num2str(elem.getId())]);
                     obj.colorSelection(elem);
                     obj.Draw();
+                    obj.camera.setTarget(worldCoord);
                 end
             end
         end

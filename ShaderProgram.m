@@ -82,8 +82,9 @@ classdef ShaderProgram < handle
                 location = gl.glGetUniformLocation(obj.shaderProgId, nom);
                 if (location == -1)
                     warning(['uniform ' nom ' na pas ete trouve dans le programme']);
+                else
+                    obj.mapUniformLocation(nom) = location;
                 end
-                obj.mapUniformLocation(nom) = location;
             end
         end % fin findLocation
 
