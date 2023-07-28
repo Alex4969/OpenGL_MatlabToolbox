@@ -132,25 +132,17 @@ classdef GLGeometry < handle
         end % fin de generateIndices
 
         function declareVertexAttrib(obj, gl)
-            %DECLAREVERTEXATTRIB : definit les vertex attribute pour OpenGL. Fait plusieurs appel a setVertexAttrib
+            %DECLAREVERTEXATTRIB : definit les vertex attribute pour OpenGL.
             nbOctet = sum(obj.nLayout) * 4;
-            index = 0; offset = 0;
+            offset = 0;
             for i=1:4
-                [index, offset] = obj.setVertexAttrib(gl, obj.nLayout(i), index, offset, nbOctet);
+                if (obj.nLayout(i) > 0)
+                    gl.glVertexAttribPointer(i, obj.nLayout(i), gl.GL_FLOAT, gl.GL_FALSE, nbOctet, offset);
+                    gl.glEnableVertexAttribArray(i);
+                    offset = offset + obj.nLayout(i)*4;
+                end
             end
         end % fin de declareVertexAttrib
-
-        function [index, offset] = setVertexAttrib(~, gl, nAttrib, index, offset, taille)
-            %SETVERTEXATTRIB : définit 1 vertex attribute pour OpenGL
-            if (nAttrib ~= 0)
-                gl.glVertexAttribPointer(index, nAttrib, gl.GL_FLOAT, gl.GL_FALSE, taille, offset);
-                gl.glEnableVertexAttribArray(index);
-                index = index + 1;
-                offset = offset + 4 * nAttrib;
-            end
-        end % fin de setVertexAttrib
-    
     end % fin des methodes privées
-
 end % fin de la classe GLGeometry
 
