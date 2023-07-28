@@ -6,7 +6,7 @@ in vec3 vSurfaceNormal;     //ENTREE DEPUIS GEOM : la normale a la surface
 in vec3 vCrntPos;           //ENTREE DEPUIS VERT : la position du point (avant projection!)
 in vec2 vTextureCoord;      //ENTREE DEPUIS BUFFER : la couleur du point
 
-uniform sampler2D uTexture; //n° slot de la texture a appliquée
+uniform sampler2D uTexture; //n slot de la texture a appliquee
 uniform vec3 uLightColor;   //couleur de la lumiere
 uniform vec3 uLightPos;     //position de la lumiere
 uniform vec3 uCamPos;       //position de la camera

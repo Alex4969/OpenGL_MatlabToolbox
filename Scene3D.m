@@ -222,9 +222,9 @@ classdef Scene3D < handle
                 slot = obj.getTextureId(fileName, false);
                 elem.textureId = slot;
                 if slot == -1
-                    obj.ajouterProg(elem, "defaut");
+                    obj.ajouterProg(elem, "all");
                 else
-                    obj.ajouterProg(elem, "textured");
+                    obj.ajouterProg(elem, "all");
                 end
             else 
                 warning('L objet donne en parametre n est pas texturable');
@@ -251,19 +251,14 @@ classdef Scene3D < handle
         end % fin de getGL
 
         function choixProg(obj, elem)
-            attrib = elem.getAttrib(); % 1x3 logical : color, mapping, normal
-            if (attrib(2) == 1)
-                choix = "colored";
-            elseif attrib(4) == 1
-                choix = "normed";
-            else
-                choix = "defaut";
-            end
-            obj.ajouterProg(elem, choix);
+            obj.ajouterProg(elem, "all");
         end % fin de choixProg
 
         function ajouterProg(obj, elem, fileName)
-            if (numEntries(obj.listeShaders) == 0 || isKey(obj.listeShaders, fileName) == 0)
+            if fileName == "all"
+                prog = ShaderProgram(obj.getGL(), fileName, elem.getLayout());
+                elem.shader = prog;
+            elseif (numEntries(obj.listeShaders) == 0 || isKey(obj.listeShaders, fileName) == 0)
                 prog = {ShaderProgram(obj.getGL(), fileName)};
                 obj.listeShaders(fileName) = prog;
                 elem.shader = prog{1};
@@ -409,7 +404,7 @@ classdef Scene3D < handle
                     disp(['element toutche : ' num2str(elem.getId())]);
                     obj.colorSelection(elem);
                     obj.Draw();
-                    obj.camera.setTarget(worldCoord);
+                    %obj.camera.setTarget(worldCoord);
                 end
             end
         end

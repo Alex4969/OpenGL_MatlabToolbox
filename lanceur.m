@@ -23,6 +23,7 @@ viewer.AjouterObjet(pyramide1);
 
 % pyramide avec une couleur par sommet
 couleurPyramide = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
+%couleurPyramide = [ 1 0 0 ; 1 1 0 ; 0 1 0 ; 0 0.6 1 ; 1 1 1];
 pyraColorGeom = Geometry(2, posPyramide, indicesPyramide);
 pyraColorGeom.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 pyramide2 = ElementFace(pyraColorGeom);
@@ -41,7 +42,6 @@ viewer.ApplyTexture(pyramide3, "briques.jpg");
 [posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
 
 %sphere avec des normales par sommet
-%bouleNormalesGeom = Geometry(posBoule, indBoule, posBoule);
 bouleNormalesGeom = Geometry(4, posBoule, indBoule);
 boule1 = ElementFace(bouleNormalesGeom);
 boule1.GenerateNormals();
@@ -54,11 +54,12 @@ bouleGeom = Geometry(5, posBoule, indBoule);
 boule2 = ElementFace(bouleGeom);
 boule2.setModelMatrix(MTrans3D([-0.5 -0.2 0]));
 boule2.couleurPoints = [1 1 0 1];
-%viewer.AjouterObjet(boule2);
+viewer.AjouterObjet(boule2);
 
 % sphere avec texture map monde
 bouleTexGeom = Geometry(6, posBoule, indBoule);
 boule3 = ElementFace(bouleTexGeom);
+boule3.GenerateNormals();
 boule3.AddMapping(mappingBoule);
 boule3.setModelMatrix(MTrans3D([3 0 0]));
 boule3.ModifyModelMatrix(MRot3D([180 0 0]), 1);
@@ -82,8 +83,8 @@ planGeom = Geometry(8, posPlan, indPlan);
 plan1 = ElementFace(planGeom);
 plan1.AddMapping(mappingPlan);
 plan1.setModelMatrix(MTrans3D([0 0 -4]));
-%viewer.AjouterObjet(plan1);
-%viewer.ApplyTexture(plan1, "monde.jpg");
+viewer.AjouterObjet(plan1);
+viewer.ApplyTexture(plan1, "monde.jpg");
 
 % piece d'echec depuis un fichier
 chessGeom = Geometry(9);
@@ -107,10 +108,6 @@ viewer.AjouterObjet(texteF);
 texteN = ElementTexte(13, 'Texte Ancre', ravie, 'N', [0.8 0.1 0.65 1.0], 0);
 texteN.setModelMatrix(MTrans3D([2 2 2]));
 viewer.AjouterObjet(texteN);
-
-% % texteX = ElementTexte(12, 'X', ravie, 1, 'P', [1 1 0 1], [5 0 0], 0);
-% % %texteX.setModelMatrix(MTrans3D([5, 0, 0]))
-% % viewer.AjouterTexte(texteX);
 
 viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
 viewer.lumiere.setPosition([0 2 3]);

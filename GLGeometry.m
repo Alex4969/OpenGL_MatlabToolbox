@@ -18,7 +18,6 @@ classdef GLGeometry < handle
     end
     
     methods
-
         function obj = GLGeometry(sommets)
             obj.vertexData = sommets;
             nPos = size(sommets, 2);
@@ -73,7 +72,7 @@ classdef GLGeometry < handle
                 obj.modifyVertexBuffer(gl, obj.vertexData);
                 obj.updateNeeded = false;
             end
-        end % fin de bing
+        end % fin de bind
 
         function Unbind(~, gl)
             %UNBIND retire les objets du contexte OpenGL
@@ -88,11 +87,9 @@ classdef GLGeometry < handle
             gl.glDeleteBuffers(1, obj.VBOBuffer);
             gl.glDeleteBuffers(1, obj.EBOBuffer);
         end % fin de delete
-
     end % fin des methodes defauts
 
     methods (Access = private)
-        
         function generateVertexArray(obj, gl)
             %GENERATEVERTEXARRAY : Creer le VAO
             obj.VAOBuffer = java.nio.IntBuffer.allocate(1);

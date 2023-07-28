@@ -37,6 +37,7 @@ classdef Police < handle
                 [letter, infos] = obj.readLigne(tline);
                 dico(letter) = infos;
             end
+            fclose(fId);
         end % fin de readFnt
         
         function [letter, infos] = readLigne(~, ligne)

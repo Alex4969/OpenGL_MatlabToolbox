@@ -18,8 +18,8 @@ classdef (Abstract) VisibleElement < handle
             obj.visible = true;
         end % fin du constructeur de VisibleElement
 
-        function res = getAttrib(obj)
-            res = logical(obj.GLGeom.nLayout);
+        function res = getLayout(obj)
+            res = obj.GLGeom.nLayout;
         end
 
         function model = getModelMatrix(obj)
