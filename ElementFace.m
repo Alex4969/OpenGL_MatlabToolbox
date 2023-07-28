@@ -62,6 +62,13 @@ classdef ElementFace < VisibleElement
             obj.GLGeom.Unbind(gl);
         end % fin de Draw
 
+        function changerProg(obj, gl, type)
+            if nargin == 2
+                type = 'L';
+            end
+            obj.shader = ShaderProgram(gl, obj.getLayout(), type);
+        end
+
         function setEpaisseurArretes(obj, newEp)
             obj.epaisseurArretes = newEp;
         end

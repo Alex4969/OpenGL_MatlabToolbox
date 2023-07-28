@@ -10,17 +10,20 @@ classdef ShaderProgram < handle
     
     methods
 
-        function obj = ShaderProgram(gl, fileName, layout)
+        function obj = ShaderProgram(gl, layout, ind) %ind = 'D' dur, 'L' lisse, 'S' sans lumiere
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
-            obj.filePath = "shaders/" + fileName;
-            if (fileName == "all")
-                obj.createProg(gl, layout, true);
+            if ind == 'L'
+                bSmooth = true;
             else
-                obj.compileFile(gl, gl.GL_VERTEX_SHADER, fileread(obj.filePath + ".vert.glsl"));
-                obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, fileread(obj.filePath + ".frag.glsl"));
+                bSmooth = false;
             end
-
+            if ind == 'S'
+                file = "noLight";
+            else
+                file = "all";
+            end
+            obj.createProg(gl, file, layout, bSmooth);
             gl.glLinkProgram(obj.shaderProgId);
             gl.glValidateProgram(obj.shaderProgId);
             CheckError(gl, 'erreur de compilation des shaders');
@@ -81,7 +84,7 @@ classdef ShaderProgram < handle
             end
         end % fin de findLocation
 
-        function createProg(obj, gl, nLayout, bSmooth)
+        function createProg(obj, gl, file, nLayout, bSmooth)
             motCle(1) = "POS" + nLayout(1);
             if nLayout(2) > 0
                 motCle(2) = "COL" + nLayout(2);
@@ -94,26 +97,28 @@ classdef ShaderProgram < handle
                 if nLayout(4) > 0
                     motCle(3) = "NORM";
                 else
-                    disp('Affichage smooth impossible pour un objet sans normales aux sommets');
+                    %disp('Affichage smooth impossible pour un objet sans normales aux sommets');
                     bSmooth = false;
                 end
             end
 
-            src = obj.readIfContains("shaders/all.vert.glsl", motCle);
+            src = obj.readIfContains("shaders/" + file + ".vert.glsl", motCle);
             if bSmooth == 1
                 src = src + obj.readIfContains("shaders/allSmooth.vert.glsl", motCle);
-            else
+            elseif file == "all"
                 src = src + obj.readIfContains("shaders/allSharp.vert.glsl", motCle);
             end
             obj.compileFile(gl, gl.GL_VERTEX_SHADER, src);
 
-            if bSmooth == 0 %affichage avec normal aux faces, il faut générer les normales dans un geometry shaders
+            if bSmooth == 0 && file == "all"%affichage avec normal aux faces, il faut générer les normales dans un geometry shaders
                 src = obj.readIfContains("shaders/all.geom.glsl", motCle);
                 obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, src);
             end
 
-            src = obj.readIfContains("shaders/all.frag.glsl", motCle);
-            src = src + fileread("shaders/light.frag.glsl");
+            src = obj.readIfContains("shaders/" + file + ".frag.glsl", motCle);
+            if file == "all"
+                src = src + fileread("shaders/light.frag.glsl");
+            end
             obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, src);
         end % fin de create Program
 

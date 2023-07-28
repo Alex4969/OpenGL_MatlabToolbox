@@ -80,12 +80,14 @@ classdef (Abstract) VisibleElement < handle
 
         function Init(obj, gl)
             obj.GLGeom.CreateGLObject(gl, obj.Geom.listeConnection);
+            obj.changerProg(gl);
         end
     end % fin des methodes defauts
 
     methods (Abstract = true)
         Draw(obj, gl)
         sNew = reverseSelect(obj, s)
+        changerProg(obj, gl);
     end % fin des methodes abstraites
 
 end % fin de la classe VisibleElement

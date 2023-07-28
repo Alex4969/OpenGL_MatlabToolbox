@@ -9,7 +9,6 @@ classdef Geometry < handle
         listePoints         % matrice nx3 ou nx2 contenant les points dans l'espace
         listeConnection     % matrice ligne donne la connectivité en triangle des points de la liste de points
         modelMatrix         % transformation du modèle dans la scène 3D (translation, rotation, homothétie)
-        %composanteSupp      % matrice nxm contenant des indications supplémentaires sur les sommets (couleurs, normales...)
     end
     
     methods

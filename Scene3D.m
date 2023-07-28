@@ -45,7 +45,7 @@ classdef Scene3D < handle
             obj.context = obj.fenetre.canvas.javaObj.getContext();
 
             obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
-            obj.lumiere = Light([0, 3, 3], [1 1 1]);
+            obj.lumiere = Light([obj.camera.getPosition], [1 1 1]);
             
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
@@ -63,13 +63,10 @@ classdef Scene3D < handle
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
 
             obj.axes.Init(gl);
-            obj.ajouterProg(obj.axes, "axis");
             obj.gyroscope.Init(gl);
-            obj.ajouterProg(obj.gyroscope, "axis");
             obj.grille.Init(gl);
-            obj.ajouterProg(obj.grille, "grille");
             obj.framebuffer.Init(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
-            obj.ajouterProg(obj.framebuffer.forme, "framebuffer");
+            obj.framebuffer.forme.changerProg(gl, 'S');
 
             obj.context.release();
 
@@ -98,9 +95,6 @@ classdef Scene3D < handle
             if isa(elem, 'ElementTexte')
                 slot = obj.getTextureId(elem.police.name + ".png", true);
                 elem.textureId = slot;
-                obj.ajouterProg(elem, "texte");
-            else 
-                obj.choixProg(elem);
             end
             obj.context.release();
         end % fin de ajouterObjet
@@ -144,7 +138,7 @@ classdef Scene3D < handle
                 end
                 if isa(elem, 'ElementTexte')
                     if (elem.type == 'P' || elem.type == 'N')
-                        progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
+                        progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getCameraMatrix());
                     elseif elem.type == 'F'
                         progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix());
                     end
@@ -212,7 +206,7 @@ classdef Scene3D < handle
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
-            %notify(obj,'evt_update');
+            notify(obj,'evt_update');
         end % fin setCouleurFond
 
         function ApplyTexture(obj, elem, fileName)
@@ -221,21 +215,17 @@ classdef Scene3D < handle
             if (isa(elem, 'ElementFace') && elem.GLGeom.nLayout(3) ~= 0)
                 slot = obj.getTextureId(fileName, false);
                 elem.textureId = slot;
-                if slot == -1
-                    obj.ajouterProg(elem, "all");
-                else
-                    obj.ajouterProg(elem, "all");
-                end
+                elem.changerProg(obj.getGL());
             else 
                 warning('L objet donne en parametre n est pas texturable');
             end
         end % fin de ApplyTexture
 
         function AddGeomToLight(obj, geom)
+            disp('ne fonctionne pas')
             gl = obj.getGL();
             elem = ElementFace(geom);
             elem.Init(gl);
-            obj.ajouterProg(elem, "grille");
             obj.lumiere.setForme(elem);
             obj.context.release();
         end
@@ -249,24 +239,6 @@ classdef Scene3D < handle
             end
             gl = obj.context.getCurrentGL();
         end % fin de getGL
-
-        function choixProg(obj, elem)
-            obj.ajouterProg(elem, "all");
-        end % fin de choixProg
-
-        function ajouterProg(obj, elem, fileName)
-            if fileName == "all"
-                prog = ShaderProgram(obj.getGL(), fileName, elem.getLayout());
-                elem.shader = prog;
-            elseif (numEntries(obj.listeShaders) == 0 || isKey(obj.listeShaders, fileName) == 0)
-                prog = {ShaderProgram(obj.getGL(), fileName)};
-                obj.listeShaders(fileName) = prog;
-                elem.shader = prog{1};
-            else
-                shader = obj.listeShaders(fileName);
-                elem.shader = shader{1};
-            end
-        end % fin de ajouterProg
 
         function drawInternalObject(obj, gl, elem)
             progAct = elem.shader;
@@ -292,7 +264,6 @@ classdef Scene3D < handle
                     slot = length(obj.mapTextures) + 1;
                     tex = Texture(obj.getGL(), dossier + fileName, slot);
                     obj.mapTextures(fileName) = tex;
-                    obj.context.release();
                 else
                     slot = -1;
                 end

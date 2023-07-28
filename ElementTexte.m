@@ -42,10 +42,14 @@ classdef ElementTexte < VisibleElement
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
             obj.shader.SetUniform1i(gl, 'uTexture', obj.textureId);
-            obj.shader.SetUniform4f(gl, 'uTextColor', obj.couleurTexte);
+            obj.shader.SetUniform4f(gl, 'uColor', obj.couleurTexte);
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             CheckError(gl, 'apres le dessin d un texte');
         end % fin de Draw
+
+        function changerProg(obj, gl)
+            obj.shader = ShaderProgram(gl, obj.getLayout(), 'S');
+        end
 
         function sNew = reverseSelect(obj, s)
             sNew.id          = obj.getId();

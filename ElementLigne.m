@@ -60,6 +60,10 @@ classdef ElementLigne < VisibleElement
             obj.epaisseurLignes = s.epaisseur;
         end
 
+        function changerProg(obj, gl)
+            obj.shader = ShaderProgram(gl, obj.getLayout(), 'S');
+        end
+
     end % fin des methodes defauts
 
 end  % fin classe ElementLigne
