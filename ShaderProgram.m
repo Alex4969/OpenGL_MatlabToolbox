@@ -28,10 +28,6 @@ classdef ShaderProgram < handle
 
         function compileFile(obj, gl, type, src)
             shaderId = gl.glCreateShader(type);
-%            if contains(src, 'intensiteLumineuse')
- %               src2 = fileread("shaders/light.frag.glsl");
-  %              src = [src  src2];
-   %         end
             gl.glShaderSource(shaderId, 1, src, []);
             gl.glCompileShader(shaderId);
             gl.glAttachShader(obj.shaderProgId, shaderId);
@@ -69,7 +65,6 @@ classdef ShaderProgram < handle
             location = obj.findLocation(gl, nom);
             gl.glUniformMatrix4fv(location, 1, gl.GL_FALSE, matUni);
         end % fin de SetUniformMat4
-
     end % fin des méthodes defauts
 
     methods (Access = private)
@@ -84,7 +79,7 @@ classdef ShaderProgram < handle
                     obj.mapUniformLocation(nom) = location;
                 end
             end
-        end % fin findLocation
+        end % fin de findLocation
 
         function createProg(obj, gl, nLayout, bSmooth)
             motCle(1) = "POS" + nLayout(1);
@@ -95,7 +90,7 @@ classdef ShaderProgram < handle
             else
                 motCle(2) = "DEF";
             end
-            if bSmooth %on veut un affichage smooth (normal au vertex)
+            if bSmooth == 1 % On veut un affichage smooth (normales aux sommets)
                 if nLayout(4) > 0
                     motCle(3) = "NORM";
                 else
@@ -103,60 +98,32 @@ classdef ShaderProgram < handle
                     bSmooth = false;
                 end
             end
-            src = "";
-            fId = fopen("shaders/all.vert.glsl");
-            while ~feof(fId)
-                tline = fgets(fId);
-                if contains(tline, "//")
-                    if contains(tline, motCle)
-                        src = src + tline;
-                    end 
-                else
-                    src = src + tline;
-                end
-            end
-            fclose(fId);
-            if bSmooth
-                fId = fopen("shaders/allSmooth.vert.glsl");
+
+            src = obj.readIfContains("shaders/all.vert.glsl", motCle);
+            if bSmooth == 1
+                src = src + obj.readIfContains("shaders/allSmooth.vert.glsl", motCle);
             else
-                fId = fopen("shaders/allSharp.vert.glsl");
+                src = src + obj.readIfContains("shaders/allSharp.vert.glsl", motCle);
             end
-            while ~feof(fId)
-                tline = fgets(fId);
-                if contains(tline, "//")
-                    if contains(tline, motCle)
-                        src = src + tline;
-                    end 
-                else
-                    src = src + tline;
-                end
-            end
-            fclose(fId);
-            obj.compileFile(gl, gl.GL_VERTEX_SHADER, char(src));
+            obj.compileFile(gl, gl.GL_VERTEX_SHADER, src);
 
-            if bSmooth == 0 % shader pour calcul les normales aux faces
-                src = "";
-                fId = fopen("shaders/all.geom.glsl");
-                while ~feof(fId)
-                    tline = fgets(fId);
-                    if contains(tline, "//")
-                        if contains(tline, motCle)
-                            src = src + tline;
-                        end 
-                    else
-                        src = src + tline;
-                    end
-                end
-                fclose(fId);
-                obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, char(src));
+            if bSmooth == 0 %affichage avec normal aux faces, il faut générer les normales dans un geometry shaders
+                src = obj.readIfContains("shaders/all.geom.glsl", motCle);
+                obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, src);
             end
 
+            src = obj.readIfContains("shaders/all.frag.glsl", motCle);
+            src = src + fileread("shaders/light.frag.glsl");
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, src);
+        end % fin de create Program
+
+        function src = readIfContains(~, filePath, keyWords)
             src = "";
-            fId = fopen("shaders/all.frag.glsl");
+            fId = fopen(filePath);
             while ~feof(fId)
                 tline = fgets(fId);
                 if contains(tline, "//")
-                    if contains(tline, motCle)
+                    if contains(tline, keyWords)
                         src = src + tline;
                     end 
                 else
@@ -164,15 +131,6 @@ classdef ShaderProgram < handle
                 end
             end
             fclose(fId);
-            fId = fopen("shaders/light.frag.glsl");
-            while ~feof(fId)
-                tline = fgets(fId);
-                src = src + tline;
-            end
-            fclose(fId);
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, char(src));
-        end
-
+        end % fin de readIfContains
     end % fin des methodes privées
-
 end % fin classe ShaderProgram
