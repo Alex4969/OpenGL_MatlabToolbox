@@ -21,8 +21,9 @@ classdef Camera < handle
     properties
 
         %%% Attributes pour le mouvement
-        speed = 0.15;
-        %sensibility
+        speed = 5;
+        sensibility =1;
+
         posCentreMvt = 0;   % 1x3 si pour donner un centre de rotation sinon le centre = target
 
         constraint logical  % 1x3 pour chaque axe
@@ -171,7 +172,7 @@ classdef Camera < handle
         end % fin de translatePlanAct
 
         function zoom(obj,signe)
-            facteur = 1 + signe*obj.speed;
+            facteur = 1 + signe*0.05*obj.sensibility
             vect = obj.position - obj.target;
             vect = vect * facteur;
             obj.position = obj.target + vect;

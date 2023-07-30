@@ -272,7 +272,7 @@ classdef Scene3D < handle
 
         function generateInternalObject(obj)
             tailleAxe = 50;
-            [pos, idx, color] = Axes.generateAxes(-tailleAxe, tailleAxe);
+            [pos, idx, color] = Axes.generateAxes(tailleAxe, tailleAxe);
             axesGeom = Geometry(-1, pos, idx);
             obj.axes = Axes(axesGeom, -tailleAxe, tailleAxe);
             obj.axes.AddColor(color);
@@ -367,17 +367,24 @@ classdef Scene3D < handle
             obj.startY=event.getPoint.getY();
             obj.mouseButton = event.getButton();
             
-            if obj.mouseButton == 1 && ~isempty(obj.mapElements)
-                worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
-                disp(worldCoord)
+            mod = event.getModifiers()
+            worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
+            disp(worldCoord)
+            if mod==18 %CTRL LEFT CLICK obj.mouseButton == 1 && ~isempty(obj.mapElements)
+
                 if numel(worldCoord) == 3
                     elem = obj.getPointedObject(worldCoord);
-                    disp(['element toutche : ' num2str(elem.getId())]);
+                    disp(['element touched : ' num2str(elem.getId())]);
                     obj.colorSelection(elem);
-                    obj.Draw();
-                    %obj.camera.setTarget(worldCoord);
+                    obj.fenetre.setTextRight(['ID = ' num2str(elem.getId()) '  '])
+
                 end
+            elseif mod==24 %ALT LEFT CLICK
+                %altPressed = bitand(mod,event.ALT_MASK);
+                obj.camera.setTarget(worldCoord);
             end
+            obj.Draw();
+
         end
 
         function cbk_MouseReleased(obj,source,event)
@@ -397,10 +404,10 @@ classdef Scene3D < handle
             mod = event.getModifiers();
             ctrlPressed = bitand(mod,event.CTRL_MASK);
             if ctrlPressed
-                obj.camera.translatePlanAct(3 * dx/obj.canvas.getWidth(), 3 * dy/obj.canvas.getHeight());
+                obj.camera.translatePlanAct(obj.camera.speed * dx/obj.canvas.getWidth(), obj.camera.speed * dy/obj.canvas.getHeight());
             else
                 if (obj.mouseButton == 3)
-                    obj.camera.rotate(dx/obj.canvas.getWidth(), dy/obj.canvas.getHeight());
+                    obj.camera.rotate(obj.camera.sensibility* dx/obj.canvas.getWidth(),obj.camera.sensibility* dy/obj.canvas.getHeight());
                 end
             end
             obj.lumiere.setPosition([obj.camera.getPosition]);
@@ -409,7 +416,7 @@ classdef Scene3D < handle
         end
 
         function cbk_KeyPressed(obj,source,event)
-            %disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
+            % disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
             redraw = true;
             switch event.getKeyChar()
                 case 'x'
@@ -424,6 +431,10 @@ classdef Scene3D < handle
                     obj.camera.upView;                    
                 case 'p' %perspective/ortho
                     obj.camera.switchProjType;
+                case '+' %increase cam speed
+                    obj.camera.speed=min(100,obj.camera.speed+1);
+                case '-' %decrease cam speed
+                    obj.camera.speed=max(5,obj.camera.speed-1);                   
                 case char(27) % ECHAP
                     if obj.selectObject.id ~= 0
                         obj.selectObject = obj.mapElements(obj.selectObject.id).reverseSelect(obj.selectObject);
