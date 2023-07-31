@@ -27,6 +27,7 @@ classdef Framebuffer < handle
             CheckError(gl, 'Erreur du renderbuffer du frameBuffer');
             obj.checkFrameBuffer(gl);
 
+            obj.forme.setModeRendu('T', 'S');
             obj.forme.Init(gl);
 
             obj.UnBind(gl);

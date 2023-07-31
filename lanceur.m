@@ -4,7 +4,6 @@ addpath('outils\');
 addpath('java\');
 
 viewer = Scene3D;
-
 viewer.setCouleurFond([0 0 0.4])
 
 %%%%  definition des objets  %%%%

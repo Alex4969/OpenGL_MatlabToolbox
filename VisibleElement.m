@@ -8,6 +8,7 @@ classdef (Abstract) VisibleElement < handle
         typeLumiere = 'S'
         typeRendu = 'D'
         newRendu logical
+        typeOrientation = 'P' % 'P' Perspective, 'N' Normale a l'ecran, 'F' Fixe, 'O' orthonormé
 
         visible logical
     end
@@ -21,10 +22,6 @@ classdef (Abstract) VisibleElement < handle
             obj.visible = true;
             obj.newRendu = true;
         end % fin du constructeur de VisibleElement
-
-        function res = getLayout(obj)
-            res = obj.GLGeom.nLayout;
-        end
 
         function model = getModelMatrix(obj)
             model = obj.Geom.modelMatrix;
@@ -112,7 +109,7 @@ classdef (Abstract) VisibleElement < handle
         end % fin de verifNewProg
 
         function changerProg(obj, gl)
-            nLayout = obj.getLayout();
+            nLayout = obj.GLGeom.nLayout;
             typeL = obj.typeLumiere;
             if typeL == 'L' && nLayout(4) == 0
                 warning('L objet ne contient pas de normales aux sommets')

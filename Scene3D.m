@@ -60,11 +60,11 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_BLEND);
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
 
+            obj.lumiere.generateUbo(gl);
             obj.axes.Init(gl);
             obj.gyroscope.Init(gl);
             obj.grille.Init(gl);
             obj.framebuffer.Init(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
-            obj.framebuffer.forme.definirModeRendu('T', 'S');
 
             obj.context.release();
 
@@ -108,6 +108,7 @@ classdef Scene3D < handle
         function Draw(obj)
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
+            obj.lumiere.remplirUbo(gl);
             obj.framebuffer.Bind(gl);
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             gl.glEnable(gl.GL_DEPTH_TEST);
@@ -144,10 +145,10 @@ classdef Scene3D < handle
                 else
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
                     progAct.SetUniform3f  (gl, 'uCamPos',     obj.camera.getPosition());
-                    progAct.SetUniform3f  (gl, 'uLightPos',   obj.lumiere.getPosition());
-                    progAct.SetUniform3f  (gl, 'uLightColor', obj.lumiere.getColor());
-                    progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
-                    progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
+                    % progAct.SetUniform3f  (gl, 'uLightPos',   obj.lumiere.getPosition());
+                    % progAct.SetUniform3f  (gl, 'uLightColor', obj.lumiere.getColor());
+                    % progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
+                    % progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
                     elem.Draw(gl);
                 end
             end
@@ -170,7 +171,7 @@ classdef Scene3D < handle
             for i=1:numel(listeElem)
                 listeElem{i}.delete(gl);
             end
-            if numEntries(obj.mapTextures) ~= 0
+            if ~isempty(obj.mapTextures)
                 textures = values(obj.mapTextures);
                 for i=1:numel(textures)
                     textures{1}.delete(gl);
@@ -207,7 +208,7 @@ classdef Scene3D < handle
             if (isa(elem, 'ElementFace') && elem.GLGeom.nLayout(3) ~= 0)
                 slot = obj.getTextureId(fileName, false);
                 elem.textureId = slot;
-                elem.definirModeRendu('T');
+                elem.setModeRendu('T');
                 elem.verifNewProg(obj.getGL);
                 obj.context.release();
             else 

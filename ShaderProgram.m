@@ -9,7 +9,6 @@ classdef ShaderProgram < handle
     end
     
     methods
-
         function obj = ShaderProgram(gl, nLayout, ind) %ind = 'D' dur, 'L' lisse, 'S' sans lumiere
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
@@ -98,7 +97,7 @@ classdef ShaderProgram < handle
             end
 
             srcFrag = obj.readIfContains("shaders/all.frag.glsl", motCle);
-            srcFrag = srcFrag + fileread("shaders/light.frag.glsl");
+            srcFrag = srcFrag + fileread("shaders/light.frag.glsl")
             obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
         end % fin de create Program
 
