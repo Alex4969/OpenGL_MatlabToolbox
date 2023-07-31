@@ -272,7 +272,7 @@ classdef Scene3D < handle
 
         function generateInternalObject(obj)
             tailleAxe = 50;
-            [pos, idx, color] = Axes.generateAxes(tailleAxe, tailleAxe);
+            [pos, idx, color] = Axes.generateAxes(-tailleAxe, tailleAxe);
             axesGeom = Geometry(-1, pos, idx);
             obj.axes = Axes(axesGeom, -tailleAxe, tailleAxe);
             obj.axes.AddColor(color);
@@ -367,24 +367,19 @@ classdef Scene3D < handle
             obj.startY=event.getPoint.getY();
             obj.mouseButton = event.getButton();
             
-            mod = event.getModifiers()
+            mod = event.getModifiers();
             worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
             disp(worldCoord)
             if mod==18 %CTRL LEFT CLICK obj.mouseButton == 1 && ~isempty(obj.mapElements)
-
                 if numel(worldCoord) == 3
                     elem = obj.getPointedObject(worldCoord);
                     disp(['element touched : ' num2str(elem.getId())]);
                     obj.colorSelection(elem);
                     obj.fenetre.setTextRight(['ID = ' num2str(elem.getId()) '  '])
-
                 end
             elseif mod==24 %ALT LEFT CLICK
-                %altPressed = bitand(mod,event.ALT_MASK);
                 obj.camera.setTarget(worldCoord);
             end
-            obj.Draw();
-
         end
 
         function cbk_MouseReleased(obj,source,event)
@@ -404,10 +399,10 @@ classdef Scene3D < handle
             mod = event.getModifiers();
             ctrlPressed = bitand(mod,event.CTRL_MASK);
             if ctrlPressed
-                obj.camera.translatePlanAct(obj.camera.speed * dx/obj.canvas.getWidth(), obj.camera.speed * dy/obj.canvas.getHeight());
+                obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
             else
                 if (obj.mouseButton == 3)
-                    obj.camera.rotate(obj.camera.sensibility* dx/obj.canvas.getWidth(),obj.camera.sensibility* dy/obj.canvas.getHeight());
+                    obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
                 end
             end
             obj.lumiere.setPosition([obj.camera.getPosition]);

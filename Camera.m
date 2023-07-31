@@ -166,8 +166,8 @@ classdef Camera < handle
                 translation = translation + dx * left;
                 translation = translation * (1 + obj.speed);
             end
-            obj.position = obj.position + translation;
-            obj.target   = obj.target   + translation;
+            obj.position = obj.position + translation * obj.speed;
+            obj.target   = obj.target   + translation * obj.speed;
             obj.computeView();
         end % fin de translatePlanAct
 
@@ -193,8 +193,8 @@ classdef Camera < handle
             % conversion en coordonné sphérique et application du changement
             % en coordonnée spherique les axes ne sont pas dans le meme ordre : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
             rayon = norm(pos);
-            theta = acos(pos(2) / rayon)   - dy;
-            phi   = atan2(pos(1), pos(3))  - dx;
+            theta = acos(pos(2) / rayon)   - dy * obj.sensibility;
+            phi   = atan2(pos(1), pos(3))  - dx * obj.sensibility;
             if (theta < 0)
                 theta = 0.01;
             elseif (theta > pi)

@@ -103,10 +103,6 @@ texteP = ElementTexte(11, 'Texte perspective', ravie, 'P', [1 0.5 0.7 1.0], 0);
 texteP.setModelMatrix(MTrans3D([-2 -2 -2]));
 viewer.AjouterObjet(texteP);
 
-texteF = ElementTexte(12, 'Texte Fixe', ravie, 'F', [0.2 0.8 0.2 1.0], 1);
-texteF.setModelMatrix(MTrans3D([-1 1 0]));
-viewer.AjouterObjet(texteF);
-
 texteN = ElementTexte(13, 'Texte Ancre', ravie, 'N', [0.8 0.1 0.65 1.0], 0);
 texteN.setModelMatrix(MTrans3D([2 2 2]));
 viewer.AjouterObjet(texteN);
