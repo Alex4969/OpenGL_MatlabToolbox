@@ -29,6 +29,18 @@ pyramide2 = ElementFace(pyraColorGeom);
 pyramide2.AddColor(couleurPyramide);
 viewer.AjouterObjet(pyramide2);
 
+% nuage de points avec une couleur par sommet
+% couleurPoints = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
+%couleurPyramide = [ 1 0 0 ; 1 1 0 ; 0 1 0 ; 0 0.6 1 ; 1 1 1];
+posPoints=rand(1000,3)*2;
+couleurPoints =rand(1000,3);
+cloudGeom = Geometry(25, posPoints, [1:1000]);
+% pyraColorGeom.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
+cloudPoints = ElementPoint(cloudGeom);
+cloudPoints.AddColor(couleurPoints);
+viewer.AjouterObjet(cloudPoints);
+
+
 % pyramide avec texture
 pyraTexGeom = Geometry(3, posPyramide, indicesPyramide);
 pyraTexGeom.setModelMatrix(MTrans3D([-4 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
