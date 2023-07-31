@@ -93,10 +93,10 @@ chessGeom = Geometry(9);
 chessGeom.CreateFromFile('objets3D/chess4_ascii.stl');
 chess = ElementFace(chessGeom);
 chess.GenerateNormals();
-chess.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02));
-%chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2));
-viewer.AjouterObjet(chess);
 chess.setCouleurFaces(rand(1,3));
+chess.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02));
+% chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2));
+viewer.AjouterObjet(chess);
 
 ravie = Police("ravie");
 texteP = ElementTexte(11, 'Texte perspective', ravie, 'P', [1 0.5 0.7 1.0], 0);

@@ -8,7 +8,6 @@ classdef Scene3D < handle
         framebuffer Framebuffer
 
         mapElements         % map contenant les objets 3D de la scenes
-        listeShaders        % dictionnaire qui lie le nom du fichier glsl a son programme
         mapTextures         % dictionnaire qui lie le nom de l'image a sa texture
 
         camera Camera       % instance de la camera
@@ -52,7 +51,6 @@ classdef Scene3D < handle
             obj.mapElements = containers.Map('KeyType','int32','ValueType','any');
             obj.mapTextures = containers.Map('KeyType','char', 'ValueType', 'any');
             obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
-            obj.listeShaders = dictionary;
 
             gl = obj.getGL();
             gl.glViewport(0, 0, obj.canvas.getWidth(), obj.canvas.getHeight());
@@ -171,12 +169,6 @@ classdef Scene3D < handle
             listeElem = values(obj.mapElements);
             for i=1:numel(listeElem)
                 listeElem{i}.delete(gl);
-            end
-            if numEntries(obj.listeShaders) ~= 0
-                progs = values(obj.listeShaders);
-                for i=1:numel(progs)
-                    progs{1}.delete(gl);
-                end
             end
             if numEntries(obj.mapTextures) ~= 0
                 textures = values(obj.mapTextures);
@@ -367,18 +359,18 @@ classdef Scene3D < handle
             obj.startY=event.getPoint.getY();
             obj.mouseButton = event.getButton();
             
-            mod = event.getModifiers();
             worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
-            disp(worldCoord)
-            if mod==18 %CTRL LEFT CLICK obj.mouseButton == 1 && ~isempty(obj.mapElements)
-                if numel(worldCoord) == 3
+            % disp(worldCoord)
+            if numel(worldCoord) == 3
+                mod = event.getModifiers();
+                if mod==18 %CTRL LEFT CLICK
                     elem = obj.getPointedObject(worldCoord);
                     disp(['element touched : ' num2str(elem.getId())]);
                     obj.colorSelection(elem);
                     obj.fenetre.setTextRight(['ID = ' num2str(elem.getId()) '  '])
+                elseif mod==24 %ALT LEFT CLICK
+                    obj.camera.setTarget(worldCoord);
                 end
-            elseif mod==24 %ALT LEFT CLICK
-                obj.camera.setTarget(worldCoord);
             end
         end
 

@@ -172,7 +172,7 @@ classdef Camera < handle
         end % fin de translatePlanAct
 
         function zoom(obj,signe)
-            facteur = 1 + signe*0.05*obj.sensibility
+            facteur = 1 + signe*0.05*obj.sensibility;
             vect = obj.position - obj.target;
             vect = vect * facteur;
             obj.position = obj.target + vect;

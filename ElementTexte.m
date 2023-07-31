@@ -61,7 +61,7 @@ classdef ElementTexte < VisibleElement
 
     methods(Static = true)
         function [pos, ind, mapping] = constructText(str, police, ancre)
-            pos = zeros(strlength(str) * 4, 3);
+            pos = zeros(strlength(str) * 4, 2);
             mapping = zeros(strlength(str) * 4, 2);
             cursor = struct('x', 0, 'y', 0);
             ind = [];
@@ -70,10 +70,10 @@ classdef ElementTexte < VisibleElement
                 infos = police.letterProperties(str(i));
                 cursor.x = cursor.x + infos.xoffset;
                 cursor.y = cursor.y - infos.yoffset;
-                pos(base + 1, 1:3) = [cursor.x              cursor.y               0];
-                pos(base + 2, 1:3) = [cursor.x+infos.width  cursor.y               0];
-                pos(base + 3, 1:3) = [cursor.x+infos.width  cursor.y-infos.height  0];
-                pos(base + 4, 1:3) = [cursor.x              cursor.y-infos.height  0];
+                pos(base + 1, 1:2) = [cursor.x              cursor.y             ];
+                pos(base + 2, 1:2) = [cursor.x+infos.width  cursor.y             ];
+                pos(base + 3, 1:2) = [cursor.x+infos.width  cursor.y-infos.height];
+                pos(base + 4, 1:2) = [cursor.x              cursor.y-infos.height];
                 maxY = 512 - infos.y;
                 mapping(base + 1, 1:2) = [  infos.x                 maxY              ];
                 mapping(base + 2, 1:2) = [  infos.x+infos.width     maxY              ];

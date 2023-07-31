@@ -76,6 +76,7 @@ classdef (Abstract) VisibleElement < handle
 
         function delete(obj, gl)
             obj.GLGeom.delete(gl);
+            obj.shader.delete(gl);
         end % fin de delete
 
         function Init(obj, gl)
@@ -89,6 +90,5 @@ classdef (Abstract) VisibleElement < handle
         sNew = reverseSelect(obj, s)
         changerProg(obj, gl);
     end % fin des methodes abstraites
-
 end % fin de la classe VisibleElement
 

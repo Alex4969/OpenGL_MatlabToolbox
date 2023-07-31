@@ -10,32 +10,32 @@ classdef ShaderProgram < handle
     
     methods
 
-        function obj = ShaderProgram(gl, layout, ind) %ind = 'D' dur, 'L' lisse, 'S' sans lumiere
+        function obj = ShaderProgram(gl, nLayout, ind) %ind = 'D' dur, 'L' lisse, 'S' sans lumiere
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
-            if ind == 'L'
-                bSmooth = true;
+            motCle(1) = "POS" + nLayout(1);
+            if nLayout(2) > 0
+                motCle(2) = "COL" + nLayout(2);
+            elseif nLayout(3) > 0
+                motCle(2) = "TEX";
             else
-                bSmooth = false;
+                motCle(2) = "DEF";
             end
             if ind == 'S'
-                file = "noLight";
+                obj.createProgNoLight(gl, motCle);
             else
-                file = "all";
+                if ind == 'L' && nLayout(4) > 0 
+                    bSmooth = true;
+                    motCle(3) = "NORM";
+                else
+                    bSmooth = false;
+                end
+                obj.createProgWithLight(gl, motCle, bSmooth)
             end
-            obj.createProg(gl, file, layout, bSmooth);
             gl.glLinkProgram(obj.shaderProgId);
             gl.glValidateProgram(obj.shaderProgId);
             CheckError(gl, 'erreur de compilation des shaders');
         end % fin du constructeur ShaderProgram
-
-        function compileFile(obj, gl, type, src)
-            shaderId = gl.glCreateShader(type);
-            gl.glShaderSource(shaderId, 1, src, []);
-            gl.glCompileShader(shaderId);
-            gl.glAttachShader(obj.shaderProgId, shaderId);
-            gl.glDeleteShader(shaderId);
-        end %fin de compileFile
 
         function Bind(obj, gl)
             gl.glUseProgram(obj.shaderProgId);
@@ -84,42 +84,30 @@ classdef ShaderProgram < handle
             end
         end % fin de findLocation
 
-        function createProg(obj, gl, file, nLayout, bSmooth)
-            motCle(1) = "POS" + nLayout(1);
-            if nLayout(2) > 0
-                motCle(2) = "COL" + nLayout(2);
-            elseif nLayout(3) > 0
-                motCle(2) = "TEX";
-            else
-                motCle(2) = "DEF";
-            end
-            if bSmooth == 1 % On veut un affichage smooth (normales aux sommets)
-                if nLayout(4) > 0
-                    motCle(3) = "NORM";
-                else
-                    %disp('Affichage smooth impossible pour un objet sans normales aux sommets');
-                    bSmooth = false;
-                end
-            end
-
-            src = obj.readIfContains("shaders/" + file + ".vert.glsl", motCle);
+        function createProgWithLight(obj, gl, motCle, bSmooth)
+            srcVert = obj.readIfContains("shaders/all.vert.glsl", motCle);
             if bSmooth == 1
-                src = src + obj.readIfContains("shaders/allSmooth.vert.glsl", motCle);
-            elseif file == "all"
-                src = src + obj.readIfContains("shaders/allSharp.vert.glsl", motCle);
+                srcVert = srcVert + obj.readIfContains("shaders/allSmooth.vert.glsl", motCle);
+                obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
+            else
+                srcVert = srcVert + obj.readIfContains("shaders/allSharp.vert.glsl", motCle);
+                obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
+                %affichage avec normal aux faces, il faut générer les normales dans un geometry shaders
+                srcGeom = obj.readIfContains("shaders/all.geom.glsl", motCle);
+                obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, srcGeom);
             end
-            obj.compileFile(gl, gl.GL_VERTEX_SHADER, src);
 
-            if bSmooth == 0 && file == "all"%affichage avec normal aux faces, il faut générer les normales dans un geometry shaders
-                src = obj.readIfContains("shaders/all.geom.glsl", motCle);
-                obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, src);
-            end
+            srcFrag = obj.readIfContains("shaders/all.frag.glsl", motCle);
+            srcFrag = srcFrag + fileread("shaders/light.frag.glsl");
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
+        end % fin de create Program
 
-            src = obj.readIfContains("shaders/" + file + ".frag.glsl", motCle);
-            if file == "all"
-                src = src + fileread("shaders/light.frag.glsl");
-            end
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, src);
+        function createProgNoLight(obj, gl, motCle)
+            srcVert = obj.readIfContains("shaders/noLight.vert.glsl", motCle);
+            obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
+
+            srcFrag = obj.readIfContains("shaders/noLight.frag.glsl", motCle);
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
         end % fin de create Program
 
         function src = readIfContains(~, filePath, keyWords)
@@ -137,5 +125,13 @@ classdef ShaderProgram < handle
             end
             fclose(fId);
         end % fin de readIfContains
+
+        function compileFile(obj, gl, type, src)
+            shaderId = gl.glCreateShader(type);
+            gl.glShaderSource(shaderId, 1, src, []);
+            gl.glCompileShader(shaderId);
+            gl.glAttachShader(obj.shaderProgId, shaderId);
+            gl.glDeleteShader(shaderId);
+        end %fin de compileFile
     end % fin des methodes privées
 end % fin classe ShaderProgram
