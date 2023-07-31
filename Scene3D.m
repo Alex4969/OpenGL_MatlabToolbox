@@ -64,7 +64,7 @@ classdef Scene3D < handle
             obj.gyroscope.Init(gl);
             obj.grille.Init(gl);
             obj.framebuffer.Init(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
-            obj.framebuffer.forme.changerProg(gl, 'S');
+            obj.framebuffer.forme.definirModeRendu('T', 'S');
 
             obj.context.release();
 
@@ -88,12 +88,12 @@ classdef Scene3D < handle
                 disp('l objet a ajouter n est pas un VisibleElement');
                 return
             end
-            elem.Init(obj.getGL());
-            obj.mapElements(elem.getId()) = elem;
             if isa(elem, 'ElementTexte')
                 slot = obj.getTextureId(elem.police.name + ".png", true);
                 elem.textureId = slot;
             end
+            elem.Init(obj.getGL());
+            obj.mapElements(elem.getId()) = elem;
             obj.context.release();
         end % fin de ajouterObjet
 
@@ -207,7 +207,9 @@ classdef Scene3D < handle
             if (isa(elem, 'ElementFace') && elem.GLGeom.nLayout(3) ~= 0)
                 slot = obj.getTextureId(fileName, false);
                 elem.textureId = slot;
-                elem.changerProg(obj.getGL());
+                elem.definirModeRendu('T');
+                elem.verifNewProg(obj.getGL);
+                obj.context.release();
             else 
                 warning('L objet donne en parametre n est pas texturable');
             end

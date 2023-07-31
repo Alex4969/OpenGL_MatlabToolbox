@@ -5,6 +5,9 @@ classdef (Abstract) VisibleElement < handle
         Geom Geometry
         GLGeom GLGeometry
         shader ShaderProgram
+        typeLumiere = 'S'
+        typeRendu = 'D'
+        newRendu logical
 
         visible logical
     end
@@ -16,6 +19,7 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom = aGeom;
             obj.GLGeom = GLGeometry(obj.Geom.listePoints);
             obj.visible = true;
+            obj.newRendu = true;
         end % fin du constructeur de VisibleElement
 
         function res = getLayout(obj)
@@ -42,19 +46,27 @@ classdef (Abstract) VisibleElement < handle
 
         function AddColor(obj, matColor)
             obj.GLGeom.addDataToBuffer(matColor, 2);
+            obj.typeRendu = 'C';
+            obj.newRendu = true;
         end
 
         function AddMapping(obj, matMapping)
             obj.GLGeom.addDataToBuffer(matMapping, 3);
+            obj.typeRendu = 'T';
+            obj.newRendu = true;
         end
 
         function AddNormals(obj, matNormales)
             obj.GLGeom.addDataToBuffer(matNormales, 4);
+            obj.typeLumiere = 'L';
+            obj.newRendu = true;
         end
 
         function GenerateNormals(obj)
             normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
             obj.GLGeom.addDataToBuffer(normales, 4);
+            obj.typeLumiere = 'L';
+            obj.newRendu = true;
         end
 
         function id = getId(obj)
@@ -81,14 +93,54 @@ classdef (Abstract) VisibleElement < handle
 
         function Init(obj, gl)
             obj.GLGeom.CreateGLObject(gl, obj.Geom.listeConnection);
-            obj.changerProg(gl);
-        end
+            obj.verifNewProg(gl);
+        end % fin de Init
+
+        function setModeRendu(obj, newTypeRendu, newTypeLumiere)
+            if nargin == 3
+                obj.typeLumiere = newTypeLumiere;
+            end
+            obj.typeRendu = newTypeRendu;
+            obj.newRendu = true;
+        end % fin de setModeRendu
+
+        function verifNewProg(obj, gl)
+            if obj.newRendu
+                obj.newRendu = false;
+                obj.changerProg(gl);
+            end
+        end % fin de verifNewProg
+
+        function changerProg(obj, gl)
+            nLayout = obj.getLayout();
+            typeL = obj.typeLumiere;
+            if typeL == 'L' && nLayout(4) == 0
+                warning('L objet ne contient pas de normales aux sommets')
+                typeL = 'D';
+            end
+            if nLayout(3) > 0 && obj.textureId == -1
+                nLayout(3) = 0;
+            end
+            switch obj.typeRendu
+                case 'T' % texture
+                    if nLayout(3) > 0
+                        nLayout(2) = 0;
+                    end
+                case 'C' % color
+                    if nLayout(2) > 0
+                        nLayout(3) = 0;
+                    end
+                case 'D'
+                    nLayout([2, 3]) = 0;
+            end
+            obj.shader = ShaderProgram(gl, nLayout, typeL);
+            obj.shader.Bind(gl);
+        end % fin de changerProg
     end % fin des methodes defauts
 
     methods (Abstract = true)
         Draw(obj, gl)
         sNew = reverseSelect(obj, s)
-        changerProg(obj, gl);
     end % fin des methodes abstraites
 end % fin de la classe VisibleElement
 

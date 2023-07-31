@@ -59,11 +59,6 @@ classdef ElementPoint < VisibleElement
             obj.couleurLignes   = s.couleur;
             obj.epaisseurLignes = s.epaisseur;
         end
-
-        function changerProg(obj, gl)
-            obj.shader = ShaderProgram(gl, obj.getLayout(), 'S');
-        end
-
     end % fin des methodes defauts
 
 end  % fin classe ElementLigne

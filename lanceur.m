@@ -80,13 +80,13 @@ viewer.AjouterObjet(cyl2);
 viewer.ApplyTexture(cyl2, "couleurs.jpg");
 
 %generation du plan
-[posPlan, indPlan, mappingPlan] = generatePlan(16, 9);
-planGeom = Geometry(8, posPlan, indPlan);
-plan1 = ElementFace(planGeom);
-plan1.AddMapping(mappingPlan);
-plan1.setModelMatrix(MTrans3D([0 0 -4]));
-viewer.AjouterObjet(plan1);
-viewer.ApplyTexture(plan1, "monde.jpg");
+% [posPlan, indPlan, mappingPlan] = generatePlan(16, 9);
+% planGeom = Geometry(8, posPlan, indPlan);
+% plan1 = ElementFace(planGeom);
+% plan1.AddMapping(mappingPlan);
+% plan1.setModelMatrix(MTrans3D([0 0 -4]));
+% viewer.AjouterObjet(plan1);
+% viewer.ApplyTexture(plan1, "monde.jpg");
 
 % piece d'echec depuis un fichier
 chessGeom = Geometry(9);

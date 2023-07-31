@@ -21,6 +21,7 @@ classdef ElementTexte < VisibleElement
             obj.police = police;
             obj.type = type;
             obj.couleurTexte = color;
+            obj.typeRendu = 'T';
         end % fin du constructeur Texte
 
         function Draw(obj, gl, camAttrib)
@@ -28,6 +29,7 @@ classdef ElementTexte < VisibleElement
             if obj.visible == 0
                 return
             end
+            obj.verifNewProg(gl);
             obj.GLGeom.Bind(gl);
             model = obj.getModelMatrix();
             if obj.type == 'F' % On plaque le texte sur le premier plan du cube de projection
@@ -46,10 +48,6 @@ classdef ElementTexte < VisibleElement
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             CheckError(gl, 'apres le dessin d un texte');
         end % fin de Draw
-
-        function changerProg(obj, gl)
-            obj.shader = ShaderProgram(gl, obj.getLayout(), 'S');
-        end
 
         function sNew = reverseSelect(obj, s)
             sNew.id          = obj.getId();

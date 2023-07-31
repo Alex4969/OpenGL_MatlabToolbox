@@ -23,6 +23,7 @@ classdef ElementLigne < VisibleElement
             if obj.visible == 0
                 return
             end
+            obj.verifNewProg(gl);
             obj.GLGeom.Bind(gl);
             obj.shader.SetUniformMat4(gl, 'uModelMatrix', obj.Geom.modelMatrix);
 
@@ -58,12 +59,6 @@ classdef ElementLigne < VisibleElement
             sNew.epaisseur = obj.epaisseurLignes;
             obj.couleurLignes   = s.couleur;
             obj.epaisseurLignes = s.epaisseur;
-        end
-
-        function changerProg(obj, gl)
-            obj.shader = ShaderProgram(gl, obj.getLayout(), 'S');
-        end
-
+        end % fin de reverseSelect
     end % fin des methodes defauts
-
 end  % fin classe ElementLigne

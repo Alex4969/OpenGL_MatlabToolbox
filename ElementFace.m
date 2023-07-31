@@ -14,6 +14,7 @@ classdef ElementFace < VisibleElement
         function obj = ElementFace(aGeom)
             %FACEELEMENT 
             obj@VisibleElement(aGeom); % appel au constructeur parent
+            obj.typeLumiere = 'D';
 
             obj.epaisseurArretes = 2;
             obj.epaisseurPoints = 4;
@@ -28,14 +29,15 @@ classdef ElementFace < VisibleElement
             if obj.visible == 0
                 return
             end
+            obj.verifNewProg(gl);
             obj.GLGeom.Bind(gl);
             obj.shader.SetUniformMat4(gl, 'uModelMatrix', obj.Geom.modelMatrix);
 
-            if obj.textureId ~= -1
+            if obj.typeRendu == 'T' && obj.textureId ~= -1
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
                 obj.shader.SetUniform1i(gl, 'uTexture', obj.textureId);
                 gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-            elseif obj.GLGeom.nLayout(2) ~= 0
+            elseif obj.typeRendu == 'C' && obj.GLGeom.nLayout(2) ~= 0
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
                 gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             else
@@ -44,30 +46,24 @@ classdef ElementFace < VisibleElement
                     obj.shader.SetUniform4f(gl, 'uColor', obj.couleurFaces);
                     gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
                 end
-            end
-            if (numel(obj.couleurArretes) == 4)
-                gl.glLineWidth(obj.epaisseurArretes);
-                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
-                obj.shader.SetUniform4f(gl, 'uColor', obj.couleurArretes);
-                gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-            end
-                
-            if (numel(obj.couleurPoints) == 4)
-                gl.glPointSize(obj.epaisseurPoints);
-                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_POINT);
-                obj.shader.SetUniform4f(gl, 'uColor', obj.couleurPoints);
-                gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+
+                if (numel(obj.couleurArretes) == 4)
+                    gl.glLineWidth(obj.epaisseurArretes);
+                    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
+                    obj.shader.SetUniform4f(gl, 'uColor', obj.couleurArretes);
+                    gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+                end
+                    
+                if (numel(obj.couleurPoints) == 4)
+                    gl.glPointSize(obj.epaisseurPoints);
+                    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_POINT);
+                    obj.shader.SetUniform4f(gl, 'uColor', obj.couleurPoints);
+                    gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+                end
             end
             CheckError(gl, 'apres le dessin');
             obj.GLGeom.Unbind(gl);
         end % fin de Draw
-
-        function changerProg(obj, gl, type)
-            if nargin == 2
-                type = 'L';
-            end
-            obj.shader = ShaderProgram(gl, obj.getLayout(), type);
-        end
 
         function setEpaisseurArretes(obj, newEp)
             obj.epaisseurArretes = newEp;
@@ -95,8 +91,7 @@ classdef ElementFace < VisibleElement
             sNew.epaisseur = obj.epaisseurArretes;
             obj.couleurArretes   = s.couleur;
             obj.epaisseurArretes = s.epaisseur;
-        end
-
+        end % fin de reverseSelect
     end % fin de methodes defauts
 
     methods (Access = private)
@@ -114,6 +109,5 @@ classdef ElementFace < VisibleElement
             end
         end % fin de testNewCol
     end % fin des methodes privees
-
 end % fin classe ElementFace
 
