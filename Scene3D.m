@@ -7,8 +7,8 @@ classdef Scene3D < handle
         context             % GLContext
         framebuffer Framebuffer
 
-        mapElements         % map contenant les objets 3D de la scenes
-        mapTextures         % dictionnaire qui lie le nom de l'image a sa texture
+        mapElements containers.Map  % map contenant les objets 3D de la scenes
+        mapTextures containers.Map  % dictionnaire qui lie le nom de l'image a sa texture
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
@@ -42,9 +42,6 @@ classdef Scene3D < handle
             obj.canvas.setAutoSwapBufferMode(false);
             obj.canvas.display();
             obj.context = obj.fenetre.canvas.javaObj.getContext();
-
-            obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
-            obj.lumiere = Light([obj.camera.getPosition], [1 1 1]);
             
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
@@ -60,7 +57,8 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_BLEND);
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
 
-            obj.lumiere.generateUbo(gl);
+            obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
+            obj.lumiere = Light(gl, [obj.camera.getPosition], [1 1 1]);
             obj.axes.Init(gl);
             obj.gyroscope.Init(gl);
             obj.grille.Init(gl);
@@ -109,55 +107,31 @@ classdef Scene3D < handle
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
             obj.lumiere.remplirUbo(gl);
+            obj.camera.remplirUbo(gl);
             obj.framebuffer.Bind(gl);
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             gl.glEnable(gl.GL_DEPTH_TEST);
 
-            %%afficher le gysmo
-            progAct = obj.gyroscope.shader;
-            progAct.Bind(gl);
-            gyroMatrix = MProj3D('O', [obj.camera.getRatio() 1 1 20]) * obj.camera.getViewMatrix();
-            gyroMatrix(1:3, 4) = [-0.97+0.1/obj.camera.getRatio, -0.87, 0]; %on remplace la position par le coin gauche de l'ecran
-            progAct.SetUniformMat4(gl, 'uCamMatrix', gyroMatrix);
-            obj.gyroscope.Draw(gl);
+            camAttrib = obj.camera.getAttributes();
 
-            %dessiner les objets interne
-            obj.drawInternalObject(gl, obj.axes);
-            obj.drawInternalObject(gl, obj.grille);
+            %dessin des objets internes
+            obj.gyroscope.Draw(gl, camAttrib)
+            obj.axes.Draw(gl, camAttrib)
+            obj.grille.Draw(gl, camAttrib)
             if ~isempty(obj.lumiere.forme)
-                obj.drawInternalObject(gl, obj.lumiere.forme);
+                obj.lumiere.forme.Draw(gl, camAttrib)
             end
 
+            %dessin des objets ajouter a la scene
             listeElem = obj.orderElem();
             for i=1:numel(listeElem)
                 elem = listeElem{i};
-                if (i == 1 || progAct ~= elem.shader)
-                    progAct = elem.shader;
-                    progAct.Bind(gl);
-                end
-                if isa(elem, 'ElementTexte')
-                    if (elem.type == 'P' || elem.type == 'N')
-                        progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getCameraMatrix());
-                    elseif elem.type == 'F'
-                        progAct.SetUniformMat4(gl, 'uCamMatrix', obj.camera.getProjMatrix());
-                    end
-                    elem.Draw(gl, obj.camera.getAttributes);
-                else
-                    progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-                    progAct.SetUniform3f  (gl, 'uCamPos',     obj.camera.getPosition());
-                    % progAct.SetUniform3f  (gl, 'uLightPos',   obj.lumiere.getPosition());
-                    % progAct.SetUniform3f  (gl, 'uLightColor', obj.lumiere.getColor());
-                    % progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
-                    % progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
-                    elem.Draw(gl);
-                end
+                elem.Draw(gl, camAttrib);
             end
 
             obj.framebuffer.UnBind(gl);
             gl.glDisable(gl.GL_DEPTH_TEST);
-            progAct = obj.framebuffer.forme.shader;
-            progAct.Bind(gl);
-            obj.framebuffer.forme.Draw(gl);
+            obj.framebuffer.forme.Draw(gl, camAttrib);
 
             obj.context.release();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
@@ -171,11 +145,9 @@ classdef Scene3D < handle
             for i=1:numel(listeElem)
                 listeElem{i}.delete(gl);
             end
-            if ~isempty(obj.mapTextures)
-                textures = values(obj.mapTextures);
-                for i=1:numel(textures)
-                    textures{1}.delete(gl);
-                end
+            textures = values(obj.mapTextures);
+            for i=1:numel(textures)
+                textures{1}.delete(gl);
             end
             obj.axes.delete(gl);
             obj.grille.delete(gl);
@@ -209,8 +181,6 @@ classdef Scene3D < handle
                 slot = obj.getTextureId(fileName, false);
                 elem.textureId = slot;
                 elem.setModeRendu('T');
-                elem.verifNewProg(obj.getGL);
-                obj.context.release();
             else 
                 warning('L objet donne en parametre n est pas texturable');
             end
@@ -235,13 +205,6 @@ classdef Scene3D < handle
             gl = obj.context.getCurrentGL();
         end % fin de getGL
 
-        function drawInternalObject(obj, gl, elem)
-            progAct = elem.shader;
-            progAct.Bind(gl);
-            progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-            elem.Draw(gl);
-        end % fin de drawInternalObject
-
         function slot = getTextureId(obj, fileName, texte)
             %GETTEXTUREID Renvoie l'id de la texture correspondant au fichier.
             % si elle n'existe pas, elle est créée.
@@ -263,7 +226,7 @@ classdef Scene3D < handle
                     slot = -1;
                 end
             end
-        end
+        end % fin de getTextureId
 
         function generateInternalObject(obj)
             tailleAxe = 50;
@@ -278,6 +241,8 @@ classdef Scene3D < handle
             obj.gyroscope = Axes(gysmoGeom, 0, tailleGysmo);
             obj.gyroscope.setEpaisseur(4);
             obj.gyroscope.AddColor(color);
+            obj.gyroscope.setModelMatrix(MTrans3D([-0.97, -0.87, 0]));
+            obj.gyroscope.typeOrientation = 'O';
 
             [pos, idx] = Grid.generateGrid(obj.axes.getFin(), 2);
             grilleGeom = Geometry(-3, pos, idx);
@@ -286,6 +251,7 @@ classdef Scene3D < handle
             [pos, idx, mapping] = generatePlan(2, 2);
             planGeom = Geometry(0, pos, idx);
             frameBufferPlan = ElementFace(planGeom);
+            frameBufferPlan.typeOrientation = 'R';
             frameBufferPlan.AddMapping(mapping);
             obj.framebuffer = Framebuffer(frameBufferPlan);
         end % fin de generateInternalObject
@@ -306,7 +272,7 @@ classdef Scene3D < handle
 
             if all(n, "all")
                 worldCoord = 0;
-                disp('le lancer n a pas touché de cible');
+                % disp('le lancer n a pas touché de cible');
             else
                 profondeur(n) = nan; % pourquoi ?
                 profondeur = rot90(profondeur);

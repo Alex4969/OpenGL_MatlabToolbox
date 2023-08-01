@@ -20,16 +20,17 @@ classdef Light < handle
     end
     
     methods
-        function obj = Light(pos, col, dir, param)
+        function obj = Light(gl, pos, col, dir, param)
             %LIGHT Construct an instance of this class
-            if nargin < 1, pos   = [-5 -5  5]; end
-            if nargin < 2, col   = [ 1  1  1]; end
-            if nargin < 3, dir   = [ 0 -1  0]; end
-            if nargin < 4, param = [ 0  0  0]; end
+            if nargin < 2, pos   = [-5 -5  5]; end
+            if nargin < 3, col   = [ 1  1  1]; end
+            if nargin < 4, dir   = [ 0 -1  0]; end
+            if nargin < 5, param = [ 0  0  0]; end
             obj.position = pos;
             obj.couleurLumiere = col;
             obj.directionLumiere = dir;
             obj.paramsLumiere = param;
+            obj.generateUbo(gl);
             obj.updateNeeded = true;
         end % fin du constructeur de light
 
@@ -129,7 +130,7 @@ classdef Light < handle
             gl.glGenBuffers(1, obj.UBOBuffer);
             obj.UBOId = typecast(obj.UBOBuffer.array(), 'uint32');
             gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, obj.UBOId);
-            gl.glBufferData(gl.GL_UNIFORM_BUFFER, 64, [], gl.GL_STATIC_DRAW);
+            gl.glBufferData(gl.GL_UNIFORM_BUFFER, 64, [], gl.GL_DYNAMIC_DRAW);
             gl.glBindBufferRange(gl.GL_UNIFORM_BUFFER, 0, obj.UBOId, 0, 64);
             gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, 0);
         end
@@ -137,38 +138,22 @@ classdef Light < handle
         function remplirUbo(obj, gl)
             if obj.updateNeeded
                 gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, obj.UBOId);
-                obj.putColor(gl);
-                obj.putPos(gl);
-                obj.putDir(gl);
-                obj.putData(gl);
+                obj.putVec(gl, obj.position, 0);
+                obj.putVec(gl, obj.couleurLumiere, 16);
+                obj.putVec(gl, obj.directionLumiere, 32);
+                obj.putVec(gl, obj.paramsLumiere, 48);
                 gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, 0);
             end
             obj.updateNeeded = false;
         end
-    end
+    end % fin des methodes defauts
 
     methods (Access = private)
-        function putPos(obj, gl)
-            obj.putVec(gl, obj.position, 0);
-        end
-
-        function putColor(obj, gl)
-            obj.putVec(gl, obj.couleurLumiere, 16);
-        end
-
-        function putDir(obj, gl)
-            obj.putVec(gl, obj.directionLumiere, 32);
-        end
-
-        function putData(obj, gl)
-            obj.putVec(gl, obj.paramsLumiere, 48);
-        end
-
-        function putVec(obj, gl, vec, deb)
+        function putVec(~, gl, vec, deb)
             vecUni = java.nio.FloatBuffer.allocate(4);
             vecUni.put(vec(:));
             vecUni.rewind();
             gl.glBufferSubData(gl.GL_UNIFORM_BUFFER, deb, 16, vecUni);
         end
-    end % fin des methodes defauts
+    end % fin des methodes privees
 end % fin classe light
