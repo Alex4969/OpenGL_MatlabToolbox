@@ -29,7 +29,7 @@ classdef Police < handle
                 tline = fgetl(fId);
             end
             
-            nbLigne = tline(13:14);
+            nbLigne = extractAfter(tline, 'count=');
             nbLigne = str2double(nbLigne);
         
             for i=1:nbLigne
@@ -41,25 +41,24 @@ classdef Police < handle
         end % fin de readFnt
         
         function [letter, infos] = readLigne(~, ligne)
-            tmp = ligne(9:11);
-            letter = int16(str2double(tmp));
+            tmp = extractBetween(ligne, 'id=', ' ');
+            letter = int16(str2double(tmp{1}));
             
-            tmp = ligne(19:21);
-            infos.x = int16(str2double(tmp));
-            tmp = ligne(26:28);
-            infos.y = int16(str2double(tmp));
-            tmp = ligne(37:39);
-            infos.width = int16(str2double(tmp));
-            tmp = ligne(49:51);
-            infos.height = int16(str2double(tmp));
-            tmp = ligne(62:64);
-            infos.xoffset = int16(str2double(tmp));
-            tmp = ligne(75:77);
-            infos.yoffset = int16(str2double(tmp));
-            tmp = ligne(89:91);
-            infos.xadvance = int16(str2double(tmp));
+            tmp = extractBetween(ligne, 'x=', ' ');
+            infos.x = int16(str2double(tmp{1}));
+            tmp = extractBetween(ligne, 'y=', ' ');
+            infos.y = int16(str2double(tmp{1}));
+            tmp = extractBetween(ligne, 'width=', ' ');
+            infos.width = int16(str2double(tmp{1}));
+            tmp = extractBetween(ligne, 'height=', ' ');
+            infos.height = int16(str2double(tmp{1}));
+            tmp = extractBetween(ligne, 'xoffset=', ' ');
+            infos.xoffset = int16(str2double(tmp{1}));
+            tmp = extractBetween(ligne, 'yoffset=', ' ');
+            infos.yoffset = int16(str2double(tmp{1}));
+            tmp = extractBetween(ligne, 'xadvance=', ' ');
+            infos.xadvance = int16(str2double(tmp{1}));
         end % fin de readLigne
     end % fin des methodes privées
-
 end % fin classe Police
 
