@@ -5,7 +5,6 @@ classdef ElementTexte < VisibleElement
     properties
         str                 % le texte a afficher
         police Police
-        type                % 'P' : perspective, 'N' : normal, de face, 'F' : Fixe
         couleurTexte        % 1x4 double entre 0 et 1
         textureId = -1
     end
@@ -19,7 +18,7 @@ classdef ElementTexte < VisibleElement
             obj.AddMapping(mapping);
             obj.str = str;
             obj.police = police;
-            obj.type = type;
+            obj.typeOrientation = type;
             obj.couleurTexte = color;
             obj.typeRendu = 'T';
         end % fin du constructeur Texte
@@ -29,18 +28,8 @@ classdef ElementTexte < VisibleElement
             if obj.visible == 0
                 return
             end
-            obj.verifNewProg(gl);
-            obj.GLGeom.Bind(gl);
-            model = obj.getModelMatrix();
-            if obj.type == 'F' % On plaque le texte sur le premier plan du cube de projection
-                model(1, 4) = model(1, 4) * camAttrib.maxX;
-                model(2, 4) = model(2, 4) * camAttrib.maxY;
-                model(3, 4) = -camAttrib.near;
-                model  = model * MScale3D(camAttrib.coef);
-            elseif obj.type == 'N' % On inverse l'effet de rotation de la caméra
-                model(1:3, 1:3) = model(1:3, 1:3) / camAttrib.rot;
-            end
-            obj.shader.SetUniformMat4(gl, 'uModelMatrix', model);
+            
+            obj.CommonDraw(gl, camAttrib);
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
             obj.shader.SetUniform1i(gl, 'uTexture', obj.textureId);

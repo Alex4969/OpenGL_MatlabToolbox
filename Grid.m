@@ -25,11 +25,12 @@ classdef Grid < ElementLigne
             obj.couleurLignes = [0.3 0.3 0.3 1];
         end % fin du constructeur Grid
 
-        function Draw(obj, gl)
+        function Draw(obj, gl, camAttrib)
             if obj.visible == 0
                 return
             end
-            obj.GLGeom.Bind(gl);
+            
+            obj.CommonDraw(gl, camAttrib);
 
             gl.glLineWidth(obj.epaisseurLignes);
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);

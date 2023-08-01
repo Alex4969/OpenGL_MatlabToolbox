@@ -135,7 +135,7 @@ classdef Camera < handle
             MProj = obj.projMatrix;
         end
 
-        function att = getAttributes(obj) % contient near, maxY, maxX, coef, rot
+        function att = getAttributes(obj) % contient near, maxY, maxX, coef, view, proj, ratio
             att.near = obj.near;
             if obj.type % perpective
                 maxY = obj.near * tan(deg2rad(obj.fov/2));
@@ -147,13 +147,14 @@ classdef Camera < handle
             maxX = maxY * obj.ratio;
             att.maxX  = maxX;
             att.maxY = maxY;
-            att.rot = obj.viewMatrix(1:3, 1:3);
+            att.view = obj.viewMatrix;
+            att.proj = obj.projMatrix;
+            att.ratio = obj.ratio;
         end % fin de getAttribute
 
     end %fin des methodes defauts
 
-    % special transformations / gestion de la souris
-    methods
+    methods % special transformations / gestion de la souris
         function translatePlanAct(obj,dx,dy)
             if any(obj.constraint)
                 dz = 0;
@@ -178,7 +179,7 @@ classdef Camera < handle
         end % fin de translatePlanAct
 
         function zoom(obj,signe)
-            facteur = 1 + signe*0.05*obj.sensibility;
+            facteur = 1 + signe * 0.05 * obj.sensibility;
             vect = obj.position - obj.target;
             vect = vect * facteur;
             obj.position = obj.target + vect;

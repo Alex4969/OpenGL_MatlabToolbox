@@ -8,13 +8,12 @@ classdef (Abstract) VisibleElement < handle
         typeLumiere = 'S'
         typeRendu = 'D'
         newRendu logical
-        typeOrientation = 'P' % 'P' Perspective, 'N' Normale a l'ecran, 'F' Fixe, 'O' orthonormé
+        typeOrientation = 'P' % 'P' Perspective, 'N' Normale a l'ecran, 'F' Fixe, 'O' orthonormé, 'R' rien
 
         visible logical
     end
     
     methods
-
         function obj = VisibleElement(aGeom)
             %VISIBLEELEMENT
             obj.Geom = aGeom;
@@ -101,13 +100,6 @@ classdef (Abstract) VisibleElement < handle
             obj.newRendu = true;
         end % fin de setModeRendu
 
-        function verifNewProg(obj, gl)
-            if obj.newRendu
-                obj.newRendu = false;
-                obj.changerProg(gl);
-            end
-        end % fin de verifNewProg
-
         function changerProg(obj, gl)
             nLayout = obj.GLGeom.nLayout;
             typeL = obj.typeLumiere;
@@ -131,12 +123,45 @@ classdef (Abstract) VisibleElement < handle
                     nLayout([2, 3]) = 0;
             end
             obj.shader = ShaderProgram(gl, nLayout, typeL);
-            obj.shader.Bind(gl);
         end % fin de changerProg
+
+        function CommonDraw(obj, gl, camAttrib)
+            %COMMONDRAW, fonction appele au debut de tous les draw des
+            %objets. Definie le programme et le mode d'orientation
+            if obj.newRendu == true
+                obj.newRendu = false;
+                obj.changerProg(gl);
+            end
+            obj.shader.Bind(gl);
+            obj.GLGeom.Bind(gl);
+            model = obj.getModelMatrix();
+            if obj.typeOrientation == 'F' % On plaque le texte sur le premier plan du cube de projection
+                model(1, 4) = model(1, 4) * camAttrib.maxX;
+                model(2, 4) = model(2, 4) * camAttrib.maxY;
+                model(3, 4) = -camAttrib.near;
+                model = model * MScale3D(camAttrib.coef);
+                cam =  camAttrib.proj;
+            elseif obj.typeOrientation == 'O'
+                cam = MProj3D('O', [camAttrib.ratio 1 1 20]) * camAttrib.view;
+                cam(1, 4) = model(1, 4) + 0.1/camAttrib.ratio;
+                cam(2,4) = model(2,4);
+                cam(3,4) = 0;
+                model = eye(4);
+            elseif obj.typeOrientation == 'N' % On inverse l'effet de rotation de la caméra
+                model(1:3, 1:3) = model(1:3, 1:3) / camAttrib.view(1:3, 1:3);
+                cam =  camAttrib.proj * camAttrib.view;
+            elseif obj.typeOrientation == 'P' % Perpective
+                cam =  camAttrib.proj * camAttrib.view;
+            else
+                cam = eye(4);
+            end
+            obj.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
+            obj.shader.SetUniformMat4(gl, 'uModelMatrix', model);
+        end % fin de commonDraw
     end % fin des methodes defauts
 
     methods (Abstract = true)
-        Draw(obj, gl)
+        Draw(obj, gl, camAttrib)
         sNew = reverseSelect(obj, s)
     end % fin des methodes abstraites
 end % fin de la classe VisibleElement

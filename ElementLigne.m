@@ -18,14 +18,13 @@ classdef ElementLigne < VisibleElement
             obj.couleurLignes   = couleur;
         end % fin du constructeur ElementLigne
 
-        function Draw(obj, gl)
+        function Draw(obj, gl, camAttrib)
             %DRAW dessine cet objet
             if obj.visible == 0
                 return
             end
-            obj.verifNewProg(gl);
-            obj.GLGeom.Bind(gl);
-            obj.shader.SetUniformMat4(gl, 'uModelMatrix', obj.Geom.modelMatrix);
+            
+            obj.CommonDraw(gl, camAttrib);
 
             gl.glLineWidth(obj.epaisseurLignes);
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
