@@ -7,8 +7,8 @@ classdef Scene3D < handle
         context             % GLContext
         framebuffer Framebuffer
 
-        mapElements         % map contenant les objets 3D de la scenes
-        mapTextures         % dictionnaire qui lie le nom de l'image a sa texture
+        mapElements containers.Map  % map contenant les objets 3D de la scenes
+        mapTextures containers.Map  % dictionnaire qui lie le nom de l'image a sa texture
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
@@ -42,9 +42,6 @@ classdef Scene3D < handle
             obj.canvas.setAutoSwapBufferMode(false);
             obj.canvas.display();
             obj.context = obj.fenetre.canvas.javaObj.getContext();
-
-            obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
-            obj.lumiere = Light([obj.camera.getPosition], [1 1 1]);
             
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
@@ -60,7 +57,8 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_BLEND);
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
 
-            obj.lumiere.generateUbo(gl);
+            obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
+            obj.lumiere = Light(gl, [obj.camera.getPosition], [1 1 1]);
             obj.axes.Init(gl);
             obj.gyroscope.Init(gl);
             obj.grille.Init(gl);
@@ -109,6 +107,7 @@ classdef Scene3D < handle
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
             obj.lumiere.remplirUbo(gl);
+            obj.camera.remplirUbo(gl);
             obj.framebuffer.Bind(gl);
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             gl.glEnable(gl.GL_DEPTH_TEST);
@@ -144,11 +143,6 @@ classdef Scene3D < handle
                     elem.Draw(gl, obj.camera.getAttributes);
                 else
                     progAct.SetUniformMat4(gl, 'uCamMatrix',  obj.camera.getCameraMatrix());
-                    progAct.SetUniform3f  (gl, 'uCamPos',     obj.camera.getPosition());
-                    % progAct.SetUniform3f  (gl, 'uLightPos',   obj.lumiere.getPosition());
-                    % progAct.SetUniform3f  (gl, 'uLightColor', obj.lumiere.getColor());
-                    % progAct.SetUniform3f  (gl, 'uLightDir',   obj.lumiere.getDirection());
-                    % progAct.SetUniform3f  (gl, 'uLightData',  obj.lumiere.getParam());
                     elem.Draw(gl);
                 end
             end
@@ -306,7 +300,7 @@ classdef Scene3D < handle
 
             if all(n, "all")
                 worldCoord = 0;
-                disp('le lancer n a pas touché de cible');
+                % disp('le lancer n a pas touché de cible');
             else
                 profondeur(n) = nan; % pourquoi ?
                 profondeur = rot90(profondeur);

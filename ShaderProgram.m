@@ -97,7 +97,7 @@ classdef ShaderProgram < handle
             end
 
             srcFrag = obj.readIfContains("shaders/all.frag.glsl", motCle);
-            srcFrag = srcFrag + fileread("shaders/light.frag.glsl")
+            srcFrag = srcFrag + fileread("shaders/light.frag.glsl");
             obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
         end % fin de create Program
 

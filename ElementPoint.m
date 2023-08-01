@@ -24,10 +24,11 @@ classdef ElementPoint < VisibleElement
                 return
             end
             obj.GLGeom.Bind(gl);
+            obj.verifNewProg(gl);
             obj.shader.SetUniformMat4(gl, 'uModelMatrix', obj.Geom.modelMatrix);
 
             gl.glPointSize(obj.epaisseurLignes);
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_POINTS);
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_POINT);
             if (obj.GLGeom.nLayout(2) == 0)
                 obj.shader.SetUniform4f(gl, 'uColor', obj.couleurLignes);
             end
