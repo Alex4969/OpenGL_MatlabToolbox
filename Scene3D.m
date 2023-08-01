@@ -12,8 +12,8 @@ classdef Scene3D < handle
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
-        axes Axes           % instance des axes lié au repere
-        gyroscope Axes      % indication d'angle dans le repere
+        axes ElementLigne           % instance des axes lié au repere
+        gyroscope ElementLigne      % indication d'angle dans le repere
         grille Grid         % instance de la grille lié au repere
 
         cbk_manager javacallbackmanager
@@ -38,12 +38,10 @@ classdef Scene3D < handle
                 error('Bad argument number')
             end
             
-            obj.canvas=obj.fenetre.canvas.javaObj;
+            obj.canvas = obj.fenetre.canvas.javaObj;
             obj.canvas.setAutoSwapBufferMode(false);
             obj.canvas.display();
             obj.context = obj.fenetre.canvas.javaObj.getContext();
-            
-            obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
             obj.mapElements = containers.Map('KeyType','int32','ValueType','any');
             obj.mapTextures = containers.Map('KeyType','char', 'ValueType', 'any');
@@ -56,18 +54,18 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_LINE_SMOOTH);
             gl.glEnable(gl.GL_BLEND);
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
+            % gl.glEnable(gl.GL_CULL_FACE);
+            % gl.glCullFace(gl.GL_BACK);
+            % gl.glFrontFace(gl.GL_CCW);
 
             obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light(gl, [obj.camera.getPosition], [1 1 1]);
-            obj.axes.Init(gl);
-            obj.gyroscope.Init(gl);
-            obj.grille.Init(gl);
-            obj.framebuffer.Init(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
+            obj.generateInternalObject(gl); % axes, gyroscope, grille & framebuffer
 
             obj.context.release();
 
             %Listeners
-            obj.cbk_manager=javacallbackmanager(obj.canvas);
+            obj.cbk_manager = javacallbackmanager(obj.canvas);
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MousePressed');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseReleased');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
@@ -94,6 +92,20 @@ classdef Scene3D < handle
             obj.mapElements(elem.getId()) = elem;
             obj.context.release();
         end % fin de ajouterObjet
+
+        function AjouterGeom(obj, aGeom, type)
+            gl = obj.getGL();
+            switch type
+                case 'face'
+                    elem = ElementFace(gl, aGeom);
+                case 'ligne'
+                    elem = ElementLigne(gl, aGeom);
+                case 'point'
+                    elem = ElementPoint(gl, aGeom);
+            end
+            obj.mapElements(elem.getId()) = elem;
+            obj.context.release();
+        end
 
         function RetirerObjet(obj, elemId) % element et texte
             if isKey(obj.mapElements, elemId)
@@ -228,32 +240,32 @@ classdef Scene3D < handle
             end
         end % fin de getTextureId
 
-        function generateInternalObject(obj)
+        function generateInternalObject(obj, gl)
             tailleAxe = 50;
             [pos, idx, color] = Axes.generateAxes(-tailleAxe, tailleAxe);
             axesGeom = Geometry(-1, pos, idx);
-            obj.axes = Axes(axesGeom, -tailleAxe, tailleAxe);
+            obj.axes = ElementLigne(gl, axesGeom);
             obj.axes.AddColor(color);
+
+            [pos, idx] = Grid.generateGrid(tailleAxe, 2);
+            grilleGeom = Geometry(-2, pos, idx);
+            obj.grille = Grid(gl, grilleGeom, tailleAxe, 2);
 
             tailleGysmo = 0.06;
             [pos, idx, color] = Axes.generateAxes(0, tailleGysmo);
-            gysmoGeom = Geometry(-2, pos, idx);
-            obj.gyroscope = Axes(gysmoGeom, 0, tailleGysmo);
+            gysmoGeom = Geometry(-3, pos, idx);
+            obj.gyroscope = ElementLigne(gl, gysmoGeom);
             obj.gyroscope.setEpaisseur(4);
             obj.gyroscope.AddColor(color);
             obj.gyroscope.setModelMatrix(MTrans3D([-0.97, -0.87, 0]));
             obj.gyroscope.typeOrientation = 'O';
 
-            [pos, idx] = Grid.generateGrid(obj.axes.getFin(), 2);
-            grilleGeom = Geometry(-3, pos, idx);
-            obj.grille = Grid(grilleGeom, obj.axes.getFin(), 2);
-
             [pos, idx, mapping] = generatePlan(2, 2);
             planGeom = Geometry(0, pos, idx);
-            frameBufferPlan = ElementFace(planGeom);
+            frameBufferPlan = ElementFace(gl, planGeom);
             frameBufferPlan.typeOrientation = 'R';
             frameBufferPlan.AddMapping(mapping);
-            obj.framebuffer = Framebuffer(frameBufferPlan);
+            obj.framebuffer = Framebuffer(gl, frameBufferPlan, obj.canvas.getWidth(), obj.canvas.getHeight());
         end % fin de generateInternalObject
 
         function worldCoord = getWorldCoord(obj, clickPos)

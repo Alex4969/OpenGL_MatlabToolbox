@@ -13,110 +13,107 @@ viewer.setCouleurFond([0 0 0.4])
 
 % pyramide simple
 pyraGeom = Geometry(1, posPyramide, indicesPyramide);
-pyramide1 = ElementFace(pyraGeom);
-pyramide1.setModelMatrix(MTrans3D([-10 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
-pyramide1.setCouleurArretes([1 0 0 1]);
-pyramide1.setCouleurFaces([1 1 1 1]);
-pyramide1.setEpaisseurArretes(5);
-viewer.AjouterObjet(pyramide1);
+viewer.AjouterGeom(pyraGeom, 'face');
+elem = viewer.mapElements(1);
+elem.setCouleurArretes([1 0 0 1]);
+elem.setCouleurFaces([1 1 1 1]);
+elem.setEpaisseurArretes(5);
+elem.setModelMatrix(MTrans3D([-10 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 
 % pyramide avec une couleur par sommet
-couleurPyramide = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
-%couleurPyramide = [ 1 0 0 ; 1 1 0 ; 0 1 0 ; 0 0.6 1 ; 1 1 1];
 pyraColorGeom = Geometry(2, posPyramide, indicesPyramide);
 pyraColorGeom.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
-pyramide2 = ElementFace(pyraColorGeom);
-pyramide2.AddColor(couleurPyramide);
-viewer.AjouterObjet(pyramide2);
+viewer.AjouterGeom(pyraColorGeom, 'face');
 
-% nuage de points avec une couleur par sommet
-% couleurPoints = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
-%couleurPyramide = [ 1 0 0 ; 1 1 0 ; 0 1 0 ; 0 0.6 1 ; 1 1 1];
+couleurPyramide = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
+elem = viewer.mapElements(2);
+elem.AddColor(couleurPyramide);
+
+% % nuage de points avec une couleur par sommet
 posPoints=rand(1000,3)*2;
-couleurPoints =rand(1000,3);
 cloudGeom = Geometry(25, posPoints, [1:1000]);
-% pyraColorGeom.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
-cloudPoints = ElementPoint(cloudGeom);
-cloudPoints.AddColor(couleurPoints);
-viewer.AjouterObjet(cloudPoints);
+viewer.AjouterGeom(cloudGeom, 'point');
 
+elem = viewer.mapElements(25);
+couleurPoints = rand(1000,3);
+elem.AddColor(couleurPoints);
+% 
+% % pyramide avec texture
+% pyraTexGeom = Geometry(3, posPyramide, indicesPyramide);
+% pyraTexGeom.setModelMatrix(MTrans3D([-4 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
+% pyramide3 = ElementFace(pyraTexGeom);
+% pyramide3.AddMapping(mappingPyramide);
+% viewer.AjouterObjet(pyramide3);
+% viewer.ApplyTexture(pyramide3, "briques.jpg");
+% 
+% % generation d'une sphere
+% [posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
+% 
+% %sphere avec des normales par sommet
+% bouleNormalesGeom = Geometry(4, posBoule, indBoule);
+% boule1 = ElementFace(bouleNormalesGeom);
+% boule1.GenerateNormals();
+% boule1.setModelMatrix(MTrans3D([-0.5 1.8 0]));
+% boule1.setCouleurArretes([1 0 1 1]);
+% viewer.AjouterObjet(boule1);
+% 
+% % sphere classique
+% bouleGeom = Geometry(5, posBoule, indBoule);
+% boule2 = ElementFace(bouleGeom);
+% boule2.setModelMatrix(MTrans3D([-0.5 -0.2 0]));
+% boule2.setCouleurPoints([1 1 0 1]);
+% viewer.AjouterObjet(boule2);
+% 
+% % sphere avec texture map monde
+% bouleTexGeom = Geometry(6, posBoule, indBoule);
+% boule3 = ElementFace(bouleTexGeom);
+% boule3.GenerateNormals();
+% boule3.AddMapping(mappingBoule);
+% boule3.setModelMatrix(MTrans3D([3 0 0]));
+% boule3.ModifyModelMatrix(MRot3D([180 0 0]), 1);
+% boule3.ModifyModelMatrix(MScale3D(2), 1);
+% viewer.AjouterObjet(boule3);
+% viewer.ApplyTexture(boule3, "monde.jpg");
+% 
+% 
+% 
+% % generation du cylindre
+% [posCyl, indCyl, mappingCyl, normCyl] = generateCylinder(20, pi, 1, 2, 0);
+% 
+% cylTexGeom = Geometry(7, posCyl, indCyl);
+% cyl2 = ElementFace(cylTexGeom);
+% cyl2.AddMapping(mappingCyl);
+% cyl2.setModelMatrix(MTrans3D([3 3 0]));
+% viewer.AjouterObjet(cyl2);
+% viewer.ApplyTexture(cyl2, "couleurs.jpg");
+% 
+% %generation du plan
+% % [posPlan, indPlan, mappingPlan] = generatePlan(16, 9);
+% % planGeom = Geometry(8, posPlan, indPlan);
+% % plan1 = ElementFace(planGeom);
+% % plan1.AddMapping(mappingPlan);
+% % plan1.setModelMatrix(MTrans3D([0 0 -4]));
+% % viewer.AjouterObjet(plan1);
+% % viewer.ApplyTexture(plan1, "monde.jpg");
+% 
+% % piece d'echec depuis un fichier
+% chessGeom = Geometry(9);
+% chessGeom.CreateFromFile('objets3D/chess4_ascii.stl');
+% chess = ElementFace(chessGeom);
+% chess.GenerateNormals();
+% chess.setCouleurFaces(rand(1,3));
+% chess.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02));
+% % chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2));
+% viewer.AjouterObjet(chess);
 
-% pyramide avec texture
-pyraTexGeom = Geometry(3, posPyramide, indicesPyramide);
-pyraTexGeom.setModelMatrix(MTrans3D([-4 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
-pyramide3 = ElementFace(pyraTexGeom);
-pyramide3.AddMapping(mappingPyramide);
-viewer.AjouterObjet(pyramide3);
-viewer.ApplyTexture(pyramide3, "briques.jpg");
-
-% generation d'une sphere
-[posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
-
-%sphere avec des normales par sommet
-bouleNormalesGeom = Geometry(4, posBoule, indBoule);
-boule1 = ElementFace(bouleNormalesGeom);
-boule1.GenerateNormals();
-boule1.setModelMatrix(MTrans3D([-0.5 1.8 0]));
-boule1.setCouleurArretes([1 0 1 1]);
-viewer.AjouterObjet(boule1);
-
-% sphere classique
-bouleGeom = Geometry(5, posBoule, indBoule);
-boule2 = ElementFace(bouleGeom);
-boule2.setModelMatrix(MTrans3D([-0.5 -0.2 0]));
-boule2.setCouleurPoints([1 1 0 1]);
-viewer.AjouterObjet(boule2);
-
-% sphere avec texture map monde
-bouleTexGeom = Geometry(6, posBoule, indBoule);
-boule3 = ElementFace(bouleTexGeom);
-boule3.GenerateNormals();
-boule3.AddMapping(mappingBoule);
-boule3.setModelMatrix(MTrans3D([3 0 0]));
-boule3.ModifyModelMatrix(MRot3D([180 0 0]), 1);
-boule3.ModifyModelMatrix(MScale3D(2), 1);
-viewer.AjouterObjet(boule3);
-viewer.ApplyTexture(boule3, "monde.jpg");
-
-
-
-% generation du cylindre
-[posCyl, indCyl, mappingCyl, normCyl] = generateCylinder(20, pi, 1, 2, 0);
-
-cylTexGeom = Geometry(7, posCyl, indCyl);
-cyl2 = ElementFace(cylTexGeom);
-cyl2.AddMapping(mappingCyl);
-cyl2.setModelMatrix(MTrans3D([3 3 0]));
-viewer.AjouterObjet(cyl2);
-viewer.ApplyTexture(cyl2, "couleurs.jpg");
-
-%generation du plan
-% [posPlan, indPlan, mappingPlan] = generatePlan(16, 9);
-% planGeom = Geometry(8, posPlan, indPlan);
-% plan1 = ElementFace(planGeom);
-% plan1.AddMapping(mappingPlan);
-% plan1.setModelMatrix(MTrans3D([0 0 -4]));
-% viewer.AjouterObjet(plan1);
-% viewer.ApplyTexture(plan1, "monde.jpg");
-
-% piece d'echec depuis un fichier
-chessGeom = Geometry(9);
-chessGeom.CreateFromFile('objets3D/chess4_ascii.stl');
-chess = ElementFace(chessGeom);
-chess.GenerateNormals();
-chess.setCouleurFaces(rand(1,3));
-chess.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02));
-% chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2));
-viewer.AjouterObjet(chess);
-
-ravie = Police("ravie");
-texteP = ElementTexte(11, 'Texte perspective', ravie, 'P', [1 0.5 0.7 1.0], 0);
-texteP.setModelMatrix(MTrans3D([-2 -2 -2]));
-viewer.AjouterObjet(texteP);
-
-texteN = ElementTexte(13, 'Texte Ancre', ravie, 'N', [0.8 0.1 0.65 1.0], 0);
-texteN.setModelMatrix(MTrans3D([2 2 2]));
-viewer.AjouterObjet(texteN);
+% ravie = Police("ravie");
+% texteP = ElementTexte(11, 'Texte perspective', ravie, 'P', [1 0.5 0.7 1.0], 0);
+% texteP.setModelMatrix(MTrans3D([-2 -2 -2]));
+% viewer.AjouterObjet(texteP);
+% 
+% texteN = ElementTexte(13, 'Texte Ancre', ravie, 'N', [0.8 0.1 0.65 1.0], 0);
+% texteN.setModelMatrix(MTrans3D([2 2 2]));
+% viewer.AjouterObjet(texteN);
 
 viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
 viewer.lumiere.setColor([1 1 1]);

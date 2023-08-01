@@ -8,17 +8,15 @@ classdef Framebuffer < handle
         RBOBuffer           %Render Buffer Object
         RBOId               %Render Buffer Id
         TexBuffer           %Texture Buffer
-        TexId               %Texture Id
+        TexId = 0           %Texture Id
         forme ElementFace   %Le carré sur lequel on affiche la texture=la scène
     end
 
     methods
-        function obj = Framebuffer(forme)
+        function obj = Framebuffer(gl, forme, width, height)
             obj.forme = forme;
             obj.forme.textureId = 0;
-        end
 
-        function Init(obj, gl, width, height)
             obj.generateFramebuffer(gl);
             CheckError(gl, 'Erreur lors de la création du frameBuffer');
             obj.addTextureBuffer(gl, width, height);
@@ -28,7 +26,6 @@ classdef Framebuffer < handle
             obj.checkFrameBuffer(gl);
 
             obj.forme.setModeRendu('T', 'S');
-            obj.forme.Init(gl);
 
             obj.UnBind(gl);
         end

@@ -12,9 +12,9 @@ classdef ElementFace < VisibleElement
     end
     
     methods
-        function obj = ElementFace(aGeom)
+        function obj = ElementFace(gl, aGeom)
             %FACEELEMENT 
-            obj@VisibleElement(aGeom); % appel au constructeur parent
+            obj@VisibleElement(gl, aGeom); % appel au constructeur parent
             obj.typeLumiere = 'D';
         end
 

@@ -7,19 +7,17 @@ classdef (Abstract) VisibleElement < handle
         shader ShaderProgram
         typeLumiere = 'S'
         typeRendu = 'D'
-        newRendu logical
+        newRendu = true
         typeOrientation = 'P' % 'P' Perspective, 'N' Normale a l'ecran, 'F' Fixe, 'O' orthonormé, 'R' rien
 
-        visible logical
+        visible = true
     end
     
     methods
-        function obj = VisibleElement(aGeom)
+        function obj = VisibleElement(gl, aGeom)
             %VISIBLEELEMENT
             obj.Geom = aGeom;
-            obj.GLGeom = GLGeometry(obj.Geom.listePoints);
-            obj.visible = true;
-            obj.newRendu = true;
+            obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
