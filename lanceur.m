@@ -15,8 +15,8 @@ viewer.setCouleurFond([0 0 0.4])
 pyraGeom = Geometry(1, posPyramide, indicesPyramide);
 pyramide1 = ElementFace(pyraGeom);
 pyramide1.setModelMatrix(MTrans3D([-10 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
-pyramide1.couleurArretes = [1 0 0 1];
-pyramide1.couleurFaces = [1 1 1 1];
+pyramide1.setCouleurArretes([1 0 0 1]);
+pyramide1.setCouleurFaces([1 1 1 1]);
 pyramide1.setEpaisseurArretes(5);
 viewer.AjouterObjet(pyramide1);
 
@@ -57,14 +57,14 @@ bouleNormalesGeom = Geometry(4, posBoule, indBoule);
 boule1 = ElementFace(bouleNormalesGeom);
 boule1.GenerateNormals();
 boule1.setModelMatrix(MTrans3D([-0.5 1.8 0]));
-boule1.couleurArretes = [1 0 1 1];
+boule1.setCouleurArretes([1 0 1 1]);
 viewer.AjouterObjet(boule1);
 
 % sphere classique
 bouleGeom = Geometry(5, posBoule, indBoule);
 boule2 = ElementFace(bouleGeom);
 boule2.setModelMatrix(MTrans3D([-0.5 -0.2 0]));
-boule2.couleurPoints = [1 1 0 1];
+boule2.setCouleurPoints([1 1 0 1]);
 viewer.AjouterObjet(boule2);
 
 % sphere avec texture map monde
