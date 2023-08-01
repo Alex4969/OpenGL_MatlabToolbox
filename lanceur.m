@@ -35,9 +35,10 @@ viewer.AjouterObjet(pyramide2);
 posPoints=rand(1000,3)*2;
 couleurPoints =rand(1000,3);
 cloudGeom = Geometry(25, posPoints, [1:1000]);
-% pyraColorGeom.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
+cloudGeom.setModelMatrix(MTrans3D([-1 0 -4]));
 cloudPoints = ElementPoint(cloudGeom);
 cloudPoints.AddColor(couleurPoints);
+cloudPoints.epaisseurLignes=4;
 viewer.AjouterObjet(cloudPoints);
 
 
