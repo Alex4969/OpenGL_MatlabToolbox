@@ -89,7 +89,7 @@ classdef (Abstract) VisibleElement < handle
 
         function Init(obj, gl)
             obj.GLGeom.CreateGLObject(gl, obj.Geom.listeConnection);
-            obj.verifNewProg(gl);
+            obj.changerProg(gl);
         end % fin de Init
 
         function setModeRendu(obj, newTypeRendu, newTypeLumiere)

@@ -181,8 +181,6 @@ classdef Scene3D < handle
                 slot = obj.getTextureId(fileName, false);
                 elem.textureId = slot;
                 elem.setModeRendu('T');
-                elem.verifNewProg(obj.getGL);
-                obj.context.release();
             else 
                 warning('L objet donne en parametre n est pas texturable');
             end
