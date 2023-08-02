@@ -1,5 +1,4 @@
 clear all
-clear Texture.mapTextures
 
 addpath('outils\');
 addpath('java\');
@@ -46,7 +45,7 @@ viewer.AjouterGeom(pyraTexGeom, 'face');
 elem = viewer.mapElements(3);
 elem.setModelMatrix(MTrans3D([-4 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 elem.AddMapping(mappingPyramide);
-elem.useTexture('textures/couleurs.jpg')
+elem.useTexture('textures/briques.jpg');
 
 % % generation des données d'une sphere
 [posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
@@ -88,14 +87,9 @@ elem.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02)); % pour la piece d'echec
 elem.GenerateNormals();
 elem.setModeRendu('D', 'D'); % uniform & dur
 
-% ravie = Police("ravie");
-% texteP = ElementTexte(11, 'Texte perspective', ravie, 'P', [1 0.5 0.7 1.0], 0);
-% texteP.setModelMatrix(MTrans3D([-2 -2 -2]));
-% viewer.AjouterObjet(texteP);
-% 
-% texteN = ElementTexte(13, 'Texte Ancre', ravie, 'N', [0.8 0.1 0.65 1.0], 0);
-% texteN.setModelMatrix(MTrans3D([2 2 2]));
-% viewer.AjouterObjet(texteN);
+ravie = Police("textes/ravie");
+elem = viewer.AjouterTexte(101, 'Hello World', ravie, 1);
+elem.setModelMatrix(MTrans3D([2 2.2 2]) * MScale3D(0.4));
 
 viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
 viewer.lumiere.setColor([1 1 1]);

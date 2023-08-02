@@ -73,17 +73,12 @@ classdef Scene3D < handle
             addlistener(obj,'evt_update',@obj.cbk_update);
         end % fin du constructeur de Scene3D
 
-        function AjouterObjet(obj, elem)
-            %AJOUTEROBJET Initialise l'objet avec les fonction gl
-            %puis l'ajoute a la liste d'objet a dessiner
-            if (~isa(elem, 'VisibleElement'))
-                disp('l objet a ajouter n est pas un VisibleElement');
-                return
-            end
-            elem.Init(obj.getGL());
-            obj.mapElements(elem.getId()) = elem;
+        function elem = AjouterTexte(obj, id, texte, police, typeAncre)
+            if nargin == 4, typeAncre = 0; end
+            elem = ElementTexte(obj.getGL(), id, texte, police, typeAncre);
+            obj.mapElements(id) = elem;
             obj.context.release();
-        end % fin de ajouterObjet
+        end % fin de ajouterTexte
 
         function elem = AjouterGeom(obj, aGeom, type)
             if nargin == 2, type = 'face'; end
@@ -101,7 +96,7 @@ classdef Scene3D < handle
             end
             obj.mapElements(elem.getId()) = elem;
             obj.context.release();
-        end
+        end % fin de ajouterGeom
 
         function RetirerObjet(obj, elemId) % element et texte
             if isKey(obj.mapElements, elemId)

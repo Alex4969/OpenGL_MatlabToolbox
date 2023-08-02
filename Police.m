@@ -11,7 +11,7 @@ classdef Police < handle
     methods
         function obj = Police(fileName)
             obj.name = fileName;
-            filePath = "textes/" + fileName + ".fnt";
+            filePath = fileName + ".fnt";
             obj.letterProperties = obj.readFnt(filePath);
         end
     end

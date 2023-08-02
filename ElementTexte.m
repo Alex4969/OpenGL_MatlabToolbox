@@ -2,25 +2,25 @@ classdef ElementTexte < VisibleElement
     %TEXTE Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties
-        str                 % le texte a afficher
+    properties (GetAccess = public, SetAccess = protected)
+        str                         % le texte a afficher
         police Police
-        couleurTexte        % 1x4 double entre 0 et 1
-        textureId = -1
+        couleurTexte = [1 1 1 1]    % 1x4 double entre 0 et 1
+        texture
     end
     
     methods
-        function obj = ElementTexte(id, str, police, type, color, ancre)
+        function obj = ElementTexte(gl, id, str, police, ancre)
             %TEXTE
             [pos, ind, mapping] = ElementTexte.constructText(str, police, ancre);
             geom = Geometry(id, pos, ind);
-            obj@VisibleElement(geom);
+            obj@VisibleElement(gl, geom);
             obj.AddMapping(mapping);
             obj.str = str;
             obj.police = police;
-            obj.typeOrientation = type;
-            obj.couleurTexte = color;
+            obj.typeOrientation = 'N';
             obj.typeRendu = 'T';
+            obj.texture = Texture(gl, police.name + ".png");
         end % fin du constructeur Texte
 
         function Draw(obj, gl, camAttrib)
@@ -32,11 +32,25 @@ classdef ElementTexte < VisibleElement
             obj.CommonDraw(gl, camAttrib);
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
-            obj.shader.SetUniform1i(gl, 'uTexture', obj.textureId);
+            obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
             obj.shader.SetUniform4f(gl, 'uColor', obj.couleurTexte);
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             CheckError(gl, 'apres le dessin d un texte');
         end % fin de Draw
+
+        function setCouleur(obj, newColor)
+            %SETCOULEURFOND change la couleur du texte
+            %Peut prendre en entrée une matrice 1x3 (rgb) ou 1x4 (rgba)
+            if (numel(newColor) == 3)
+                newColor(4) = 1;
+            end
+            if numel(newColor) == 4
+                obj.couleurTexte = newColor;
+            else
+                warning('Le format de la nouvelle couleur n est pas bon, annulation');
+            end
+            notify(obj,'evt_update');
+        end % fin setCouleurFond
 
         function sNew = reverseSelect(obj, s)
             sNew.id          = obj.getId();

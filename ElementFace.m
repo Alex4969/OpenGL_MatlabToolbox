@@ -3,7 +3,7 @@ classdef ElementFace < VisibleElement
     
     properties %(GetAccess = public, SetAccess = protected)
         texture
-        textureUpdate = false;
+        textureUpdate = false
         epaisseurArretes = 3                    % float
         epaisseurPoints  = 4                    % float
         couleurFaces     = [1 0 0 1]            % 1x4
