@@ -10,6 +10,10 @@ classdef Geometry < handle
         listeConnection     % matrice ligne donne la connectivité en triangle des points de la liste de points
         modelMatrix         % transformation du modèle dans la scène 3D (translation, rotation, homothétie)
     end
+
+    events
+        geomUpdate
+    end
     
     methods
         function obj = Geometry(id, points, index)
@@ -54,6 +58,23 @@ classdef Geometry < handle
             obj.modelMatrix = model;
         end % fin de setModelMatrix
 
-    end % fin des methodes defaut
+        function ajouterPoints(obj, plusDePoints, plusDeConnectivite)
+            if size(plusDePoints, 2) == size(obj.listePoints, 2)
+                nbSommet = size(obj.listePoints, 1);
+                obj.listePoints = [obj.listePoints ; plusDePoints];
+                obj.listeConnection = [obj.listeConnection, (plusDeConnectivite + nbSommet)];
+                if event.hasListener(obj, 'geomUpdate')
+                    notify(obj, 'geomUpdate');
+                end
+            else 
+                warning('Impossible de passer de la 2D a la 3D')
+            end
+        end
 
+        function nouvelleGeom(obj, newPoints, newIndices)
+            obj.listePoints = newPoints;
+            obj.listeConnection = newIndices;
+        end
+
+    end % fin des methodes defaut
 end % fin de la classe geometrie

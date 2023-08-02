@@ -5,15 +5,14 @@ classdef Scene3D < handle
         fenetre jOGLframe   % jOGLframe contient la fenetre, un panel, le canvas, la toolbar ...
         canvas              % GLCanvas dans lequel on peut utiliser les fonction openGL
         context             % GLContext
-        framebuffer Framebuffer
+        framebuffer Framebuffer % contient une image de la scène a afficher
 
         mapElements containers.Map  % map contenant les objets 3D de la scenes
-        mapTextures containers.Map  % dictionnaire qui lie le nom de l'image a sa texture
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
-        axes Axes           % instance des axes lié au repere
-        gyroscope Axes      % indication d'angle dans le repere
+        axes ElementLigne           % instance des axes lié au repere
+        gyroscope ElementLigne      % indication d'angle dans le repere
         grille Grid         % instance de la grille lié au repere
 
         cbk_manager javacallbackmanager
@@ -29,7 +28,7 @@ classdef Scene3D < handle
 
     methods
         function obj = Scene3D(windowSize)
-            obj.fenetre=jOGLframe('GL4',0);
+            obj.fenetre = jOGLframe('GL4',0);
             if nargin == 0
                 obj.fenetre.setSize([1280 1280*9/16]);
             elseif nargin == 1
@@ -38,15 +37,12 @@ classdef Scene3D < handle
                 error('Bad argument number')
             end
             
-            obj.canvas=obj.fenetre.canvas.javaObj;
+            obj.canvas = obj.fenetre.canvas.javaObj;
             obj.canvas.setAutoSwapBufferMode(false);
             obj.canvas.display();
             obj.context = obj.fenetre.canvas.javaObj.getContext();
-            
-            obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
             obj.mapElements = containers.Map('KeyType','int32','ValueType','any');
-            obj.mapTextures = containers.Map('KeyType','char', 'ValueType', 'any');
             obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
 
             gl = obj.getGL();
@@ -56,18 +52,16 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_LINE_SMOOTH);
             gl.glEnable(gl.GL_BLEND);
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
+            % gl.glEnable(gl.GL_CULL_FACE); % optimisation : supprime l'affichage des faces arrieres
 
             obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light(gl, [obj.camera.getPosition], [1 1 1]);
-            obj.axes.Init(gl);
-            obj.gyroscope.Init(gl);
-            obj.grille.Init(gl);
-            obj.framebuffer.Init(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
+            obj.generateInternalObject(gl); % axes, gyroscope, grille & framebuffer
 
             obj.context.release();
 
             %Listeners
-            obj.cbk_manager=javacallbackmanager(obj.canvas);
+            obj.cbk_manager = javacallbackmanager(obj.canvas);
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MousePressed');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseReleased');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
@@ -79,21 +73,30 @@ classdef Scene3D < handle
             addlistener(obj,'evt_update',@obj.cbk_update);
         end % fin du constructeur de Scene3D
 
-        function AjouterObjet(obj, elem)
-            %AJOUTEROBJET Initialise l'objet avec les fonction gl
-            %puis l'ajoute a la liste d'objet a dessiner
-            if (~isa(elem, 'VisibleElement'))
-                disp('l objet a ajouter n est pas un VisibleElement');
-                return
+        function elem = AjouterTexte(obj, id, texte, police, typeAncre)
+            if nargin == 4, typeAncre = 0; end
+            elem = ElementTexte(obj.getGL(), id, texte, police, typeAncre);
+            obj.mapElements(id) = elem;
+            obj.context.release();
+        end % fin de ajouterTexte
+
+        function elem = AjouterGeom(obj, aGeom, type)
+            if nargin == 2, type = 'face'; end
+            gl = obj.getGL();
+            if isKey(obj.mapElements, aGeom.id)
+                warning('Id deja existante remplace l ancient element');
             end
-            if isa(elem, 'ElementTexte')
-                slot = obj.getTextureId(elem.police.name + ".png", true);
-                elem.textureId = slot;
+            switch type
+                case 'face'
+                    elem = ElementFace(gl, aGeom);
+                case 'ligne'
+                    elem = ElementLigne(gl, aGeom);
+                case 'point'
+                    elem = ElementPoint(gl, aGeom);
             end
-            elem.Init(obj.getGL());
             obj.mapElements(elem.getId()) = elem;
             obj.context.release();
-        end % fin de ajouterObjet
+        end % fin de ajouterGeom
 
         function RetirerObjet(obj, elemId) % element et texte
             if isKey(obj.mapElements, elemId)
@@ -145,10 +148,7 @@ classdef Scene3D < handle
             for i=1:numel(listeElem)
                 listeElem{i}.delete(gl);
             end
-            textures = values(obj.mapTextures);
-            for i=1:numel(textures)
-                textures{1}.delete(gl);
-            end
+            Texture.DeleteAll(gl);
             obj.axes.delete(gl);
             obj.grille.delete(gl);
             obj.gyroscope.delete(gl);
@@ -174,18 +174,6 @@ classdef Scene3D < handle
             notify(obj,'evt_update');
         end % fin setCouleurFond
 
-        function ApplyTexture(obj, elem, fileName)
-            %APPLYTEXTURE ajoute la texture avec le nom de fichier donné a
-            %l'element. si le fichier n'existe pas, la texture est retiré.
-            if (isa(elem, 'ElementFace') && elem.GLGeom.nLayout(3) ~= 0)
-                slot = obj.getTextureId(fileName, false);
-                elem.textureId = slot;
-                elem.setModeRendu('T');
-            else 
-                warning('L objet donne en parametre n est pas texturable');
-            end
-        end % fin de ApplyTexture
-
         function AddGeomToLight(obj, geom)
             disp('ne fonctionne pas')
             gl = obj.getGL();
@@ -205,55 +193,27 @@ classdef Scene3D < handle
             gl = obj.context.getCurrentGL();
         end % fin de getGL
 
-        function slot = getTextureId(obj, fileName, texte)
-            %GETTEXTUREID Renvoie l'id de la texture correspondant au fichier.
-            % si elle n'existe pas, elle est créée.
-            if nargin < 3, texte = false; end
-            if texte
-                dossier = "textes\";
-            else
-                dossier = "textures\";
-            end
-            if isKey(obj.mapTextures, fileName)
-                %la texture a deja été ajouté :
-                slot = obj.mapTextures(fileName).slot;
-            else
-                if isfile(dossier + fileName)
-                    slot = length(obj.mapTextures) + 1;
-                    tex = Texture(obj.getGL(), dossier + fileName, slot);
-                    obj.mapTextures(fileName) = tex;
-                else
-                    slot = -1;
-                end
-            end
-        end % fin de getTextureId
-
-        function generateInternalObject(obj)
+        function generateInternalObject(obj, gl)
             tailleAxe = 50;
             [pos, idx, color] = Axes.generateAxes(-tailleAxe, tailleAxe);
             axesGeom = Geometry(-1, pos, idx);
-            obj.axes = Axes(axesGeom, -tailleAxe, tailleAxe);
+            obj.axes = ElementLigne(gl, axesGeom);
             obj.axes.AddColor(color);
+
+            [pos, idx] = Grid.generateGrid(tailleAxe, 2);
+            grilleGeom = Geometry(-2, pos, idx);
+            obj.grille = Grid(gl, grilleGeom, tailleAxe, 2);
 
             tailleGysmo = 0.06;
             [pos, idx, color] = Axes.generateAxes(0, tailleGysmo);
-            gysmoGeom = Geometry(-2, pos, idx);
-            obj.gyroscope = Axes(gysmoGeom, 0, tailleGysmo);
+            gysmoGeom = Geometry(-3, pos, idx);
+            obj.gyroscope = ElementLigne(gl, gysmoGeom);
             obj.gyroscope.setEpaisseur(4);
             obj.gyroscope.AddColor(color);
             obj.gyroscope.setModelMatrix(MTrans3D([-0.97, -0.87, 0]));
             obj.gyroscope.typeOrientation = 'O';
 
-            [pos, idx] = Grid.generateGrid(obj.axes.getFin(), 2);
-            grilleGeom = Geometry(-3, pos, idx);
-            obj.grille = Grid(grilleGeom, obj.axes.getFin(), 2);
-
-            [pos, idx, mapping] = generatePlan(2, 2);
-            planGeom = Geometry(0, pos, idx);
-            frameBufferPlan = ElementFace(planGeom);
-            frameBufferPlan.typeOrientation = 'R';
-            frameBufferPlan.AddMapping(mapping);
-            obj.framebuffer = Framebuffer(frameBufferPlan);
+            obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
         end % fin de generateInternalObject
 
         function worldCoord = getWorldCoord(obj, clickPos)

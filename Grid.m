@@ -6,21 +6,17 @@ classdef Grid < ElementLigne
         borne
         ecart
 
-        normaleX logical
-        normaleY logical
-        normaleZ logical
+        normaleX = false
+        normaleY = true
+        normaleZ = false
     end
     
     methods
-
-        function obj = Grid(grilleGeom, aBorne, aEcart)
+        function obj = Grid(gl, grilleGeom, aBorne, aEcart)
             %GRID construit la géometrie et en fait un ElementVisible
-            obj@ElementLigne(grilleGeom)
+            obj@ElementLigne(gl, grilleGeom)
             obj.borne = aBorne;
             obj.ecart = aEcart;
-            obj.normaleX = 0;
-            obj.normaleY = 1;
-            obj.normaleZ = 0;
             obj.epaisseurLignes = 1;
             obj.couleurLignes = [0.3 0.3 0.3 1];
         end % fin du constructeur Grid
@@ -50,7 +46,6 @@ classdef Grid < ElementLigne
             end
 
             CheckError(gl, 'apres le dessin');
-            obj.GLGeom.Unbind(gl);
         end % fin du Draw
 
         function setVisibleNormales(obj, normales)
@@ -92,6 +87,5 @@ classdef Grid < ElementLigne
             end
         end % fin de generateGrid
     end % fin des methodes static
-
 end % fin classe Grid
 

@@ -16,7 +16,7 @@ classdef Light < handle
 
         UBOId               % uniform block
         UBOBuffer           % uniform block buffer
-        updateNeeded logical
+        updateNeeded = true
     end
     
     methods

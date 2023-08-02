@@ -1,25 +1,27 @@
 classdef (Abstract) VisibleElement < handle
     %VISIBLEELEMENT 
     
-    properties
+    properties (GetAccess = public, SetAccess = protected)
         Geom Geometry
         GLGeom GLGeometry
         shader ShaderProgram
         typeLumiere = 'S'
         typeRendu = 'D'
-        newRendu logical
-        typeOrientation = 'P' % 'P' Perspective, 'N' Normale a l'ecran, 'F' Fixe, 'O' orthonormé, 'R' rien
+        newRendu = true
+    end
 
-        visible logical
+    properties (Access = public)
+        typeOrientation = 'P' % 'P' Perspective, 'N' Normale a l'ecran, 'F' Fixe, 'O' orthonormé, 'R' rien
+        visible = true
     end
     
     methods
-        function obj = VisibleElement(aGeom)
+        function obj = VisibleElement(gl, aGeom)
             %VISIBLEELEMENT
             obj.Geom = aGeom;
-            obj.GLGeom = GLGeometry(obj.Geom.listePoints);
-            obj.visible = true;
-            obj.newRendu = true;
+            obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
+
+            addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
@@ -58,6 +60,50 @@ classdef (Abstract) VisibleElement < handle
             obj.newRendu = true;
         end
 
+        function cbk_geomUpdate(obj, ~, ~)
+            obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection, true);
+            if size(obj.Geom.listePoints, 2) == 2
+                obj.typeLumiere = 'S';
+            else
+                obj.typeLumiere = 'D';
+            end
+            obj.typeRendu = 'D';
+            obj.newRendu = true;
+        end
+
+        function AddPoints(obj, plusDePoints, plusDeConnectivite)
+            newDim = size(plusDePoints, 2);
+            if newDim ~= size(obj.GLGeom.vertexData, 2)
+                if newDim ~= obj.GLGeom.nLayout(1)
+                    warning('passage de 2D a 3D impossible, Annulation')
+                    return;
+                end
+                warning('Les sommets ne sont pas composés de la même facon, suppression des couleurs')
+                if newDim == 2
+                    obj.typeLumiere = 'S';
+                else
+                    obj.typeLumiere = 'D';
+                end
+                obj.typeRendu = 'D';
+                obj.newRendu = true;
+                nbSommets = size(obj.Geom.listePoints, 1);
+                newPoints = [obj.Geom.listePoints(:, 1:newDim) ; plusDePoints];
+                newConnectivite = plusDeConnectivite + nbSommets;
+                newConnectivite = [obj.Geom.listeConnection, newConnectivite];
+                obj.Geom.nouvelleGeom(newPoints, newConnectivite);
+                obj.GLGeom.nouvelleGeom(newPoints, newConnectivite, true);
+            else
+                nPos = obj.GLGeom.nLayout(1);
+                newPoints = [obj.Geom.listePoints ; plusDePoints(:, 1:nPos)];
+                newVertexData = [obj.GLGeom.vertexData ; plusDePoints];
+                nbSommets = size(obj.Geom.listePoints, 1);
+                newConnectivite = plusDeConnectivite + nbSommets;
+                newConnectivite = [obj.Geom.listeConnection, newConnectivite];
+                obj.Geom.nouvelleGeom(newPoints, newConnectivite);
+                obj.GLGeom.nouvelleGeom(newVertexData, newConnectivite, false);
+            end
+        end % fin de AddPoints
+
         function GenerateNormals(obj)
             normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
             obj.GLGeom.addDataToBuffer(normales, 4);
@@ -67,10 +113,6 @@ classdef (Abstract) VisibleElement < handle
 
         function id = getId(obj)
             id = obj.Geom.id;
-        end
-
-        function setId(obj, newId)
-            obj.Geom.id = newId;
         end
 
         function toString(obj)
@@ -87,11 +129,6 @@ classdef (Abstract) VisibleElement < handle
             obj.shader.delete(gl);
         end % fin de delete
 
-        function Init(obj, gl)
-            obj.GLGeom.CreateGLObject(gl, obj.Geom.listeConnection);
-            obj.changerProg(gl);
-        end % fin de Init
-
         function setModeRendu(obj, newTypeRendu, newTypeLumiere)
             if nargin == 3
                 obj.typeLumiere = newTypeLumiere;
@@ -107,7 +144,7 @@ classdef (Abstract) VisibleElement < handle
                 warning('L objet ne contient pas de normales aux sommets')
                 typeL = 'D';
             end
-            if nLayout(3) > 0 && obj.textureId == -1
+            if nLayout(3) > 0 && isempty(obj.texture)
                 nLayout(3) = 0;
             end
             switch obj.typeRendu

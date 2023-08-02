@@ -7,28 +7,29 @@ classdef Framebuffer < handle
         FBOId               %Frame Buffer Id
         RBOBuffer           %Render Buffer Object
         RBOId               %Render Buffer Id
-        TexBuffer           %Texture Buffer
-        TexId               %Texture Id
         forme ElementFace   %Le carré sur lequel on affiche la texture=la scène
     end
 
     methods
-        function obj = Framebuffer(forme)
-            obj.forme = forme;
-            obj.forme.textureId = 0;
-        end
-
-        function Init(obj, gl, width, height)
+        function obj = Framebuffer(gl, width, height)
             obj.generateFramebuffer(gl);
             CheckError(gl, 'Erreur lors de la création du frameBuffer');
-            obj.addTextureBuffer(gl, width, height);
+
+            [pos, idx, mapping] = generatePlan(2, 2);
+            planGeom = Geometry(0, pos, idx);
+            obj.forme = ElementFace(gl, planGeom);
+            obj.forme.typeOrientation = 'R';
+            obj.forme.AddMapping(mapping);
+
+            obj.forme.texture = Texture(gl, '', width, height);
+            gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_TEXTURE_2D, obj.forme.texture.textureId, 0);
             CheckError(gl, 'Erreur de la texture frameBuffer');
             obj.addRenderBuffer(gl, width, height);
             CheckError(gl, 'Erreur du renderbuffer du frameBuffer');
             obj.checkFrameBuffer(gl);
 
             obj.forme.setModeRendu('T', 'S');
-            obj.forme.Init(gl);
+            obj.forme.changerProg(gl);
 
             obj.UnBind(gl);
         end
@@ -37,7 +38,7 @@ classdef Framebuffer < handle
             obj.Bind(gl);
             gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, obj.FBOId);
             gl.glActiveTexture(gl.GL_TEXTURE0);
-            gl.glBindTexture(gl.GL_TEXTURE_2D, obj.TexId);
+            obj.forme.texture.Bind(gl);
 
             gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, width, height);
             gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, width, height, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
@@ -71,22 +72,6 @@ classdef Framebuffer < handle
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, obj.FBOId);
         end % fin de generateFramebuffer
 
-        function addTextureBuffer(obj, gl, w, h)
-            obj.TexBuffer = java.nio.IntBuffer.allocate(1);
-            gl.glGenTextures(1, obj.TexBuffer);
-            obj.TexId = typecast(obj.TexBuffer.array(), 'uint32');
-            gl.glActiveTexture(gl.GL_TEXTURE0);
-            gl.glBindTexture(gl.GL_TEXTURE_2D, obj.TexId);
-            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, w, h, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
-
-        	gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR);	
-            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR);	
-            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE);
-            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE);
-
-            gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_TEXTURE_2D, obj.TexId, 0);
-        end % fin de addTextureBuffer
-
         function addRenderBuffer(obj, gl, w, h)
             obj.RBOBuffer = java.nio.IntBuffer.allocate(1);
             gl.glGenRenderbuffers(1, obj.RBOBuffer);
@@ -105,5 +90,4 @@ classdef Framebuffer < handle
         end % fin de checkRenderBuffer
 
     end % fin des methodes privées
-
 end % fin classe Framebuffer

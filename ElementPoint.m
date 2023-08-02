@@ -1,21 +1,16 @@
 classdef ElementPoint < VisibleElement
-    %ELEMENTLIGNE
+    %ELEMENTPOINT
     
     properties
-        epaisseurLignes     % float
-        couleurLignes       % 1x4
+        epaisseurLignes = 2             % float
+        couleurLignes   = [1 0 0 1]     % 1x4
     end
     
     methods
 
-        function obj = ElementPoint(aGeom, epaisseur, couleur)
+        function obj = ElementPoint(gl, aGeom)
             %ELEMENTLIGNE
-            obj@VisibleElement(aGeom);
-
-            if nargin < 2, epaisseur = 2; end
-            if nargin < 3, couleur = [1 1 1 1]; end
-            obj.epaisseurLignes = epaisseur;
-            obj.couleurLignes   = couleur;
+            obj@VisibleElement(gl, aGeom);
         end % fin du constructeur ElementLigne
 
         function Draw(obj, gl, camAttrib)
@@ -34,7 +29,6 @@ classdef ElementPoint < VisibleElement
             gl.glDrawElements(gl.GL_POINTS, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
 
             CheckError(gl, 'apres le dessin');
-            obj.GLGeom.Unbind(gl);
         end % fin de Draw
 
         function setEpaisseur(obj, newEp)
