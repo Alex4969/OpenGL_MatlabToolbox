@@ -11,6 +11,7 @@ classdef ElementPoint < VisibleElement
         function obj = ElementPoint(gl, aGeom)
             %ELEMENTLIGNE
             obj@VisibleElement(gl, aGeom);
+            obj.Type='Point';
         end % fin du constructeur ElementLigne
 
         function Draw(obj, gl, camAttrib)

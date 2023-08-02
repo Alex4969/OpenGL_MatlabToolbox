@@ -11,6 +11,7 @@ classdef ElementLigne < VisibleElement
         function obj = ElementLigne(gl, aGeom)
             %ELEMENTLIGNE
             obj@VisibleElement(gl, aGeom);
+            obj.Type='Line';
         end % fin du constructeur ElementLigne
 
         function Draw(obj, gl, camAttrib)

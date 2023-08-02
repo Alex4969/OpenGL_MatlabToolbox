@@ -13,12 +13,14 @@ classdef ElementFace < VisibleElement
 
     properties (GetAccess = public, SetAccess = protected)
         choixAffichage   = [true false false]   % 1x3 logical, vrai s'il faut afficher Face, Arrete, Points
-    end
+    end  
+   
     
     methods
         function obj = ElementFace(gl, aGeom)
             %FACEELEMENT 
             obj@VisibleElement(gl, aGeom); % appel au constructeur parent
+            obj.Type='Face';
             obj.typeLumiere = 'D';
         end
 
@@ -87,6 +89,7 @@ classdef ElementFace < VisibleElement
         function setCouleurFaces(obj, newCol)
             obj.couleurFaces = obj.testNewCol(newCol);
             obj.choixAffichage(1) = true; 
+            notify(obj,'evt_update');
         end
 
         function setCouleurArretes(obj, newCol)

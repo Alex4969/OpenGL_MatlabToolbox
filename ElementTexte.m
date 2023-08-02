@@ -15,6 +15,7 @@ classdef ElementTexte < VisibleElement
             [pos, ind, mapping] = ElementTexte.constructText(str, police, ancre);
             geom = Geometry(id, pos, ind);
             obj@VisibleElement(gl, geom);
+            obj.Type='Texte';
             obj.AddMapping(mapping);
             obj.str = str;
             obj.police = police;

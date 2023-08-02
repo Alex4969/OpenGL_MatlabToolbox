@@ -30,13 +30,16 @@ elem.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 elem.AddColor(couleurPyramide);
 
 % % nuage de points avec une couleur par sommet
-posPoints=rand(1000,3)*2;
-cloudGeom = Geometry(25, posPoints, [1:1000]);
+N=10000;
+m=-1;M=1;
+posPoints=rand(N,3)*(M-m)+m;
+cloudGeom = Geometry(25, posPoints, [1:N]);
 viewer.AjouterGeom(cloudGeom, 'point');
-
+elem = viewer.mapElements(25);
+elem.setModelMatrix(MTrans3D([-2 4 -4]) * MRot3D([0 0 45]) * MScale3D(1));
 
 elem = viewer.mapElements(25);
-couleurPoints = rand(1000,3);
+couleurPoints = rand(N,3);
 elem.AddColor(couleurPoints);
 
 % % pyramide avec texture

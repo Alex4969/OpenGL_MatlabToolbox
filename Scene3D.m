@@ -71,6 +71,7 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
 
             addlistener(obj,'evt_update',@obj.cbk_update);
+            
         end % fin du constructeur de Scene3D
 
         function elem = AjouterTexte(obj, id, texte, police, typeAncre)
@@ -95,6 +96,7 @@ classdef Scene3D < handle
                     elem = ElementPoint(gl, aGeom);
             end
             obj.mapElements(elem.getId()) = elem;
+            addlistener(elem,'evt_update',@obj.cbk_update);
             obj.context.release();
         end % fin de ajouterGeom
 

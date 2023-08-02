@@ -2,6 +2,7 @@ classdef (Abstract) VisibleElement < handle
     %VISIBLEELEMENT 
     
     properties (GetAccess = public, SetAccess = protected)
+        Type string
         Geom Geometry
         GLGeom GLGeometry
         shader ShaderProgram
@@ -14,6 +15,10 @@ classdef (Abstract) VisibleElement < handle
         typeOrientation = 'P' % 'P' Perspective, 'N' Normale a l'ecran, 'F' Fixe, 'O' orthonormé, 'R' rien
         visible = true
     end
+
+    events
+        evt_update
+    end     
     
     methods
         function obj = VisibleElement(gl, aGeom)
