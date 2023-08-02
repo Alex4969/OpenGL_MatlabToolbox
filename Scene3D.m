@@ -5,7 +5,7 @@ classdef Scene3D < handle
         fenetre jOGLframe   % jOGLframe contient la fenetre, un panel, le canvas, la toolbar ...
         canvas              % GLCanvas dans lequel on peut utiliser les fonction openGL
         context             % GLContext
-        framebuffer Framebuffer
+        framebuffer Framebuffer % contient une image de la scène a afficher
 
         mapElements containers.Map  % map contenant les objets 3D de la scenes
         mapTextures containers.Map  % dictionnaire qui lie le nom de l'image a sa texture
@@ -54,9 +54,7 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_LINE_SMOOTH);
             gl.glEnable(gl.GL_BLEND);
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
-            % gl.glEnable(gl.GL_CULL_FACE);
-            % gl.glCullFace(gl.GL_BACK);
-            % gl.glFrontFace(gl.GL_CCW);
+            % gl.glEnable(gl.GL_CULL_FACE); % optimisation : supprime l'affichage des faces arrieres
 
             obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light(gl, [obj.camera.getPosition], [1 1 1]);
@@ -93,8 +91,12 @@ classdef Scene3D < handle
             obj.context.release();
         end % fin de ajouterObjet
 
-        function AjouterGeom(obj, aGeom, type)
+        function elem = AjouterGeom(obj, aGeom, type)
+            if nargin == 2, type = 'face'; end
             gl = obj.getGL();
+            if isKey(obj.mapElements, aGeom.id)
+                warning('Id deja existante remplace l ancient element');
+            end
             switch type
                 case 'face'
                     elem = ElementFace(gl, aGeom);
