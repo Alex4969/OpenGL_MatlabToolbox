@@ -20,6 +20,8 @@ classdef (Abstract) VisibleElement < handle
             %VISIBLEELEMENT
             obj.Geom = aGeom;
             obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
+
+            addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
@@ -55,6 +57,17 @@ classdef (Abstract) VisibleElement < handle
         function AddNormals(obj, matNormales)
             obj.GLGeom.addDataToBuffer(matNormales, 4);
             obj.typeLumiere = 'L';
+            obj.newRendu = true;
+        end
+
+        function cbk_geomUpdate(obj, ~, ~)
+            obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection, true);
+            if size(obj.Geom.listePoints, 2) == 2
+                obj.typeLumiere = 'S';
+            else
+                obj.typeLumiere = 'D';
+            end
+            obj.typeRendu = 'D';
             obj.newRendu = true;
         end
 
