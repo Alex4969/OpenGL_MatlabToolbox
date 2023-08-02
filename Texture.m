@@ -3,21 +3,31 @@ classdef Texture < handle
     %   Detailed explanation goes here
     
     properties
-        filePath        % string : nom du fichier avec l'extension
+        filePath        % char : nom du fichier avec extension
         textureId       % uint32 : id de la texture
-        texBuffer
-        slot
+        texBuffer       % java.nio.IntBuffer : necessaire pour supprimer l'objet
+        slot            % le slot OpenGL dans lequel se situe la texture
+    end
+
+    properties (Constant = true)
+        mapTextures = containers.Map('KeyType','char', 'ValueType', 'any');
     end
     
     methods
-        function obj = Texture(gl, fileName, slot)
-            %TEXTURE 
-            obj.slot = slot;
-            if slot == 0
-                warning('slot 0 reservé pour le frameBuffer !')
+        function obj = Texture(gl, fileName, width, height)
+            %TEXTURE
+            if isempty(fileName)
+                obj.slot = 0;
+                obj.generateTextureFBO(gl, width, height);
             else
+                if isKey(obj.mapTextures, fileName)
+                    obj.slot = obj.mapTextures(fileName).slot;
+                else
+                    obj.slot = length(obj.mapTextures) + 1;
+                end
                 obj.filePath = fileName;
                 obj.generateTexture(gl);
+                obj.mapTextures(fileName) = obj;
             end
         end % fin du constructeur Texture
 
@@ -36,7 +46,6 @@ classdef Texture < handle
     end % fin des methodes defauts
 
     methods (Access = private)
-
         function generateTexture(obj, gl)
             obj.texBuffer = java.nio.IntBuffer.allocate(1);
             gl.glGenTextures(1, obj.texBuffer);
@@ -61,17 +70,40 @@ classdef Texture < handle
             imBuffer.rewind();
             if (format == 3)
                 type = gl.GL_RGB;
-                %disp('rgb')
             else
                 type = gl.GL_RGBA;
-                %disp('rgba')
             end
             %gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1); %dans la toolbox mais visiblement pas necessaire
             gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, type, size(im, 2), size(im, 3), 0, type, gl.GL_UNSIGNED_BYTE, imBuffer);
             gl.glGenerateMipmap(gl.GL_TEXTURE_2D);
-        end
+        end % fin de generateTexture
+
+        function generateTextureFBO(obj, gl, w, h)
+            obj.texBuffer = java.nio.IntBuffer.allocate(1);
+            gl.glGenTextures(1, obj.texBuffer);
+            obj.textureId = typecast(obj.texBuffer.array(), 'uint32');
+            gl.glActiveTexture(gl.GL_TEXTURE0);
+            gl.glBindTexture(gl.GL_TEXTURE_2D, obj.textureId);
+            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, w, h, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
+
+        	gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR);	
+            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR);	
+            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE);
+            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE);
+        end % fin de generateTextureFBO
 
     end % fin des methodes privées
 
+    methods (Static)
+        function DeleteAll(gl)
+            k = keys(Texture.mapTextures);
+            for i=1:numel(k)
+                cle = k{i};
+                tex = Texture.mapTextures(cle);
+                tex.delete(gl);
+                remove(Texture.mapTextures, cle);
+            end
+        end
+    end
 end % fin classe Texture
 

@@ -1,15 +1,17 @@
 classdef (Abstract) VisibleElement < handle
     %VISIBLEELEMENT 
     
-    properties
+    properties (GetAccess = public, SetAccess = protected)
         Geom Geometry
         GLGeom GLGeometry
         shader ShaderProgram
         typeLumiere = 'S'
         typeRendu = 'D'
         newRendu = true
-        typeOrientation = 'P' % 'P' Perspective, 'N' Normale a l'ecran, 'F' Fixe, 'O' orthonormé, 'R' rien
+    end
 
+    properties (Access = public)
+        typeOrientation = 'P' % 'P' Perspective, 'N' Normale a l'ecran, 'F' Fixe, 'O' orthonormé, 'R' rien
         visible = true
     end
     
@@ -105,7 +107,7 @@ classdef (Abstract) VisibleElement < handle
                 warning('L objet ne contient pas de normales aux sommets')
                 typeL = 'D';
             end
-            if nLayout(3) > 0 && obj.textureId == -1
+            if nLayout(3) > 0 && isempty(obj.texture)
                 nLayout(3) = 0;
             end
             switch obj.typeRendu

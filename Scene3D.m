@@ -8,7 +8,6 @@ classdef Scene3D < handle
         framebuffer Framebuffer % contient une image de la scène a afficher
 
         mapElements containers.Map  % map contenant les objets 3D de la scenes
-        mapTextures containers.Map  % dictionnaire qui lie le nom de l'image a sa texture
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
@@ -29,7 +28,7 @@ classdef Scene3D < handle
 
     methods
         function obj = Scene3D(windowSize)
-            obj.fenetre=jOGLframe('GL4',0);
+            obj.fenetre = jOGLframe('GL4',0);
             if nargin == 0
                 obj.fenetre.setSize([1280 1280*9/16]);
             elseif nargin == 1
@@ -44,7 +43,6 @@ classdef Scene3D < handle
             obj.context = obj.fenetre.canvas.javaObj.getContext();
 
             obj.mapElements = containers.Map('KeyType','int32','ValueType','any');
-            obj.mapTextures = containers.Map('KeyType','char', 'ValueType', 'any');
             obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
 
             gl = obj.getGL();
@@ -81,10 +79,6 @@ classdef Scene3D < handle
             if (~isa(elem, 'VisibleElement'))
                 disp('l objet a ajouter n est pas un VisibleElement');
                 return
-            end
-            if isa(elem, 'ElementTexte')
-                slot = obj.getTextureId(elem.police.name + ".png", true);
-                elem.textureId = slot;
             end
             elem.Init(obj.getGL());
             obj.mapElements(elem.getId()) = elem;
@@ -159,10 +153,7 @@ classdef Scene3D < handle
             for i=1:numel(listeElem)
                 listeElem{i}.delete(gl);
             end
-            textures = values(obj.mapTextures);
-            for i=1:numel(textures)
-                textures{1}.delete(gl);
-            end
+            Texture.DeleteAll(gl);
             obj.axes.delete(gl);
             obj.grille.delete(gl);
             obj.gyroscope.delete(gl);
@@ -188,18 +179,6 @@ classdef Scene3D < handle
             notify(obj,'evt_update');
         end % fin setCouleurFond
 
-        function ApplyTexture(obj, elem, fileName)
-            %APPLYTEXTURE ajoute la texture avec le nom de fichier donné a
-            %l'element. si le fichier n'existe pas, la texture est retiré.
-            if (isa(elem, 'ElementFace') && elem.GLGeom.nLayout(3) ~= 0)
-                slot = obj.getTextureId(fileName, false);
-                elem.textureId = slot;
-                elem.setModeRendu('T');
-            else 
-                warning('L objet donne en parametre n est pas texturable');
-            end
-        end % fin de ApplyTexture
-
         function AddGeomToLight(obj, geom)
             disp('ne fonctionne pas')
             gl = obj.getGL();
@@ -218,29 +197,6 @@ classdef Scene3D < handle
             end
             gl = obj.context.getCurrentGL();
         end % fin de getGL
-
-        function slot = getTextureId(obj, fileName, texte)
-            %GETTEXTUREID Renvoie l'id de la texture correspondant au fichier.
-            % si elle n'existe pas, elle est créée.
-            if nargin < 3, texte = false; end
-            if texte
-                dossier = "textes\";
-            else
-                dossier = "textures\";
-            end
-            if isKey(obj.mapTextures, fileName)
-                %la texture a deja été ajouté :
-                slot = obj.mapTextures(fileName).slot;
-            else
-                if isfile(dossier + fileName)
-                    slot = length(obj.mapTextures) + 1;
-                    tex = Texture(obj.getGL(), dossier + fileName, slot);
-                    obj.mapTextures(fileName) = tex;
-                else
-                    slot = -1;
-                end
-            end
-        end % fin de getTextureId
 
         function generateInternalObject(obj, gl)
             tailleAxe = 50;
@@ -262,12 +218,7 @@ classdef Scene3D < handle
             obj.gyroscope.setModelMatrix(MTrans3D([-0.97, -0.87, 0]));
             obj.gyroscope.typeOrientation = 'O';
 
-            [pos, idx, mapping] = generatePlan(2, 2);
-            planGeom = Geometry(0, pos, idx);
-            frameBufferPlan = ElementFace(gl, planGeom);
-            frameBufferPlan.typeOrientation = 'R';
-            frameBufferPlan.AddMapping(mapping);
-            obj.framebuffer = Framebuffer(gl, frameBufferPlan, obj.canvas.getWidth(), obj.canvas.getHeight());
+            obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
         end % fin de generateInternalObject
 
         function worldCoord = getWorldCoord(obj, clickPos)

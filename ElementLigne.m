@@ -29,7 +29,6 @@ classdef ElementLigne < VisibleElement
             gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
 
             CheckError(gl, 'apres le dessin');
-            obj.GLGeom.Unbind(gl);
         end % fin de Draw
 
         function setEpaisseur(obj, newEp)

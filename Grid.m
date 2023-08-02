@@ -46,7 +46,6 @@ classdef Grid < ElementLigne
             end
 
             CheckError(gl, 'apres le dessin');
-            obj.GLGeom.Unbind(gl);
         end % fin du Draw
 
         function setVisibleNormales(obj, normales)

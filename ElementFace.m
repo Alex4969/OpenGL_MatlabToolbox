@@ -2,12 +2,16 @@ classdef ElementFace < VisibleElement
     %ELEMENTFACE Décrit les objets a afficher qui sont pleins
     
     properties %(GetAccess = public, SetAccess = protected)
-        textureId        = -1
+        texture
+        textureUpdate = false;
         epaisseurArretes = 3                    % float
         epaisseurPoints  = 4                    % float
         couleurFaces     = [1 0 0 1]            % 1x4
         couleurArretes   = [0 1 0 1]            % 1x4
         couleurPoints    = [0 0 1 1]            % 1x4
+    end
+
+    properties (GetAccess = public, SetAccess = protected)
         choixAffichage   = [true false false]   % 1x3 logical, vrai s'il faut afficher Face, Arrete, Points
     end
     
@@ -26,9 +30,13 @@ classdef ElementFace < VisibleElement
 
             obj.CommonDraw(gl, camAttrib);
 
-            if obj.typeRendu == 'T' && obj.textureId ~= -1
+            if obj.typeRendu == 'T' && ~isempty(obj.texture)
+                if obj.textureUpdate == true
+                    obj.texture = Texture(gl, obj.texture);
+                    obj.textureUpdate = false;
+                end
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
-                obj.shader.SetUniform1i(gl, 'uTexture', obj.textureId);
+                obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
                 gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             elseif obj.typeRendu == 'C' && obj.GLGeom.nLayout(2) ~= 0
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
@@ -56,8 +64,17 @@ classdef ElementFace < VisibleElement
             end
 
             CheckError(gl, 'apres le dessin');
-            obj.GLGeom.Unbind(gl);
         end % fin de Draw
+
+        function useTexture(obj, fileName)
+            if obj.GLGeom.nLayout(3) == 0
+                warning('l objet ne contient pas le mapping pour appliquer la texture. Annulation')
+                return 
+            end
+            obj.setModeRendu('T');
+            obj.textureUpdate = true;
+            obj.texture = fileName;
+        end
 
         function setEpaisseurArretes(obj, newEp)
             obj.epaisseurArretes = newEp;
