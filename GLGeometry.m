@@ -13,6 +13,7 @@ classdef GLGeometry < handle
         %%% Contient le nombre de valeurs pour cet attribut ou 0 si il n'y est pas
         vertexData              % doit etre de la meme hauteur que Geom.listePoints
                                 % contient les composantes de couleurs / mapping / normales
+        indexData
         nLayout                 % [nPos, nColor, NTextureMapping, nNormales] : compte le nombre de valeurs pour chaque attribut
         updateNeeded = false
     end
@@ -20,10 +21,11 @@ classdef GLGeometry < handle
     methods
         function obj = GLGeometry(gl, sommets, indices)
             obj.vertexData = sommets;
+            obj.indexData = uint32(indices);
             nPos = size(sommets, 2);
             obj.nLayout = [nPos, 0, 0, 0];
 
-            obj.CreateGLObject(gl, indices);
+            obj.CreateGLObject(gl);
         end % fin du constructeur GLGeometry
 
         function addDataToBuffer(obj, mat, pos)
@@ -47,7 +49,7 @@ classdef GLGeometry < handle
             end
         end % fin de addDataToBuffer
         
-        function CreateGLObject(obj, gl, indices)
+        function CreateGLObject(obj, gl)
             %CREATEGLOBJECT
             obj.generateVAO(gl);
             CheckError(gl, 'Erreur pour la creation du vao');
@@ -55,8 +57,10 @@ classdef GLGeometry < handle
             CheckError(gl, 'Erreur pour la creation du arrayBuffer');
             obj.fillVBO(gl);
             CheckError(gl, 'Erreur pour le remplissage du arrayBuffer');
-            obj.generateEBO(gl, indices);
+            obj.generateEBO(gl);
             CheckError(gl, 'Erreur pour la creation de l indexBuffer');
+            fillEBO(obj, gl)
+            CheckError(gl, 'Erreur pour le remplissage du EBO')
             obj.declareVertexAttrib(gl);
             CheckError(gl, 'Erreur pour la declaration des vertex attributes');
 
@@ -71,6 +75,7 @@ classdef GLGeometry < handle
             if obj.updateNeeded
                 obj.declareVertexAttrib(gl);
                 obj.fillVBO(gl);
+                obj.fillEBO(gl);
                 obj.updateNeeded = false;
                 CheckError(gl, 'Erreur de la mise a jour');
             end
@@ -89,6 +94,15 @@ classdef GLGeometry < handle
             gl.glDeleteBuffers(1, obj.VBOBuffer);
             gl.glDeleteBuffers(1, obj.EBOBuffer);
         end % fin de delete
+
+        function nouvelleGeom(obj, newVertexData, newIndices, changementDim)
+            obj.updateNeeded = true;
+            if changementDim == true
+                obj.nLayout(2:4) = 0;
+            end
+            obj.vertexData = newVertexData;
+            obj.indexData = uint32(newIndices);
+        end % fin de nouvelleGeom
     end % fin des methodes defauts
 
     methods (Access = private)
@@ -116,20 +130,23 @@ classdef GLGeometry < handle
             sommetsData.put(vertex(:));
             sommetsData.rewind();
             gl.glBufferData(gl.GL_ARRAY_BUFFER, numel(vertex) * 4, sommetsData, gl.GL_STATIC_DRAW);
-        end
+        end % fin de fillVBO
 
-        function generateEBO(obj, gl, indices)
+        function generateEBO(obj, gl)
             %GENERATEINDICIES : Creer le EBO et le rempli avec les indices
-            indices = uint32(indices);
-            indexData = java.nio.IntBuffer.allocate(numel(indices));
-            indexData.put(indices(:));
-            indexData.rewind();
             obj.EBOBuffer = java.nio.IntBuffer.allocate(1);
             gl.glGenBuffers(1, obj.EBOBuffer);
             obj.EBOId = typecast(obj.EBOBuffer.array(), 'uint32');
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, obj.EBOId);
-            gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, numel(indices) * 4, indexData, gl.GL_STATIC_DRAW);
         end % fin de generateIndices
+
+        function fillEBO(obj, gl)
+            gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, obj.EBOId);
+            idxBuffer = java.nio.IntBuffer.allocate(numel(obj.indexData));
+            idxBuffer.put(obj.indexData(:));
+            idxBuffer.rewind();
+            gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, numel(obj.indexData) * 4, idxBuffer, gl.GL_STATIC_DRAW);
+        end % fin de fillEBO
 
         function declareVertexAttrib(obj, gl)
             %DECLAREVERTEXATTRIB : definit les vertex attribute pour OpenGL.
