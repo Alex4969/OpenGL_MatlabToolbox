@@ -4,7 +4,7 @@ classdef ElementFace < VisibleElement
     properties %(GetAccess = public, SetAccess = protected)
         texture
         textureUpdate = false
-        epaisseurArretes = 3                    % float
+        epaisseurArretes = 1                    % float
         epaisseurPoints  = 4                    % float
         couleurFaces     = [1 0 0 1]            % 1x4
         couleurArretes   = [0 1 0 1]            % 1x4
@@ -12,7 +12,7 @@ classdef ElementFace < VisibleElement
     end
 
     properties (GetAccess = public, SetAccess = protected)
-        choixAffichage   = [true false false]   % 1x3 logical, vrai s'il faut afficher Face, Arrete, Points
+        quoiAfficher int32   % 1x3 logical, vrai s'il faut afficher Face, Arrete, Points
     end  
    
     
@@ -20,8 +20,9 @@ classdef ElementFace < VisibleElement
         function obj = ElementFace(gl, aGeom)
             %FACEELEMENT 
             obj@VisibleElement(gl, aGeom); % appel au constructeur parent
-            obj.Type='Face';
+            obj.Type = 'Face';
             obj.typeLumiere = 'D';
+            obj.quoiAfficher = 1;
         end
 
         function Draw(obj, gl, camAttrib)
@@ -31,39 +32,30 @@ classdef ElementFace < VisibleElement
             end
 
             obj.CommonDraw(gl, camAttrib);
-
-            if obj.typeRendu == 'T' && ~isempty(obj.texture)
-                if obj.textureUpdate == true
-                    obj.texture = Texture(gl, obj.texture);
-                    obj.textureUpdate = false;
+            if obj.typeOrientation ~= 'R'
+                obj.shader.SetUniform1i(gl, 'uQuoiAfficher', obj.quoiAfficher);
+                if bitand(obj.quoiAfficher, 1) > 0
+                    if obj.typeRendu == 'T' && ~isempty(obj.texture)
+                        if obj.textureUpdate == true
+                            obj.texture = Texture(gl, obj.texture);
+                            obj.textureUpdate = false;
+                        end
+                        obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
+                        gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+                    elseif obj.typeRendu == 'D' && bitand(obj.quoiAfficher, 1) > 0
+                        obj.shader.SetUniform4f(gl, 'uFaceColor', obj.couleurFaces);
+                    end
                 end
-                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
-                obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
-                gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-            elseif obj.typeRendu == 'C' && obj.GLGeom.nLayout(2) ~= 0
-                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
-                gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-            else
-                if obj.choixAffichage(1) == true
-                    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
-                    obj.shader.SetUniform4f(gl, 'uColor', obj.couleurFaces);
-                    gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+                if bitand(obj.quoiAfficher, 2) > 0
+                    obj.shader.SetUniform4f(gl, 'uLineColor', obj.couleurArretes);
+                    obj.shader.SetUniform1f(gl, 'uLineSize', obj.epaisseurArretes);
+                end
+                if bitand(obj.quoiAfficher, 4) > 0
+                    obj.shader.SetUniform4f(gl, 'uPointColor', obj.couleurPoints);
                 end
             end
-
-            if obj.choixAffichage(2) == true
-                gl.glLineWidth(obj.epaisseurArretes);
-                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
-                obj.shader.SetUniform4f(gl, 'uColor', obj.couleurArretes);
-                gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-            end
-                
-            if obj.choixAffichage(3) == true
-                gl.glPointSize(obj.epaisseurPoints);
-                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_POINT);
-                obj.shader.SetUniform4f(gl, 'uColor', obj.couleurPoints);
-                gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-            end
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
+            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
 
             CheckError(gl, 'apres le dessin');
         end % fin de Draw
@@ -88,27 +80,29 @@ classdef ElementFace < VisibleElement
 
         function setCouleurFaces(obj, newCol)
             obj.couleurFaces = obj.testNewCol(newCol);
-            obj.choixAffichage(1) = true; 
+            obj.quoiAfficher = bitor(obj.quoiAfficher, 1);
             notify(obj,'evt_update');
         end
 
         function setCouleurArretes(obj, newCol)
             obj.couleurArretes = obj.testNewCol(newCol);
-            obj.choixAffichage(2) = true; 
+            obj.quoiAfficher = bitor(obj.quoiAfficher, 2);
         end
 
         function setCouleurPoints(obj, newCol)
             obj.couleurPoints = obj.testNewCol(newCol);
-            obj.choixAffichage(3) = true; 
+            obj.quoiAfficher = bitor(obj.quoiAfficher, 4);
         end
 
-        function setChoixAffichage(obj, newChoix)
-            if numel(newChoix) == 1 || numel(newChoix) == 3
-                obj.choixAffichage(1:3) = newChoix;
+        function setQuoiAfficher(obj, newChoix)
+            if newChoix == 0
+                obj.visible = false;
+            elseif newChoix < 0
+                disp('valeur incorrect');
             else
-                warning('mauvais format de newChoix');
+                obj.quoiAfficher = newChoix;
             end
-        end
+        end % fin de setQuoiAfficher
 
         function sNew = reverseSelect(obj, s)
             sNew.id        = obj.getId();

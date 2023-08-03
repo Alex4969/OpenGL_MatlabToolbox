@@ -7,6 +7,7 @@ out vec3 vNormal;
 out vec3 vCrntPos;
 out vec2 vTextureCoord;  //TEX
 out vec4 vColor;         //COL3 COL4
+out vec2 interpolation;
 
 in DATA
 {
@@ -27,6 +28,7 @@ void main()
 	vCrntPos = data_in[0].vCrntPos;
 	vTextureCoord = data_in[0].vTextureCoord; //TEX
 	vColor = data_in[0].vColor; //COL3 COL4
+	interpolation = vec2(1.0, 0.0);
 	EmitVertex();
 	
 	gl_Position = data_in[1].vProjection * gl_in[1].gl_Position;
@@ -34,6 +36,7 @@ void main()
 	vCrntPos = data_in[1].vCrntPos;
 	vTextureCoord = data_in[1].vTextureCoord; //TEX
 	vColor = data_in[1].vColor; //COL3 COL4
+	interpolation = vec2(0.0, 1.0);
 	EmitVertex();
 
 	gl_Position = data_in[2].vProjection * gl_in[2].gl_Position;
@@ -41,6 +44,7 @@ void main()
 	vCrntPos = data_in[2].vCrntPos;
 	vTextureCoord = data_in[2].vTextureCoord;  //TEX
 	vColor = data_in[2].vColor; //COL3 COL4
+	interpolation = vec2(0.0, 0.0);
 	EmitVertex();
 
 	EndPrimitive();

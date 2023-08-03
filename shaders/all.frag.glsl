@@ -6,8 +6,13 @@ in vec3 vNormal;
 in vec3 vCrntPos;
 in vec4 vColor;     //COL3 COL4
 in vec2 vTextureCoord; //TEX
+in vec2 interpolation;
 
-uniform vec4 uColor;        //DEF
+uniform vec4 uFaceColor = vec4(1.0);        //DEF
+uniform vec4 uLineColor = vec4(0.0);
+uniform vec4 uPointColor;
+uniform float uLineSize = 3.0;
+uniform int  uQuoiAfficher = 1;
 uniform sampler2D uTexture; //TEX
 layout (std140, binding = 1) uniform camera {
     vec3 uCamPos;
@@ -39,8 +44,17 @@ void main()
         intensiteLumineuse = spotLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightDir, uLightData.y, uLightData.z);
     }
     vec4 couleurAvant = texture(uTexture, vTextureCoord); //TEX
-    vec4 couleurAvant = uColor; //DEF
+    vec4 couleurAvant = uFaceColor; //DEF
     vec4 couleurAvant = vColor; //COL3 COL4
-    vec3 laCouleur = couleurAvant.xyz * uLightColor * intensiteLumineuse;
+
+    vec3 laCouleur = couleurAvant.xyz;
+    if (uQuoiAfficher > 1){
+        vec3 barys = vec3(interpolation.x, interpolation.y, 1 - interpolation.x - interpolation.y);
+        float centre = min(barys.x, min(barys.y, barys.z));
+        centre = smoothstep(0.0, uLineSize * fwidth(centre), centre);
+        laCouleur = (centre * laCouleur + (1.0 - centre) * uLineColor.xyz) * uLightColor * intensiteLumineuse;
+    } else {
+        laCouleur = laCouleur * uLightColor * intensiteLumineuse;
+    }
     fragColor = vec4(laCouleur, couleurAvant.w);
 }

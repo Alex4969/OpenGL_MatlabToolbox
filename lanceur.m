@@ -17,7 +17,7 @@ viewer.AjouterGeom(pyraGeom, 'face');
 elem = viewer.mapElements(1);
 elem.setCouleurArretes([1 0 0 1]);
 elem.setCouleurFaces([1 1 1 1]);
-elem.setEpaisseurArretes(5);
+elem.setEpaisseurArretes(2);
 elem.setModelMatrix(MTrans3D([-10 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 
 % pyramide avec une couleur par sommet
@@ -59,26 +59,26 @@ bouleGeom = Geometry(4, posBoule, indBoule);
 elem = viewer.AjouterGeom(bouleGeom, 'face');
 
 elem.setCouleurArretes([1 1 0]);
-elem.setChoixAffichage([0 1 0]);
+elem.setQuoiAfficher(3);
 elem.setModelMatrix(MTrans3D([0 1 0]));
 
 % % sphere avec des normales pour rendu lisse
-bouleNormalesGeom = Geometry(5, posBoule, indBoule);
-elem = viewer.AjouterGeom(bouleNormalesGeom, 'face');
-
-elem.setModelMatrix(MTrans3D([0 3 0]));
-elem.GenerateNormals();
-elem.setCouleurArretes([1 0 1 1]);
+% bouleNormalesGeom = Geometry(5, posBoule, indBoule);
+% elem = viewer.AjouterGeom(bouleNormalesGeom, 'face');
+% 
+% elem.setModelMatrix(MTrans3D([0 3 0]));
+% elem.GenerateNormals();
+% elem.setCouleurArretes([1 0 1 1]);
 
 % % sphere avec texture map monde
-bouleTexGeom = Geometry(6, posBoule, indBoule);
-elem = viewer.AjouterGeom(bouleTexGeom, 'face');
-
-elem.AddMapping(mappingBoule);
-elem.useTexture('textures/monde.jpg');
-elem.setModelMatrix(MTrans3D([3, 0, 0]));
-elem.ModifyModelMatrix(MRot3D([180 0 0]) * MScale3D(2), 1);
-elem.GenerateNormals();
+% bouleTexGeom = Geometry(6, posBoule, indBoule);
+% elem = viewer.AjouterGeom(bouleTexGeom, 'face');
+% 
+% elem.AddMapping(mappingBoule);
+% elem.useTexture('textures/monde.jpg');
+% elem.setModelMatrix(MTrans3D([3, 0, 0]));
+% elem.ModifyModelMatrix(MRot3D([180 0 0]) * MScale3D(2), 1);
+% elem.GenerateNormals();
 
 % % piece d'echec depuis un fichier
 chessGeom = Geometry(9);
@@ -89,6 +89,7 @@ elem.setCouleurFaces(rand(1, 3));
 elem.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02)); % pour la piece d'echec
 % chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2)); % pour le loup
 elem.GenerateNormals();
+elem.setQuoiAfficher(3);
 elem.setModeRendu('D', 'D'); % uniform & dur
 
 ravie = Police("textes/ravie");

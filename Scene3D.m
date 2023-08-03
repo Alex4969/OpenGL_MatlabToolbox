@@ -395,7 +395,8 @@ classdef Scene3D < handle
         end
 
         function cbk_update(obj,source,event)
-            obj.Draw;
+            disp('cbk_Update');
+            % obj.Draw;
         end
     end % fin des methodes callback
 end % fin de la classe Scene3D
