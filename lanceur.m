@@ -19,6 +19,7 @@ elem.setCouleurArretes([1 0 0 1]);
 elem.setCouleurFaces([1 1 1 1]);
 elem.setEpaisseurArretes(2);
 elem.setModelMatrix(MTrans3D([-10 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
+elem.setQuoiAfficher(2);
 
 % pyramide avec une couleur par sommet
 pyraColorGeom = Geometry(2, posPyramide, indicesPyramide);

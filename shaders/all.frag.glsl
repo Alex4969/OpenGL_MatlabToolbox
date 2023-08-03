@@ -43,20 +43,25 @@ void main()
     } else if (uLightData.x == 3.0) {
         intensiteLumineuse = spotLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightDir, uLightData.y, uLightData.z);
     }
-    vec4 couleurAvant = texture(uTexture, vTextureCoord); //TEX
-    vec4 couleurAvant = uFaceColor; //DEF
-    vec4 couleurAvant = vColor; //COL3 COL4
+    vec4 couleur = texture(uTexture, vTextureCoord); //TEX
+    vec4 couleur = uFaceColor; //DEF
+    vec4 couleur = vColor; //COL3 COL4
 
-    vec3 laCouleur = couleurAvant.xyz;
     if (uQuoiAfficher > 1){
+        //if ((uQuoiAfficher & 1) == 0)
+        //    couleur = vec4(0.0);
         vec3 barys = vec3(interpolation.x, interpolation.y, 1 - interpolation.x - interpolation.y);
         float centre = min(barys.x, min(barys.y, barys.z));
         centre = smoothstep(0.0, uLineSize * fwidth(centre), centre);
-        laCouleur = (centre * laCouleur + (1.0 - centre) * uLineColor.xyz) * uLightColor * intensiteLumineuse;
-    } else {
-        laCouleur = laCouleur * uLightColor * intensiteLumineuse;
+        couleur = centre * couleur + (1.0 - centre) * uLineColor;
+        if ((uQuoiAfficher & 1) == 0){
+            if (centre == 1)
+                discard;
+            couleur = uLineColor;
+        }
     }
-    fragColor = vec4(laCouleur, couleurAvant.w);
+    couleur.xyz *= uLightColor * intensiteLumineuse;
+    fragColor = couleur;
 }
 
 float pointLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
