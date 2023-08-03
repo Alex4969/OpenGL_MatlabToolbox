@@ -24,12 +24,9 @@ classdef ShaderProgram < handle
                 obj.createProgNoLight(gl, motCle);
             else
                 if ind == 'L' && nLayout(4) > 0 
-                    bSmooth = true;
                     motCle(3) = "NORM";
-                else
-                    bSmooth = false;
                 end
-                obj.createProgWithLight(gl, motCle, bSmooth)
+                obj.createProgWithLight(gl, motCle)
             end
             gl.glLinkProgram(obj.shaderProgId);
             gl.glValidateProgram(obj.shaderProgId);
@@ -88,21 +85,14 @@ classdef ShaderProgram < handle
             end
         end % fin de findLocation
 
-        function createProgWithLight(obj, gl, motCle, bSmooth)
+        function createProgWithLight(obj, gl, motCle)
             srcVert = obj.readIfContains("shaders/all.vert.glsl", motCle);
-            if bSmooth == 1
-                srcVert = srcVert + obj.readIfContains("shaders/allSmooth.vert.glsl", motCle);
-                obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
-            else
-                srcVert = srcVert + obj.readIfContains("shaders/allSharp.vert.glsl", motCle);
-                obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
-                %affichage avec normal aux faces, il faut générer les normales dans un geometry shaders
-                srcGeom = obj.readIfContains("shaders/all.geom.glsl", motCle);
-                obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, srcGeom);
-            end
+            obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
+
+            srcGeom = obj.readIfContains("shaders/all.geom.glsl", motCle);
+            obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, srcGeom);
 
             srcFrag = obj.readIfContains("shaders/all.frag.glsl", motCle);
-            srcFrag = srcFrag + fileread("shaders/light.frag.glsl");
             obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
         end % fin de create Program
 

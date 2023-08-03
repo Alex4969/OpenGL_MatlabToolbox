@@ -63,22 +63,22 @@ elem.setQuoiAfficher(3);
 elem.setModelMatrix(MTrans3D([0 1 0]));
 
 % % sphere avec des normales pour rendu lisse
-% bouleNormalesGeom = Geometry(5, posBoule, indBoule);
-% elem = viewer.AjouterGeom(bouleNormalesGeom, 'face');
-% 
-% elem.setModelMatrix(MTrans3D([0 3 0]));
-% elem.GenerateNormals();
-% elem.setCouleurArretes([1 0 1 1]);
+bouleNormalesGeom = Geometry(5, posBoule, indBoule);
+elem = viewer.AjouterGeom(bouleNormalesGeom, 'face');
+
+elem.setModelMatrix(MTrans3D([0 3 0]));
+elem.GenerateNormals();
+elem.setCouleurArretes([1 0 1 1]);
 
 % % sphere avec texture map monde
-% bouleTexGeom = Geometry(6, posBoule, indBoule);
-% elem = viewer.AjouterGeom(bouleTexGeom, 'face');
-% 
-% elem.AddMapping(mappingBoule);
-% elem.useTexture('textures/monde.jpg');
-% elem.setModelMatrix(MTrans3D([3, 0, 0]));
-% elem.ModifyModelMatrix(MRot3D([180 0 0]) * MScale3D(2), 1);
-% elem.GenerateNormals();
+bouleTexGeom = Geometry(6, posBoule, indBoule);
+elem = viewer.AjouterGeom(bouleTexGeom, 'face');
+
+elem.AddMapping(mappingBoule);
+elem.useTexture('textures/monde.jpg');
+elem.setModelMatrix(MTrans3D([3, 0, 0]));
+elem.ModifyModelMatrix(MRot3D([180 0 0]) * MScale3D(2), 1);
+elem.GenerateNormals();
 
 % % piece d'echec depuis un fichier
 chessGeom = Geometry(9);
