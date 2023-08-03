@@ -114,7 +114,7 @@ classdef (Abstract) VisibleElement < handle
             obj.GLGeom.addDataToBuffer(normales, 4);
             obj.typeLumiere = 'L';
             obj.newRendu = true;
-        end
+        end % fin de GenerateNormals
 
         function id = getId(obj)
             id = obj.Geom.id;
@@ -190,7 +190,7 @@ classdef (Abstract) VisibleElement < handle
                 cam(3,4) = 0;
                 model = eye(4);
             elseif obj.typeOrientation == 'N' % On inverse l'effet de rotation de la caméra
-                model(1:3, 1:3) = model(1:3, 1:3) / camAttrib.view(1:3, 1:3);
+                model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3);
                 cam =  camAttrib.proj * camAttrib.view;
             elseif obj.typeOrientation == 'P' % Perpective
                 cam =  camAttrib.proj * camAttrib.view;
@@ -207,4 +207,3 @@ classdef (Abstract) VisibleElement < handle
         sNew = reverseSelect(obj, s)
     end % fin des methodes abstraites
 end % fin de la classe VisibleElement
-
