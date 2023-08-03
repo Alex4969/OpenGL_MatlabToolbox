@@ -53,11 +53,19 @@ void main()
         vec3 barys = vec3(interpolation.x, interpolation.y, 1 - interpolation.x - interpolation.y);
         float centre = min(barys.x, min(barys.y, barys.z));
         centre = smoothstep(0.0, uLineSize * fwidth(centre), centre);
-        couleur = centre * couleur + (1.0 - centre) * uLineColor;
-        if ((uQuoiAfficher & 1) == 0){
-            if (centre == 1)
-                discard;
-            couleur = uLineColor;
+        if ((uQuoiAfficher & 2) == 2) {
+            couleur = centre * couleur + (1.0 - centre) * uLineColor;
+            if ((uQuoiAfficher & 1) == 0){
+                if (centre == 1)
+                    discard;
+                couleur = uLineColor;
+            }
+        }
+        if ((uQuoiAfficher & 4) == 4) {
+            float coin = max(barys.x, max(barys.y, barys.z));
+            if (coin > 0.95){
+                couleur = uPointColor;
+            }
         }
     }
     couleur.xyz *= uLightColor * intensiteLumineuse;
