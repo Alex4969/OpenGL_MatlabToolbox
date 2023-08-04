@@ -10,8 +10,6 @@ classdef Axes < ElementLigne
     methods
 
         function obj = Axes(aGeom, deb, fin)
-            disp('plus fonctionnel')
-            return
             %AXES Construct an instance of this class
             obj@ElementLigne(aGeom);
             obj.debut = deb;
