@@ -188,17 +188,22 @@ classdef (Abstract) VisibleElement < handle
                 model(3, 4) = -camAttrib.near;
                 model = model * MScale3D(camAttrib.coef);
                 cam =  camAttrib.proj;
-            elseif obj.typeOrientation == 'O'
-                cam = MProj3D('O', [camAttrib.ratio 1 1 20]) * camAttrib.view;
-                cam(1, 4) = model(1, 4) + 0.1/camAttrib.ratio;
-                cam(2,4) = model(2,4);
-                cam(3,4) = 0;
-                model = eye(4);
-            elseif obj.typeOrientation == 'N' % On inverse l'effet de rotation de la caméra
+            elseif obj.typeOrientation == 'N'  % On inverse l'effet de rotation de la caméra
                 model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3);
                 cam =  camAttrib.proj * camAttrib.view;
+            elseif obj.typeOrientation == 'O'
+                cam = MProj3D('O', [camAttrib.ratio*16 16 1 20]) * camAttrib.view;
+                cam(1,4) = -0.97 + 0.1/camAttrib.ratio;
+                cam(2,4) = -0.87;
+                cam(3,4) =  0;
             elseif obj.typeOrientation == 'P' % Perpective
                 cam =  camAttrib.proj * camAttrib.view;
+            elseif obj.typeOrientation == 'A'
+                model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3);
+                cam = MProj3D('O', [camAttrib.ratio*16 16 1 20]) * camAttrib.view;
+                cam(1,4) = -0.97 + 0.1/camAttrib.ratio;
+                cam(2,4) = -0.87;
+                cam(3,4) =  0;
             else
                 cam = eye(4);
             end

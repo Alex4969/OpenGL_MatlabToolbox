@@ -1,7 +1,7 @@
 classdef Camera < handle
     %CAMERA Summary of this class goes here
 
-    properties (Access = private)
+    properties (GetAccess = public, SetAccess = protected)
         %%% Attributs de la caméra
         position        % 1x3 position de la caméra
         target          % 1x3 position de la cible/objet regardé par la caméra

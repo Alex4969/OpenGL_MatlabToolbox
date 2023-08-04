@@ -2,11 +2,12 @@ classdef Ensemble < handle
     %ENSEMBLE Summary of this class goes here
     %   Detailed explanation goes here
 
-    properties
+    properties (GetAccess = public, SetAccess = protected)
         id int32
         sousElements containers.Map
         visible logical
         groupMatrix = eye(4);
+        typeOrientation = 'P'
     end
 
     methods
@@ -23,6 +24,7 @@ classdef Ensemble < handle
         function AddElem(obj, elem)
             obj.sousElements(elem.getId()) = elem;
             elem.ModifyModelMatrix(MTrans3D(-obj.groupMatrix(1:3, 4)));
+            elem.typeOrientation = obj.typeOrientation;
         end % fin de AddElem
 
         function AddToModelMatrix(obj, model, after)
@@ -43,6 +45,15 @@ classdef Ensemble < handle
             pos = obj.groupMatrix(1:3, 4);
             pos = pos';
         end % fin de getPosition
+
+        function setTypeOrientation(obj, newType)
+            obj.typeOrientation = newType;
+            listeElem = values(obj.sousElements);
+            for i=1:numel(listeElem)
+                elem = listeElem{i};
+                elem.typeOrientation = newType;
+            end
+        end
 
         function Draw(obj, gl, camAttrib)
             listeElem = values(obj.sousElements); % trié ?

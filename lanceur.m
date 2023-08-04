@@ -104,6 +104,12 @@ listeId = 31:34;
 ens = viewer.makeGroup(30, listeId, [0 2 0]);
 ens.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
 
+
+elementTexte = viewer.AjouterTexte(102, 'X', ravie, 0);
+elementTexte.setModelMatrix(MTrans3D([1 0 0]));
+elementTexte.setCouleurTexte([1 0 0]);
+elementTexte.typeOrientation = 'A';
+
 % [posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.2);
 % bouleLightGeom = Geometry(100, posBoule, indBoule);
 % viewer.AddGeomToLight(bouleLightGeom);

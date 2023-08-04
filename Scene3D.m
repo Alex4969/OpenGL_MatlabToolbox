@@ -218,13 +218,13 @@ classdef Scene3D < handle
             grilleGeom = Geometry(-2, pos, idx);
             obj.grille = Grid(gl, grilleGeom, tailleAxe, 2);
 
-            tailleGysmo = 0.06;
+            tailleGysmo = 1;
             [pos, idx, color] = Axes.generateAxes(0, tailleGysmo);
             gysmoGeom = Geometry(-3, pos, idx);
             obj.gyroscope = ElementLigne(gl, gysmoGeom);
             obj.gyroscope.setEpaisseur(4);
             obj.gyroscope.AddColor(color);
-            obj.gyroscope.setModelMatrix(MTrans3D([-0.97, -0.87, 0]));
+            obj.gyroscope.setModelMatrix(MTrans3D([0, 0, 0]));
             obj.gyroscope.typeOrientation = 'O';
 
             obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
@@ -267,7 +267,11 @@ classdef Scene3D < handle
             listeTrie = values(obj.mapElements);
             distance  = zeros(1, numel(listeTrie));
             for i=1:numel(listeTrie)
-                distance(i) = norm(listeTrie{i}.getPosition() - obj.camera.getPosition());
+                if (listeTrie{i}.typeOrientation == 'O' || listeTrie{i}.typeOrientation == 'A' || listeTrie{i}.typeOrientation == 'N')
+                    distance(i) = 0;
+                else
+                    distance(i) = norm(listeTrie{i}.getPosition() - obj.camera.getPosition());
+                end
             end
             [~, newOrder] = sort(distance, 'descend');
             listeTrie = listeTrie(newOrder);
