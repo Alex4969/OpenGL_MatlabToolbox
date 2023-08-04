@@ -25,13 +25,15 @@ classdef ElementTexte < VisibleElement
             obj.changerProg(gl);
         end % fin du constructeur Texte
 
-        function Draw(obj, gl, camAttrib)
+        function Draw(obj, gl, camAttrib, model)
             %DRAW dessine cet objet
             if obj.visible == 0
                 return
             end
-            
-            obj.CommonDraw(gl, camAttrib);
+            if nargin == 3
+                model = obj.getModelMatrix();
+            end
+            obj.CommonDraw(gl, camAttrib, model);
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
             obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);

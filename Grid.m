@@ -21,12 +21,14 @@ classdef Grid < ElementLigne
             obj.couleurLignes = [0.3 0.3 0.3 1];
         end % fin du constructeur Grid
 
-        function Draw(obj, gl, camAttrib)
+        function Draw(obj, gl, camAttrib, model)
             if obj.visible == 0
                 return
             end
-            
-            obj.CommonDraw(gl, camAttrib);
+            if nargin == 3
+                model = obj.getModelMatrix();
+            end
+            obj.CommonDraw(gl, camAttrib, model);
 
             gl.glLineWidth(obj.epaisseurLignes);
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);

@@ -173,7 +173,7 @@ classdef (Abstract) VisibleElement < handle
             obj.shader = ShaderProgram(gl, nLayout, typeL);
         end % fin de changerProg
 
-        function CommonDraw(obj, gl, camAttrib)
+        function CommonDraw(obj, gl, camAttrib, model)
             %COMMONDRAW, fonction appele au debut de tous les draw des
             %objets. Definie le programme et le mode d'orientation
             if obj.newRendu == true
@@ -182,7 +182,6 @@ classdef (Abstract) VisibleElement < handle
             end
             obj.shader.Bind(gl);
             obj.GLGeom.Bind(gl);
-            model = obj.getModelMatrix();
             if obj.typeOrientation == 'F' % On plaque le texte sur le premier plan du cube de projection
                 model(1, 4) = model(1, 4) * camAttrib.maxX;
                 model(2, 4) = model(2, 4) * camAttrib.maxY;
@@ -209,7 +208,7 @@ classdef (Abstract) VisibleElement < handle
     end % fin des methodes defauts
 
     methods (Abstract = true)
-        Draw(obj, gl, camAttrib)
+        Draw(obj, gl, camAttrib, model)
         sNew = reverseSelect(obj, s)
         setMainColor(obj, matColor)
     end % fin des methodes abstraites
