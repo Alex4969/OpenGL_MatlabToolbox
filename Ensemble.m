@@ -12,7 +12,7 @@ classdef Ensemble < handle
     methods
         function obj = Ensemble(id, centre)
         %ENSEMBLE Construct an instance of this class
-            if nargin == 3
+            if nargin == 2
                 obj.groupMatrix(1:3, 4) = centre;
             end
             obj.id = id;
@@ -22,6 +22,7 @@ classdef Ensemble < handle
 
         function AddElem(obj, elem)
             obj.sousElements(elem.getId()) = elem;
+            elem.ModifyModelMatrix(MTrans3D(-obj.groupMatrix(1:3, 4)));
         end % fin de AddElem
 
         function AddToModelMatrix(obj, model, after)
