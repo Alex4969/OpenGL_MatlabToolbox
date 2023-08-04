@@ -11,16 +11,6 @@ viewer.setCouleurFond([0 0 0.4])
 % generation des parametre de la pyramide
 [posPyramide, indicesPyramide, mappingPyramide] = generatePyramide(4, 0.8);
 
-% pyramide simple
-pyraGeom = Geometry(1, posPyramide, indicesPyramide);
-viewer.AjouterGeom(pyraGeom, 'face');
-elem = viewer.mapElements(1);
-elem.setCouleurArretes([1 0 0 1]);
-elem.setCouleurFaces([1 1 0 1]);
-elem.setCouleurPoints([0 0 0 1]);
-elem.setEpaisseurArretes(2);
-elem.setModelMatrix(MTrans3D([-10 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
-
 % pyramide avec une couleur par sommet
 pyraColorGeom = Geometry(2, posPyramide, indicesPyramide);
 viewer.AjouterGeom(pyraColorGeom, 'face');
@@ -43,15 +33,6 @@ elem = viewer.mapElements(25);
 couleurPoints = rand(N,3);
 elem.AddColor(couleurPoints);
 
-% % pyramide avec texture
-pyraTexGeom = Geometry(3, posPyramide, indicesPyramide);
-viewer.AjouterGeom(pyraTexGeom, 'face');
-
-elem = viewer.mapElements(3);
-elem.setModelMatrix(MTrans3D([-4 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
-elem.AddMapping(mappingPyramide);
-elem.useTexture('textures/briques.jpg');
-
 % % generation des données d'une sphere
 [posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
 
@@ -60,16 +41,9 @@ bouleGeom = Geometry(4, posBoule, indBoule);
 elem = viewer.AjouterGeom(bouleGeom, 'face');
 
 elem.setCouleurArretes([1 1 0]);
-elem.setQuoiAfficher(3);
-elem.setModelMatrix(MTrans3D([0 1 0]));
-
-% % sphere avec des normales pour rendu lisse
-bouleNormalesGeom = Geometry(5, posBoule, indBoule);
-elem = viewer.AjouterGeom(bouleNormalesGeom, 'face');
-
-elem.setModelMatrix(MTrans3D([0 3 0]));
-elem.GenerateNormals();
-elem.setCouleurArretes([1 0 1 1]);
+elem.setEpaisseurArretes(3);
+elem.setQuoiAfficher(2);
+elem.setModelMatrix(MTrans3D([-4 1 0]));
 
 % % sphere avec texture map monde
 bouleTexGeom = Geometry(6, posBoule, indBoule);
@@ -99,6 +73,37 @@ elem.setModelMatrix(MTrans3D([2 2.2 2]) * MScale3D(0.4));
 
 viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
 viewer.lumiere.setColor([1 1 1]);
+
+% % sphere avec des normales pour rendu lisse
+bouleNormalesGeom = Geometry(31, posBoule, indBoule);
+bouleNormalesGeom.setModelMatrix(MTrans3D([-1 1.7 0]) * MScale3D(0.8));
+elem = viewer.AjouterGeom(bouleNormalesGeom, 'face');
+
+elem.GenerateNormals();
+elem.setCouleurArretes([1 0 1 1]);
+
+bouleNormalesGeom2 = Geometry(32, posBoule, indBoule);
+bouleNormalesGeom2.setModelMatrix(MTrans3D([1 1.7 0]) * MScale3D(0.8));
+elem = viewer.AjouterGeom(bouleNormalesGeom2, 'face');
+elem.setCouleurFaces([0 1 0.8 1]);
+
+% % pyramide avec texture
+pyraTexGeom = Geometry(33, posPyramide, indicesPyramide);
+pyraTexGeom.setModelMatrix(MTrans3D([0 0 0]) * MRot3D([0 -45 0]) * MScale3D(1.3));
+elem = viewer.AjouterGeom(pyraTexGeom, 'face');
+
+elem.AddMapping(mappingPyramide);
+elem.useTexture('textures/briques.jpg');
+
+[pos, ind] = generatePlan(3, 1.2);
+planGeom = Geometry(34, pos, ind);
+planGeom.setModelMatrix(MTrans3D([0 -1.3 0]));
+viewer.AjouterGeom(planGeom, 'face');
+
+listeId = 31:34;
+ens = viewer.makeGroup(30, listeId);
+ens.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
+
 % [posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.2);
 % bouleLightGeom = Geometry(100, posBoule, indBoule);
 % viewer.AddGeomToLight(bouleLightGeom);

@@ -10,19 +10,19 @@ classdef Ensemble < handle
     end
 
     methods
-        function obj = Ensemble()
+        function obj = Ensemble(id, centre)
         %ENSEMBLE Construct an instance of this class
+            if nargin == 3
+                obj.groupMatrix(1:3, 4) = centre;
+            end
+            obj.id = id;
             obj.visible = true;
-            obj.sousElements = containers.Map('KeyType', int32, 'ValueType', 'any');
+            obj.sousElements = containers.Map('KeyType', 'int32', 'ValueType', 'any');
         end
 
         function AddElem(obj, elem)
             obj.sousElements(elem.getId()) = elem;
         end % fin de AddElem
-
-        function mod = getModelMatrix(obj)
-            mod = obj.groupMatrix;
-        end % fin de getModelMatrix
 
         function AddToModelMatrix(obj, model, after)
             %ADDTOMODELMATRIX multiplie la nouvelle matrice modele par
@@ -37,6 +37,11 @@ classdef Ensemble < handle
         function setModelMatrix(obj, model)
             obj.groupMatrix = model;
         end % fin de setModelMatrix
+
+        function pos = getPosition(obj)
+            pos = obj.groupMatrix(1:3, 4);
+            pos = pos';
+        end % fin de getPosition
 
         function Draw(obj, gl, camAttrib)
             listeElem = values(obj.sousElements); % trié ?

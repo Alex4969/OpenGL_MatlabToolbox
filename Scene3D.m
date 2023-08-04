@@ -100,8 +100,9 @@ classdef Scene3D < handle
             obj.context.release();
         end % fin de ajouterGeom
 
-        function RetirerObjet(obj, elemId) % element et texte
+        function elem = RetirerObjet(obj, elemId) % element et texte
             if isKey(obj.mapElements, elemId)
+                elem = obj.mapElements(elemId);
                 remove(obj.mapElements, elemId);
             else
                 disp('objet a supprimé n existe pas');
@@ -141,6 +142,17 @@ classdef Scene3D < handle
             obj.context.release();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
+
+        function ens = makeGroup(obj, id, listeId, centre)
+            if nargin == 3
+                centre = [0 0 0];
+            end
+            ens = Ensemble(id, centre);
+            for i=listeId
+                ens.AddElem(obj.RetirerObjet(i));
+            end
+            obj.mapElements(id) = ens;
+        end
 
         function delete(obj)
             %DELETE Supprime les objets de la scene

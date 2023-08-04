@@ -58,7 +58,7 @@ void main()
             if ((uQuoiAfficher & 1) == 0){
                 if (centre == 1)
                     discard;
-                couleur = uLineColor;
+                couleur = vec4(0.0) * couleur + (1.0 - centre) * uLineColor;;
             }
         }
         if ((uQuoiAfficher & 4) == 4) {
