@@ -2,8 +2,8 @@ classdef ElementPoint < VisibleElement
     %ELEMENTPOINT
     
     properties
-        epaisseurLignes = 2             % float
-        couleurLignes   = [1 0 0 1]     % 1x4
+        epaisseurPoints = 2             % float
+        couleurPoints   = [1 0 0 1]     % 1x4
     end
     
     methods
@@ -11,7 +11,8 @@ classdef ElementPoint < VisibleElement
         function obj = ElementPoint(gl, aGeom)
             %ELEMENTLIGNE
             obj@VisibleElement(gl, aGeom);
-            obj.Type='Point';
+            obj.Type = 'Point';
+            obj.changerProg(gl);
         end % fin du constructeur ElementLigne
 
         function Draw(obj, gl, camAttrib)
@@ -22,10 +23,10 @@ classdef ElementPoint < VisibleElement
             
             obj.CommonDraw(gl, camAttrib);
 
-            gl.glPointSize(obj.epaisseurLignes);
+            gl.glPointSize(obj.epaisseurPoints);
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_POINT);
             if (obj.GLGeom.nLayout(2) == 0)
-                obj.shader.SetUniform4f(gl, 'uColor', obj.couleurLignes);
+                obj.shader.SetUniform4f(gl, 'uColor', obj.couleurPoints);
             end
             gl.glDrawElements(gl.GL_POINTS, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
 
@@ -33,7 +34,7 @@ classdef ElementPoint < VisibleElement
         end % fin de Draw
 
         function setEpaisseur(obj, newEp)
-            obj.epaisseurLignes = newEp;
+            obj.epaisseurPoints = newEp;
         end
 
         function setCouleur(obj, newColor)
@@ -41,18 +42,22 @@ classdef ElementPoint < VisibleElement
                 newColor(4) = 1;
             end
             if numel(newColor) == 4
-                obj.couleurLignes = newColor;
+                obj.couleurPoints = newColor;
             else
                 warning('mauvaise matrice de couleur, annulation');
             end
         end % fin de setCouleur
 
+        function setMainColor(obj, matColor)
+            obj.setCouleur(matColor);
+        end % fin de setMainColor
+
         function sNew = reverseSelect(obj, s)
             sNew.id        = obj.getId();
-            sNew.couleur   = obj.couleurLignes;
-            sNew.epaisseur = obj.epaisseurLignes;
-            obj.couleurLignes   = s.couleur;
-            obj.epaisseurLignes = s.epaisseur;
+            sNew.couleur   = obj.couleurPoints;
+            sNew.epaisseur = obj.epaisseurPoints;
+            obj.couleurPoints   = s.couleur;
+            obj.epaisseurPoints = s.epaisseur;
         end
     end % fin des methodes defauts
 

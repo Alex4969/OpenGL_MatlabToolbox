@@ -8,7 +8,7 @@ classdef (Abstract) VisibleElement < handle
         shader ShaderProgram
         typeLumiere = 'S'
         typeRendu = 'D'
-        newRendu = true
+        newRendu logical
     end
 
     properties (Access = public)
@@ -25,6 +25,7 @@ classdef (Abstract) VisibleElement < handle
             %VISIBLEELEMENT
             obj.Geom = aGeom;
             obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
+            obj.newRendu = false;
 
             addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
         end % fin du constructeur de VisibleElement
@@ -48,8 +49,13 @@ classdef (Abstract) VisibleElement < handle
         end % fin de getPosition
 
         function AddColor(obj, matColor)
-            obj.GLGeom.addDataToBuffer(matColor, 2);
-            obj.typeRendu = 'C';
+            if size(matColor, 1) == 1
+                obj.setMainColor(matColor);
+                obj.typeRendu = 'D';
+            else
+                obj.GLGeom.addDataToBuffer(matColor, 2);
+                obj.typeRendu = 'C';
+            end
             obj.newRendu = true;
         end
 
@@ -205,5 +211,6 @@ classdef (Abstract) VisibleElement < handle
     methods (Abstract = true)
         Draw(obj, gl, camAttrib)
         sNew = reverseSelect(obj, s)
+        setMainColor(obj, matColor)
     end % fin des methodes abstraites
 end % fin de la classe VisibleElement

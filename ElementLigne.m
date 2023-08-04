@@ -11,7 +11,8 @@ classdef ElementLigne < VisibleElement
         function obj = ElementLigne(gl, aGeom)
             %ELEMENTLIGNE
             obj@VisibleElement(gl, aGeom);
-            obj.Type='Line';
+            obj.Type = 'Line';
+            obj.changerProg(gl);
         end % fin du constructeur ElementLigne
 
         function Draw(obj, gl, camAttrib)
@@ -46,6 +47,10 @@ classdef ElementLigne < VisibleElement
                 warning('mauvaise matrice de couleur, annulation');
             end
         end % fin de setCouleur
+
+        function setMainColor(obj, matColor)
+            obj.setCouleur(matColor);
+        end % fin de setMainColor
 
         function sNew = reverseSelect(obj, s)
             sNew.id        = obj.getId();

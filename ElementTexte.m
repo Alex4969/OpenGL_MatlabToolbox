@@ -22,6 +22,7 @@ classdef ElementTexte < VisibleElement
             obj.typeOrientation = 'N';
             obj.typeRendu = 'T';
             obj.texture = Texture(gl, police.name + ".png");
+            obj.changerProg(gl);
         end % fin du constructeur Texte
 
         function Draw(obj, gl, camAttrib)
@@ -39,7 +40,7 @@ classdef ElementTexte < VisibleElement
             CheckError(gl, 'apres le dessin d un texte');
         end % fin de Draw
 
-        function setCouleur(obj, newColor)
+        function setCouleurTexte(obj, newColor)
             %SETCOULEURFOND change la couleur du texte
             %Peut prendre en entrée une matrice 1x3 (rgb) ou 1x4 (rgba)
             if (numel(newColor) == 3)
@@ -52,6 +53,10 @@ classdef ElementTexte < VisibleElement
             end
             notify(obj,'evt_update');
         end % fin setCouleurFond
+
+        function setMainColor(obj, matColor)
+            obj.setCouleurTexte(matColor);
+        end % fin de setMainColor
 
         function sNew = reverseSelect(obj, s)
             sNew.id          = obj.getId();

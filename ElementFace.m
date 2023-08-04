@@ -23,6 +23,7 @@ classdef ElementFace < VisibleElement
             obj.Type = 'Face';
             obj.typeLumiere = 'D';
             obj.quoiAfficher = 1;
+            obj.changerProg(gl);
         end
 
         function Draw(obj, gl, camAttrib)
@@ -103,6 +104,10 @@ classdef ElementFace < VisibleElement
                 obj.quoiAfficher = newChoix;
             end
         end % fin de setQuoiAfficher
+
+        function setMainColor(obj, matColor)
+            obj.setCouleurFaces(matColor);
+        end % fin de setMainColor
 
         function sNew = reverseSelect(obj, s)
             sNew.id        = obj.getId();
