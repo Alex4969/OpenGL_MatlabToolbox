@@ -7,7 +7,7 @@ classdef Ensemble < handle
         sousElements containers.Map
         visible logical
         groupMatrix = eye(4);
-        typeOrientation = 'P'
+        typeOrientation uint16
     end
 
     methods
@@ -19,6 +19,7 @@ classdef Ensemble < handle
             obj.id = id;
             obj.visible = true;
             obj.sousElements = containers.Map('KeyType', 'int32', 'ValueType', 'any');
+            obj.typeOrientation = 1;
         end
 
         function AddElem(obj, elem)

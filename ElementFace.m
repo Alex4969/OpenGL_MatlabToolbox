@@ -35,7 +35,7 @@ classdef ElementFace < VisibleElement
                 model = obj.getModelMatrix();
             end
             obj.CommonDraw(gl, camAttrib, model);
-            if obj.typeOrientation ~= 'R'
+            if obj.typeOrientation > 0
                 obj.shader.SetUniform1i(gl, 'uQuoiAfficher', obj.quoiAfficher);
                 if bitand(obj.quoiAfficher, 1) > 0
                     if obj.typeRendu == 'T' && ~isempty(obj.texture)

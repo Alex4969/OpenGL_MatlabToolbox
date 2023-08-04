@@ -19,7 +19,7 @@ classdef ElementTexte < VisibleElement
             obj.AddMapping(mapping);
             obj.str = str;
             obj.police = police;
-            obj.typeOrientation = 'N';
+            obj.typeOrientation = 2; % normal a l'ecran
             obj.typeRendu = 'T';
             obj.texture = Texture(gl, police.name + ".png");
             obj.changerProg(gl);

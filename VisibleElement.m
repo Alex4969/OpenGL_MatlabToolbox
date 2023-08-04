@@ -12,7 +12,7 @@ classdef (Abstract) VisibleElement < handle
     end
 
     properties (Access = public)
-        typeOrientation = 'P' % 'P' Perspective, 'N' Normale a l'ecran, 'F' Fixe, 'O' orthonormé, 'R' rien
+        typeOrientation uint16 % '1000' Perspective, '0100' Normale a l'ecran, '0010' Fixe, '0001' orthonormé, 'R' rien
         visible = true
     end
 
@@ -26,6 +26,7 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom = aGeom;
             obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
             obj.newRendu = false;
+            obj.typeOrientation = 1;
 
             addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
         end % fin du constructeur de VisibleElement
@@ -182,30 +183,27 @@ classdef (Abstract) VisibleElement < handle
             end
             obj.shader.Bind(gl);
             obj.GLGeom.Bind(gl);
-            if obj.typeOrientation == 'F' % On plaque le texte sur le premier plan du cube de projection
+            if obj.typeOrientation == 0
+                cam = eye(4);
+            elseif obj.typeOrientation == 1
+                cam = camAttrib.proj * camAttrib.view;
+            elseif obj.typeOrientation == 8
                 model(1, 4) = model(1, 4) * camAttrib.maxX;
                 model(2, 4) = model(2, 4) * camAttrib.maxY;
                 model(3, 4) = -camAttrib.near;
                 model = model * MScale3D(camAttrib.coef);
                 cam =  camAttrib.proj;
-            elseif obj.typeOrientation == 'N'  % On inverse l'effet de rotation de la caméra
-                model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3);
-                cam =  camAttrib.proj * camAttrib.view;
-            elseif obj.typeOrientation == 'O'
-                cam = MProj3D('O', [camAttrib.ratio*16 16 1 20]) * camAttrib.view;
-                cam(1,4) = -0.97 + 0.1/camAttrib.ratio;
-                cam(2,4) = -0.87;
-                cam(3,4) =  0;
-            elseif obj.typeOrientation == 'P' % Perpective
-                cam =  camAttrib.proj * camAttrib.view;
-            elseif obj.typeOrientation == 'A'
-                model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3);
-                cam = MProj3D('O', [camAttrib.ratio*16 16 1 20]) * camAttrib.view;
-                cam(1,4) = -0.97 + 0.1/camAttrib.ratio;
-                cam(2,4) = -0.87;
-                cam(3,4) =  0;
             else
-                cam = eye(4);
+                if bitand(obj.typeOrientation, 2) > 0
+                    model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3);
+                    cam =  camAttrib.proj * camAttrib.view;
+                end
+                if bitand(obj.typeOrientation, 4) > 0
+                    cam = MProj3D('O', [camAttrib.ratio*16 16 1 20]) * camAttrib.view;
+                    cam(1,4) = -0.97 + 0.1/camAttrib.ratio;
+                    cam(2,4) = -0.87;
+                    cam(3,4) =  0;
+                end
             end
             obj.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
             obj.shader.SetUniformMat4(gl, 'uModelMatrix', model);

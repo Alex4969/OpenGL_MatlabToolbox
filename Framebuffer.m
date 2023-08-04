@@ -18,7 +18,7 @@ classdef Framebuffer < handle
             [pos, idx, mapping] = generatePlan(2, 2);
             planGeom = Geometry(0, pos, idx);
             obj.forme = ElementFace(gl, planGeom);
-            obj.forme.typeOrientation = 'R';
+            obj.forme.typeOrientation = 0;
             obj.forme.AddMapping(mapping);
 
             obj.forme.texture = Texture(gl, '', width, height);

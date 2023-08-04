@@ -225,7 +225,7 @@ classdef Scene3D < handle
             obj.gyroscope.setEpaisseur(4);
             obj.gyroscope.AddColor(color);
             obj.gyroscope.setModelMatrix(MTrans3D([0, 0, 0]));
-            obj.gyroscope.typeOrientation = 'O';
+            obj.gyroscope.typeOrientation = 4;
 
             obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
         end % fin de generateInternalObject
@@ -267,7 +267,7 @@ classdef Scene3D < handle
             listeTrie = values(obj.mapElements);
             distance  = zeros(1, numel(listeTrie));
             for i=1:numel(listeTrie)
-                if (listeTrie{i}.typeOrientation == 'O' || listeTrie{i}.typeOrientation == 'A' || listeTrie{i}.typeOrientation == 'N')
+                if listeTrie{i}.typeOrientation >= 4 %ortho ou fixe
                     distance(i) = 0;
                 else
                     distance(i) = norm(listeTrie{i}.getPosition() - obj.camera.getPosition());
