@@ -123,10 +123,6 @@ classdef Camera < handle
             pos = obj.position;
         end % fin de getPosition
 
-        function camMat = getCameraMatrix(obj)
-            camMat = obj.projMatrix * obj.viewMatrix;
-        end % fin de getCameraMatrix
-
         function Mrot = getViewMatrix(obj)
             Mrot = obj.viewMatrix;
         end

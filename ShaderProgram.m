@@ -2,14 +2,12 @@ classdef ShaderProgram < handle
     %SHADERPROGRAM Compile un programme
     
     properties
-        filePath            % string : le nom du fichier sans extension
         shaderProgId        % uint32 : id de la texture
-
         mapUniformLocation  % char -> int32 : associe un nom d'uniform (variable GLSL) a sa location
     end
     
     methods
-        function obj = ShaderProgram(gl, nLayout, ind) %ind = 'D' dur, 'L' lisse, 'S' sans lumiere
+        function obj = ShaderProgram(gl, nLayout, mode) %mode = 'D' dur, 'L' lisse, 'S' sans lumiere
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
             motCle(1) = "POS" + nLayout(1);
@@ -20,10 +18,10 @@ classdef ShaderProgram < handle
             else
                 motCle(2) = "DEF";
             end
-            if ind == 'S'
+            if mode == 'S'
                 obj.createProgNoLight(gl, motCle);
             else
-                if ind == 'L' && nLayout(4) > 0 
+                if mode == 'L' && nLayout(4) > 0 
                     motCle(3) = "NORM";
                 end
                 obj.createProgWithLight(gl, motCle)

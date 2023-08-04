@@ -59,6 +59,6 @@ classdef ElementPoint < VisibleElement
             obj.couleurPoints   = s.couleur;
             obj.epaisseurPoints = s.epaisseur;
         end
+        
     end % fin des methodes defauts
-
 end  % fin classe ElementLigne
