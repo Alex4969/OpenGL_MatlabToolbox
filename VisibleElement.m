@@ -6,8 +6,8 @@ classdef (Abstract) VisibleElement < handle
         Geom Geometry
         GLGeom GLGeometry
         shader ShaderProgram
-        typeLumiere = 'S'       % 'S' : sans, 'L' : lisse, 'D' : Dur
-        typeRendu = 'D'         % 'D' : defaut/uniforme, 'C' : color, 'T' : texture
+        typeShading = 'S'       % 'S' : sans, 'L' : lisse, 'D' : Dur
+        typeColoration = 'U'    % 'U' : uniforme, 'C' : color, 'T' : texture
         newRendu logical
     end
 
@@ -52,34 +52,34 @@ classdef (Abstract) VisibleElement < handle
         function AddColor(obj, matColor)
             if size(matColor, 1) == 1
                 obj.setCouleur(matColor);
-                obj.typeRendu = 'D';
+                obj.typeColoration = 'U';
             else
                 obj.GLGeom.addDataToBuffer(matColor, 2);
-                obj.typeRendu = 'C';
+                obj.typeColoration = 'C';
             end
             obj.newRendu = true;
         end
 
         function AddMapping(obj, matMapping)
             obj.GLGeom.addDataToBuffer(matMapping, 3);
-            obj.typeRendu = 'T';
+            obj.typeColoration = 'T';
             obj.newRendu = true;
         end
 
         function AddNormals(obj, matNormales)
             obj.GLGeom.addDataToBuffer(matNormales, 4);
-            obj.typeLumiere = 'L';
+            obj.typeShading = 'L';
             obj.newRendu = true;
         end
 
         function cbk_geomUpdate(obj, ~, ~)
             obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection, true);
             if size(obj.Geom.listePoints, 2) == 2
-                obj.typeLumiere = 'S';
+                obj.typeShading = 'S';
             else
-                obj.typeLumiere = 'D';
+                obj.typeShading = 'D';
             end
-            obj.typeRendu = 'D';
+            obj.typeColoration = 'U';
             obj.newRendu = true;
         end
 
@@ -92,11 +92,11 @@ classdef (Abstract) VisibleElement < handle
                 end
                 warning('Les sommets ne sont pas composés de la même facon, suppression des couleurs')
                 if newDim == 2
-                    obj.typeLumiere = 'S';
+                    obj.typeShading = 'S';
                 else
-                    obj.typeLumiere = 'D';
+                    obj.typeShading = 'D';
                 end
-                obj.typeRendu = 'D';
+                obj.typeColoration = 'U';
                 obj.newRendu = true;
                 nbSommets = size(obj.Geom.listePoints, 1);
                 newPoints = [obj.Geom.listePoints(:, 1:newDim) ; plusDePoints];
@@ -119,7 +119,7 @@ classdef (Abstract) VisibleElement < handle
         function GenerateNormals(obj)
             normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
             obj.GLGeom.addDataToBuffer(normales, 4);
-            obj.typeLumiere = 'L';
+            obj.typeShading = 'L';
             obj.newRendu = true;
         end % fin de GenerateNormals
 
@@ -143,15 +143,15 @@ classdef (Abstract) VisibleElement < handle
 
         function setModeRendu(obj, newTypeRendu, newTypeLumiere)
             if nargin == 3
-                obj.typeLumiere = newTypeLumiere;
+                obj.typeShading = newTypeLumiere;
             end
-            obj.typeRendu = newTypeRendu;
+            obj.typeColoration = newTypeRendu;
             obj.newRendu = true;
         end % fin de setModeRendu
 
         function changerProg(obj, gl)
             nLayout = obj.GLGeom.nLayout;
-            typeL = obj.typeLumiere;
+            typeL = obj.typeShading;
             if typeL == 'L' && nLayout(4) == 0
                 warning('L objet ne contient pas de normales aux sommets')
                 typeL = 'D';
@@ -159,7 +159,7 @@ classdef (Abstract) VisibleElement < handle
             if nLayout(3) > 0 && isempty(obj.texture)
                 nLayout(3) = 0;
             end
-            switch obj.typeRendu
+            switch obj.typeColoration
                 case 'T' % texture
                     if nLayout(3) > 0
                         nLayout(2) = 0;
@@ -168,10 +168,10 @@ classdef (Abstract) VisibleElement < handle
                     if nLayout(2) > 0
                         nLayout(3) = 0;
                     end
-                case 'D'
+                case 'U'
                     nLayout([2, 3]) = 0;
             end
-            obj.shader = ShaderProgram(gl, nLayout, typeL);
+            obj.shader = ShaderProgram(gl, nLayout, typeL, obj.Type);
         end % fin de changerProg
 
         function CommonDraw(obj, gl, camAttrib, model)

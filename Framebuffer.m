@@ -40,6 +40,7 @@ classdef Framebuffer < handle
             gl.glActiveTexture(gl.GL_TEXTURE0);
             obj.forme.texture.Bind(gl);
 
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
             gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, width, height);
             gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, width, height, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
         end

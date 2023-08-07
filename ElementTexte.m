@@ -20,7 +20,7 @@ classdef ElementTexte < VisibleElement
             obj.str = str;
             obj.police = police;
             obj.typeOrientation = 2; % normal a l'ecran
-            obj.typeRendu = 'T';
+            obj.typeColoration = 'T';
             obj.texture = Texture(gl, police.name + ".png");
             obj.changerProg(gl);
         end % fin du constructeur Texte

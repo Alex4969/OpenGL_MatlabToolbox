@@ -21,7 +21,7 @@ classdef ElementFace < VisibleElement
             %FACEELEMENT 
             obj@VisibleElement(gl, aGeom); % appel au constructeur parent
             obj.Type = 'Face';
-            obj.typeLumiere = 'D';
+            obj.typeShading = 'D';
             obj.quoiAfficher = 1;
             obj.changerProg(gl);
         end
@@ -38,14 +38,14 @@ classdef ElementFace < VisibleElement
             if obj.typeOrientation > 0
                 obj.shader.SetUniform1i(gl, 'uQuoiAfficher', obj.quoiAfficher);
                 if bitand(obj.quoiAfficher, 1) > 0
-                    if obj.typeRendu == 'T' && ~isempty(obj.texture)
+                    if obj.typeColoration == 'T' && ~isempty(obj.texture)
                         if obj.textureUpdate == true
                             obj.texture = Texture(gl, obj.texture);
                             obj.textureUpdate = false;
                         end
                         obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
                         gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-                    elseif obj.typeRendu == 'D' && bitand(obj.quoiAfficher, 1) > 0
+                    elseif obj.typeColoration == 'U' && bitand(obj.quoiAfficher, 1) > 0
                         obj.shader.SetUniform4f(gl, 'uFaceColor', obj.couleur);
                     end
                 end

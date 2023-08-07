@@ -36,13 +36,13 @@ void main()
 {
     vec3 laNormale = normalize(vNormal);
     float intensiteLumineuse = 1.0;
-    if (uLightData.x == 1.0){
-        intensiteLumineuse = pointLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightData.y, uLightData.z);
-    } else if (uLightData.x == 2.0) {
-        intensiteLumineuse = direcLight(vCrntPos, laNormale, uCamPos, uLightDir);
-    } else if (uLightData.x == 3.0) {
-        intensiteLumineuse = spotLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightDir, uLightData.y, uLightData.z);
-    }
+    if (uLightData.x == 1.0){   //LIGHT
+        intensiteLumineuse = pointLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightData.y, uLightData.z);   //LIGHT
+    } else if (uLightData.x == 2.0) {   //LIGHT
+        intensiteLumineuse = direcLight(vCrntPos, laNormale, uCamPos, uLightDir);   //LIGHT
+    } else if (uLightData.x == 3.0) {   //LIGHT
+        intensiteLumineuse = spotLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightDir, uLightData.y, uLightData.z); //LIGHT
+    }   //LIGHT
     vec4 couleur = texture(uTexture, vTextureCoord); //TEX
     vec4 couleur = uFaceColor; //DEF
     vec4 couleur = vColor; //COL3 COL4

@@ -174,19 +174,9 @@ classdef Scene3D < handle
             end
             notify(obj,'evt_update');
         end % fin setCouleurFond
-
-        function AddGeomToLight(obj, geom)
-            disp('ne fonctionne pas')
-            gl = obj.getGL();
-            elem = ElementFace(geom);
-            elem.Init(gl);
-            obj.lumiere.setForme(elem);
-            obj.context.release();
-        end
     end % fin des methodes defauts
 
     methods (Access = private)
-
         function gl = getGL(obj)
             if ~obj.context.isCurrent()
                 obj.context.makeCurrent();
