@@ -255,7 +255,7 @@ classdef Camera < handle
             end
             obj.updateNeeded = false;
         end
-    end
+    end % fin des methodes liés au mouvements de souris
 
     methods (Access = private)
         function computeView(obj)
@@ -285,7 +285,7 @@ classdef Camera < handle
         function computeProj(obj)
             if obj.type == 0 % vue ortho
                 distance = norm(obj.position - obj.target);
-                obj.projMatrix = MProj3D('O', [distance * obj.ratio, distance, obj.near, obj.far]);
+                obj.projMatrix = MProj3D('O', [distance * obj.ratio, distance, -obj.far, obj.far]);
             else % vue en perspective
                 obj.projMatrix = MProj3D('P', [obj.ratio, obj.fov, obj.near, obj.far]);
             end

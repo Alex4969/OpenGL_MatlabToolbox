@@ -10,12 +10,12 @@ classdef ElementTexte < VisibleElement
     end
     
     methods
-        function obj = ElementTexte(gl, id, str, police, ancre)
-            %TEXTE
+        function obj = ElementTexte(gl, id, str, police, ancre) % voir option pour ancre ligne 100
+            %ELEMENTTEXTE
             [pos, ind, mapping] = ElementTexte.constructText(str, police, ancre);
             geom = Geometry(id, pos, ind);
             obj@VisibleElement(gl, geom);
-            obj.Type='Texte';
+            obj.Type = 'Texte';
             obj.AddMapping(mapping);
             obj.str = str;
             obj.police = police;
@@ -35,7 +35,6 @@ classdef ElementTexte < VisibleElement
             end
             obj.CommonDraw(gl, camAttrib, model);
 
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
             obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
             obj.shader.SetUniform4f(gl, 'uColor', obj.couleurTexte);
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
@@ -68,7 +67,7 @@ classdef ElementTexte < VisibleElement
         end % fin de reverseSlect
     end % fin des methodes defauts
 
-    methods(Static = true)
+    methods (Static = true)
         function [pos, ind, mapping] = constructText(str, police, ancre)
             pos = zeros(strlength(str) * 4, 2);
             mapping = zeros(strlength(str) * 4, 2);

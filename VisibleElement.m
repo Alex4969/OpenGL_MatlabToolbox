@@ -6,13 +6,13 @@ classdef (Abstract) VisibleElement < handle
         Geom Geometry
         GLGeom GLGeometry
         shader ShaderProgram
-        typeLumiere = 'S'
-        typeRendu = 'D'
+        typeLumiere = 'S'       % 'S' : sans, 'L' : lisse, 'D' : Dur
+        typeRendu = 'D'         % 'D' : defaut/uniforme, 'C' : color, 'T' : texture
         newRendu logical
     end
 
     properties (Access = public)
-        typeOrientation uint16 % '1000' Perspective, '0100' Normale a l'ecran, '0010' Fixe, '0001' orthonormé, 'R' rien
+        typeOrientation uint16 % '1000' Perspective, '0100' Normale a l'ecran, '0010' orthonorme, '0001' fixe, 'R' rien
         visible = true
     end
 

@@ -19,6 +19,7 @@ couleurPyramide = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
 elem = viewer.mapElements(2);
 elem.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 elem.AddColor(couleurPyramide);
+elem.setCouleurArretes([1 0 1]);
 
 % nuage de points avec une couleur par sommet
 N=10000;
