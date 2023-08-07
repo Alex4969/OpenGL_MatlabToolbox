@@ -48,8 +48,6 @@ void main()
     vec4 couleur = vColor; //COL3 COL4
 
     if (uQuoiAfficher > 1){
-        //if ((uQuoiAfficher & 1) == 0)
-        //    couleur = vec4(0.0);
         vec3 barys = vec3(interpolation.x, interpolation.y, 1 - interpolation.x - interpolation.y);
         float centre = min(barys.x, min(barys.y, barys.z));
         centre = smoothstep(0.0, uLineSize * fwidth(centre), centre);
@@ -138,7 +136,7 @@ float spotLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
     float specular = specAmount * specularLight;
 
     float angle = dot(lightDir, -lightVec);
-    float intensity = clamp( (angle - coneExterne)/(coneInterne - coneExterne) , 0.0, 1.0);
+    float intensity = clamp( (angle - coneExterne)/(coneInterne - coneExterne) , 0.0, 1.0 );
 
     return (diffuse * intensity + ambient + specular * intensity);
 };

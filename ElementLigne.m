@@ -26,7 +26,6 @@ classdef ElementLigne < VisibleElement
             obj.CommonDraw(gl, camAttrib, model);
 
             gl.glLineWidth(obj.epaisseurLignes);
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
             if (obj.GLGeom.nLayout(2) == 0)
                 obj.shader.SetUniform4f(gl, 'uColor', obj.couleurLignes);
             end

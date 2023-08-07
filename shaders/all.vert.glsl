@@ -14,7 +14,7 @@ out DATA {
 	vec3 vCrntPos;
 	mat4 vProjection;
     vec2 vTextureCoord; //TEX
-    vec4 vColor;        //COL3, COL4
+    vec4 vColor;        //COL3 COL4
     vec3 vNormal;       //NORM
 } data_out;
 

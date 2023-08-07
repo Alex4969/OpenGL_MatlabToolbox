@@ -57,7 +57,6 @@ classdef ElementFace < VisibleElement
                     obj.shader.SetUniform4f(gl, 'uPointColor', obj.couleurPoints);
                 end
             end
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL);
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
 
             CheckError(gl, 'apres le dessin');

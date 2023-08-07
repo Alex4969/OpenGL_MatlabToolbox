@@ -31,7 +31,7 @@ classdef Grid < ElementLigne
             obj.CommonDraw(gl, camAttrib, model);
 
             gl.glLineWidth(obj.epaisseurLignes);
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
+            %gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE);
             obj.shader.SetUniform4f(gl, 'uColor', obj.couleurLignes);
 
             if obj.normaleY == 1
