@@ -314,10 +314,11 @@ classdef Scene3D < handle
                     elem = obj.getPointedObject(worldCoord);
                     disp(['element touched : ' num2str(elem.getId())]);
                     obj.colorSelection(elem);
-                    obj.fenetre.setTextRight(['ID = ' num2str(elem.getId()) '  '])
+                    obj.fenetre.setTextRight(['ID = ' num2str(elem.getId()) '  ']);
                 elseif mod==24 %ALT LEFT CLICK
                     obj.camera.setTarget(worldCoord);
                 end
+                obj.Draw;
             end
         end
 

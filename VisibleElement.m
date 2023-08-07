@@ -168,7 +168,7 @@ classdef (Abstract) VisibleElement < handle
                     if nLayout(2) > 0
                         nLayout(3) = 0;
                     end
-                case 'D'
+                case 'D' %valeur par defaut : uniforme
                     nLayout([2, 3]) = 0;
             end
             obj.shader = ShaderProgram(gl, nLayout, typeL);

@@ -37,6 +37,7 @@ classdef ElementLigne < VisibleElement
 
         function setEpaisseur(obj, newEp)
             obj.epaisseurLignes = newEp;
+            notify(obj,'evt_update');
         end
 
         function setCouleur(obj, newColor)

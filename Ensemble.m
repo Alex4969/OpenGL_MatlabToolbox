@@ -5,10 +5,13 @@ classdef Ensemble < handle
     properties (GetAccess = public, SetAccess = protected)
         id int32
         sousElements containers.Map
-        visible logical
         groupMatrix = eye(4);
         typeOrientation uint16
     end
+
+    properties (Access = public)
+        visible logical
+    end    
 
     methods
         function obj = Ensemble(id, centre)
