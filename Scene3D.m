@@ -11,9 +11,9 @@ classdef Scene3D < handle
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
-        axes ElementLigne           % instance des axes lié au repere
-        gyroscope ElementLigne      % indication d'angle dans le repere
-        grille Grid         % instance de la grille lié au repere
+        axesId int32        % instance des axes lié au repere
+        gyroscopeId int32   % indication d'angle dans le repere
+        grilleId int32      % instance de la grille lié au repere
 
         cbk_manager javacallbackmanager
         startX              % position x de la souris lorsque je clique
@@ -56,7 +56,7 @@ classdef Scene3D < handle
 
             obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light(gl, [obj.camera.getPosition], [1 1 1]);
-            obj.generateInternalObject(gl); % axes, gyroscope, grille & framebuffer
+            obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
             obj.context.release();
 
@@ -71,7 +71,6 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
 
             addlistener(obj,'evt_update',@obj.cbk_update);
-            
         end % fin du constructeur de Scene3D
 
         function elem = AjouterTexte(obj, id, texte, police, typeAncre)
@@ -119,15 +118,6 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_DEPTH_TEST);
 
             camAttrib = obj.camera.getAttributes();
-
-            %dessin des objets internes
-            obj.gyroscope.Draw(gl, camAttrib)
-            obj.axes.Draw(gl, camAttrib)
-            obj.grille.Draw(gl, camAttrib)
-            if ~isempty(obj.lumiere.forme)
-                obj.lumiere.forme.Draw(gl, camAttrib)
-            end
-
             %dessin des objets ajouter a la scene
             listeElem = obj.orderElem();
             for i=1:numel(listeElem)
@@ -163,9 +153,6 @@ classdef Scene3D < handle
                 listeElem{i}.delete(gl);
             end
             Texture.DeleteAll(gl);
-            obj.axes.delete(gl);
-            obj.grille.delete(gl);
-            obj.gyroscope.delete(gl);
             if ~isempty(obj.lumiere.forme)
                 obj.lumiere.forme.delete(gl);
             end
@@ -207,27 +194,31 @@ classdef Scene3D < handle
             gl = obj.context.getCurrentGL();
         end % fin de getGL
 
-        function generateInternalObject(obj, gl)
+        function generateInternalObject(obj)
+            obj.axesId = -1;
             tailleAxe = 50;
-            [pos, idx, color] = Axes.generateAxes(-tailleAxe, tailleAxe);
-            axesGeom = Geometry(-1, pos, idx);
-            obj.axes = ElementLigne(gl, axesGeom);
-            obj.axes.AddColor(color);
+            [pos, idx, color] = generateAxis(-tailleAxe, tailleAxe);
+            axesGeom = Geometry(obj.axesId, pos, idx);
+            elem = obj.AjouterGeom(axesGeom, 'ligne');
+            elem.AddColor(color);
 
-            [pos, idx] = Grid.generateGrid(tailleAxe, 2);
-            grilleGeom = Geometry(-2, pos, idx);
-            obj.grille = Grid(gl, grilleGeom, tailleAxe, 2);
+            obj.grilleId = -2;
+            [pos, idx] = generateGrid(tailleAxe, 2);
+            grilleGeom = Geometry(obj.grilleId, pos, idx);
+            elem = obj.AjouterGeom(grilleGeom, 'ligne');
+            elem.setEpaisseur(1);
+            elem.setCouleur([0.3 0.3 0.3]);
 
+            obj.gyroscopeId = -3;
             tailleGysmo = 1;
-            [pos, idx, color] = Axes.generateAxes(0, tailleGysmo);
-            gysmoGeom = Geometry(-3, pos, idx);
-            obj.gyroscope = ElementLigne(gl, gysmoGeom);
-            obj.gyroscope.setEpaisseur(4);
-            obj.gyroscope.AddColor(color);
-            obj.gyroscope.setModelMatrix(MTrans3D([0, 0, 0]));
-            obj.gyroscope.typeOrientation = 4;
+            [pos, idx, color] = generateAxis(0, tailleGysmo);
+            gysmoGeom = Geometry(obj.gyroscopeId, pos, idx);
+            elem = obj.AjouterGeom(gysmoGeom, 'ligne');
+            elem.AddColor(color);
+            elem.typeOrientation = 4;
+            elem.setEpaisseur(4);
 
-            obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
+            obj.framebuffer = Framebuffer(obj.getGL(), obj.canvas.getWidth(), obj.canvas.getHeight());
         end % fin de generateInternalObject
 
         function worldCoord = getWorldCoord(obj, clickPos)
