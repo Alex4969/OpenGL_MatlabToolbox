@@ -51,7 +51,7 @@ classdef (Abstract) VisibleElement < handle
 
         function AddColor(obj, matColor)
             if size(matColor, 1) == 1
-                obj.setMainColor(matColor);
+                obj.setCouleur(matColor);
                 obj.typeRendu = 'D';
             else
                 obj.GLGeom.addDataToBuffer(matColor, 2);
@@ -213,6 +213,6 @@ classdef (Abstract) VisibleElement < handle
     methods (Abstract = true)
         Draw(obj, gl, camAttrib, model)
         sNew = reverseSelect(obj, s)
-        setMainColor(obj, matColor)
+        setCouleur(obj, matColor)
     end % fin des methodes abstraites
 end % fin de la classe VisibleElement

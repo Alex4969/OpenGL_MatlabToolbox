@@ -61,7 +61,7 @@ chessGeom = Geometry(9);
 chessGeom.CreateFromFile('objets3D/chess4_ascii.stl');
 elem = viewer.AjouterGeom(chessGeom, 'face');
 
-elem.setCouleurFaces(rand(1, 3));
+elem.setCouleur(rand(1, 3));
 elem.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02)); % pour la piece d'echec
 % chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2)); % pour le loup
 elem.GenerateNormals();
@@ -86,7 +86,7 @@ elem.setCouleurArretes([1 0 1 1]);
 bouleNormalesGeom2 = Geometry(32, posBoule, indBoule);
 bouleNormalesGeom2.setModelMatrix(MTrans3D([0 3.9 0]) * MScale3D(1.2));
 elem = viewer.AjouterGeom(bouleNormalesGeom2, 'face');
-elem.setCouleurFaces([0 1 0.8 1]);
+elem.setCouleur([0 1 0.8 1]);
 
 % % pyramide avec texture
 pyraTexGeom = Geometry(33, posPyramide, indicesPyramide);
@@ -105,10 +105,9 @@ listeId = 31:34;
 ens = viewer.makeGroup(30, listeId, [0 2 0]);
 ens.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
 
-
 elementTexte = viewer.AjouterTexte(102, 'X', ravie, 0);
 elementTexte.setModelMatrix(MTrans3D([1 0 0]));
-elementTexte.setCouleurTexte([1 0 0]);
+elementTexte.setCouleur([1 0 0]);
 elementTexte.typeOrientation = 2 + 4;
 
 % [posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.2);

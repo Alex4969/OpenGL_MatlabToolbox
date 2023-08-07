@@ -5,7 +5,7 @@ classdef ElementTexte < VisibleElement
     properties (GetAccess = public, SetAccess = protected)
         str                         % le texte a afficher
         police Police
-        couleurTexte = [1 1 1 1]    % 1x4 double entre 0 et 1
+        couleur = [1 1 1 1]    % 1x4 double entre 0 et 1
         texture
     end
     
@@ -36,34 +36,30 @@ classdef ElementTexte < VisibleElement
             obj.CommonDraw(gl, camAttrib, model);
 
             obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
-            obj.shader.SetUniform4f(gl, 'uColor', obj.couleurTexte);
+            obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             CheckError(gl, 'apres le dessin d un texte');
         end % fin de Draw
 
-        function setCouleurTexte(obj, newColor)
+        function setCouleur(obj, newColor)
             %SETCOULEURFOND change la couleur du texte
             %Peut prendre en entrée une matrice 1x3 (rgb) ou 1x4 (rgba)
             if (numel(newColor) == 3)
                 newColor(4) = 1;
             end
             if numel(newColor) == 4
-                obj.couleurTexte = newColor;
+                obj.couleur = newColor;
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
             notify(obj,'evt_update');
         end % fin setCouleurFond
 
-        function setMainColor(obj, matColor)
-            obj.setCouleurTexte(matColor);
-        end % fin de setMainColor
-
         function sNew = reverseSelect(obj, s)
             sNew.id          = obj.getId();
-            sNew.couleur     = obj.couleurTexte;
+            sNew.couleur     = obj.couleur;
             sNew.epaisseur   = s.epaisseur;
-            obj.couleurTexte = s.couleur;
+            obj.couleur = s.couleur;
         end % fin de reverseSlect
     end % fin des methodes defauts
 

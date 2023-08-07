@@ -2,8 +2,8 @@ classdef ElementLigne < VisibleElement
     %ELEMENTLIGNE
     
     properties
-        epaisseurLignes = 2             % float
-        couleurLignes   = [1 0 0 1]     % 1x4
+        epaisseur = 2             % float
+        couleur   = [1 0 0 1]     % 1x4
     end
     
     methods
@@ -25,9 +25,9 @@ classdef ElementLigne < VisibleElement
             end
             obj.CommonDraw(gl, camAttrib, model);
 
-            gl.glLineWidth(obj.epaisseurLignes);
+            gl.glLineWidth(obj.epaisseur);
             if (obj.GLGeom.nLayout(2) == 0)
-                obj.shader.SetUniform4f(gl, 'uColor', obj.couleurLignes);
+                obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
             end
             gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
 
@@ -35,7 +35,7 @@ classdef ElementLigne < VisibleElement
         end % fin de Draw
 
         function setEpaisseur(obj, newEp)
-            obj.epaisseurLignes = newEp;
+            obj.epaisseur = newEp;
         end
 
         function setCouleur(obj, newColor)
@@ -43,22 +43,18 @@ classdef ElementLigne < VisibleElement
                 newColor(4) = 1;
             end
             if numel(newColor) == 4
-                obj.couleurLignes = newColor;
+                obj.couleur = newColor;
             else
                 warning('mauvaise matrice de couleur, annulation');
             end
         end % fin de setCouleur
 
-        function setMainColor(obj, matColor)
-            obj.setCouleur(matColor);
-        end % fin de setMainColor
-
         function sNew = reverseSelect(obj, s)
             sNew.id        = obj.getId();
-            sNew.couleur   = obj.couleurLignes;
-            sNew.epaisseur = obj.epaisseurLignes;
-            obj.couleurLignes   = s.couleur;
-            obj.epaisseurLignes = s.epaisseur;
+            sNew.couleur   = obj.couleur;
+            sNew.epaisseur = obj.epaisseur;
+            obj.couleur   = s.couleur;
+            obj.epaisseur = s.epaisseur;
         end % fin de reverseSelect
     end % fin des methodes defauts
 end  % fin classe ElementLigne

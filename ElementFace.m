@@ -6,7 +6,7 @@ classdef ElementFace < VisibleElement
         textureUpdate = false
         epaisseurArretes = 1                    % float
         epaisseurPoints  = 4                    % float
-        couleurFaces     = [1 0 0 1]            % 1x4
+        couleur          = [1 0 0 1]            % 1x4
         couleurArretes   = [0 1 0 1]            % 1x4
         couleurPoints    = [0 0 1 1]            % 1x4
     end
@@ -46,7 +46,7 @@ classdef ElementFace < VisibleElement
                         obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
                         gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
                     elseif obj.typeRendu == 'D' && bitand(obj.quoiAfficher, 1) > 0
-                        obj.shader.SetUniform4f(gl, 'uFaceColor', obj.couleurFaces);
+                        obj.shader.SetUniform4f(gl, 'uFaceColor', obj.couleur);
                     end
                 end
                 if bitand(obj.quoiAfficher, 2) > 0
@@ -80,8 +80,8 @@ classdef ElementFace < VisibleElement
             obj.epaisseurPoints = newEp;
         end
 
-        function setCouleurFaces(obj, newCol)
-            obj.couleurFaces = obj.testNewCol(newCol);
+        function setCouleur(obj, newCol)
+            obj.couleur = obj.testNewCol(newCol);
             obj.quoiAfficher = bitor(obj.quoiAfficher, 1);
             notify(obj,'evt_update');
         end
@@ -105,10 +105,6 @@ classdef ElementFace < VisibleElement
                 obj.quoiAfficher = newChoix;
             end
         end % fin de setQuoiAfficher
-
-        function setMainColor(obj, matColor)
-            obj.setCouleurFaces(matColor);
-        end % fin de setMainColor
 
         function sNew = reverseSelect(obj, s)
             sNew.id        = obj.getId();
