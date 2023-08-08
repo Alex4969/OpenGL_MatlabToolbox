@@ -73,7 +73,7 @@ classdef Texture < handle
             else
                 type = gl.GL_RGBA;
             end
-            %gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1); %dans la toolbox mais visiblement pas necessaire
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1); %dans la toolbox mais visiblement pas necessaire
             gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, type, size(im, 2), size(im, 3), 0, type, gl.GL_UNSIGNED_BYTE, imBuffer);
             gl.glGenerateMipmap(gl.GL_TEXTURE_2D);
         end % fin de generateTexture
@@ -84,6 +84,7 @@ classdef Texture < handle
             obj.textureId = typecast(obj.texBuffer.array(), 'uint32');
             gl.glActiveTexture(gl.GL_TEXTURE0);
             gl.glBindTexture(gl.GL_TEXTURE_2D, obj.textureId);
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
             gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, w, h, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
 
         	gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR);	

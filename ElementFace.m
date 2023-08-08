@@ -4,49 +4,45 @@ classdef ElementFace < VisibleElement
     properties %(GetAccess = public, SetAccess = protected)
         texture
         textureUpdate = false
-        epaisseurArretes = 1                    % float
-        epaisseurPoints  = 4                    % float
-        couleurFaces     = [1 0 0 1]            % 1x4
-        couleurArretes   = [0 1 0 1]            % 1x4
-        couleurPoints    = [0 0 1 1]            % 1x4
+        epaisseurArretes = 1                % float
+        epaisseurPoints  = 2                % float
+        couleur          = [1 0 0 1]        % 1x4
+        couleurArretes   = [0 1 0 1]        % 1x4
+        couleurPoints    = [0 0 1 1]        % 1x4
     end
 
     properties (GetAccess = public, SetAccess = protected)
         quoiAfficher int32   % 1x3 logical, vrai s'il faut afficher Face, Arrete, Points
     end  
    
-    
     methods
         function obj = ElementFace(gl, aGeom)
             %FACEELEMENT 
             obj@VisibleElement(gl, aGeom); % appel au constructeur parent
             obj.Type = 'Face';
-            obj.typeLumiere = 'D';
+            obj.typeShading = 'D';
             obj.quoiAfficher = 1;
             obj.changerProg(gl);
-        end
+        end % fin constructeur ElementFace
 
-        function Draw(obj, gl, camAttrib, model)
+        function Draw(obj, gl, camAttrib)
             %DRAW dessine cet objet
-            if obj.visible == 0
+            if ~obj.isVisible()
                 return
             end
-            if nargin == 3
-                model = obj.getModelMatrix();
-            end
-            obj.CommonDraw(gl, camAttrib, model);
+            obj.CommonDraw(gl, camAttrib);
             if obj.typeOrientation > 0
                 obj.shader.SetUniform1i(gl, 'uQuoiAfficher', obj.quoiAfficher);
                 if bitand(obj.quoiAfficher, 1) > 0
-                    if obj.typeRendu == 'T' && ~isempty(obj.texture)
+                    if obj.typeColoration == 'T' && ~isempty(obj.texture)
                         if obj.textureUpdate == true
                             obj.texture = Texture(gl, obj.texture);
                             obj.textureUpdate = false;
                         end
                         obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
                         gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-                    elseif obj.typeRendu == 'D' && bitand(obj.quoiAfficher, 1) > 0
-                        obj.shader.SetUniform4f(gl, 'uFaceColor', obj.couleurFaces);
+                    elseif obj.typeColoration == 'U' && bitand(obj.quoiAfficher, 1) > 0
+                        obj.shader.SetUniform4f(gl, 'uFaceColor', obj.couleur);
                     end
                 end
                 if bitand(obj.quoiAfficher, 2) > 0
@@ -55,6 +51,7 @@ classdef ElementFace < VisibleElement
                 end
                 if bitand(obj.quoiAfficher, 4) > 0
                     obj.shader.SetUniform4f(gl, 'uPointColor', obj.couleurPoints);
+                    obj.shader.SetUniform1f(gl, 'uPointSize', obj.epaisseurPoints);
                 end
             end
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
@@ -70,7 +67,7 @@ classdef ElementFace < VisibleElement
             obj.setModeRendu('T');
             obj.textureUpdate = true;
             obj.texture = fileName;
-        end
+        end % fin de useTexture
 
         function setEpaisseurArretes(obj, newEp)
             obj.epaisseurArretes = newEp;
@@ -80,8 +77,8 @@ classdef ElementFace < VisibleElement
             obj.epaisseurPoints = newEp;
         end
 
-        function setCouleurFaces(obj, newCol)
-            obj.couleurFaces = obj.testNewCol(newCol);
+        function setCouleur(obj, newCol)
+            obj.couleur = obj.testNewCol(newCol);
             obj.quoiAfficher = bitor(obj.quoiAfficher, 1);
             notify(obj,'evt_update');
         end
@@ -106,10 +103,6 @@ classdef ElementFace < VisibleElement
             end
         end % fin de setQuoiAfficher
 
-        function setMainColor(obj, matColor)
-            obj.setCouleurFaces(matColor);
-        end % fin de setMainColor
-
         function sNew = reverseSelect(obj, s)
             sNew.id        = obj.getId();
             sNew.couleur   = obj.couleurArretes;
@@ -132,4 +125,3 @@ classdef ElementFace < VisibleElement
         end % fin de testNewCol
     end % fin des methodes privees
 end % fin classe ElementFace
-

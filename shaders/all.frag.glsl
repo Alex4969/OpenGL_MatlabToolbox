@@ -9,9 +9,10 @@ in vec2 vTextureCoord; //TEX
 in vec2 interpolation;
 
 uniform vec4 uFaceColor = vec4(1.0);        //DEF
-uniform vec4 uLineColor = vec4(0.0);
+uniform vec4 uLineColor;
 uniform vec4 uPointColor;
-uniform float uLineSize = 3.0;
+uniform float uLineSize;
+uniform float uPointSize;
 uniform int  uQuoiAfficher = 1;
 uniform sampler2D uTexture; //TEX
 layout (std140, binding = 1) uniform camera {
@@ -36,36 +37,57 @@ void main()
 {
     vec3 laNormale = normalize(vNormal);
     float intensiteLumineuse = 1.0;
-    if (uLightData.x == 1.0){
-        intensiteLumineuse = pointLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightData.y, uLightData.z);
-    } else if (uLightData.x == 2.0) {
-        intensiteLumineuse = direcLight(vCrntPos, laNormale, uCamPos, uLightDir);
-    } else if (uLightData.x == 3.0) {
-        intensiteLumineuse = spotLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightDir, uLightData.y, uLightData.z);
+    if (uLightData.x == 1.0){   //LIGHT
+        intensiteLumineuse = pointLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightData.y, uLightData.z);   //LIGHT
+    } else if (uLightData.x == 2.0) {   //LIGHT
+        intensiteLumineuse = direcLight(vCrntPos, laNormale, uCamPos, uLightDir);   //LIGHT
+    } else if (uLightData.x == 3.0) {   //LIGHT
+        intensiteLumineuse = spotLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightDir, uLightData.y, uLightData.z); //LIGHT
+    }   //LIGHT
+
+    vec4 couleur;
+    if ((uQuoiAfficher & 1) > 0){
+        couleur = texture(uTexture, vTextureCoord); //TEX
+        couleur = uFaceColor; //DEF
+        couleur = vColor; //COL3 COL4
     }
-    vec4 couleur = texture(uTexture, vTextureCoord); //TEX
-    vec4 couleur = uFaceColor; //DEF
-    vec4 couleur = vColor; //COL3 COL4
 
     if (uQuoiAfficher > 1){
         vec3 barys = vec3(interpolation.x, interpolation.y, 1 - interpolation.x - interpolation.y);
+        float coin = max(barys.x, max(barys.y, barys.z));
+        coin = smoothstep(1.0 - uPointSize * fwidth(coin), 1.0, coin);
         float centre = min(barys.x, min(barys.y, barys.z));
         centre = smoothstep(0.0, uLineSize * fwidth(centre), centre);
-        if ((uQuoiAfficher & 2) == 2) {
+        switch (uQuoiAfficher) {
+        case 2 : /* Arretes uniquement */
+            if (centre == 1)
+                discard;
+            couleur = vec4(0.0) * couleur + (1.0 - centre) * uLineColor;
+            break;
+        case 3 : /* Arretes + faces */
             couleur = centre * couleur + (1.0 - centre) * uLineColor;
-            if ((uQuoiAfficher & 1) == 0){
-                if (centre == 1)
-                    discard;
-                couleur = vec4(0.0) * couleur + (1.0 - centre) * uLineColor;;
-            }
-        }
-        if ((uQuoiAfficher & 4) == 4) {
-            float coin = max(barys.x, max(barys.y, barys.z));
-            if (coin > 0.95){
-                couleur = uPointColor;
-            }
+            break;
+        case 4 : /* Points uniquement */
+            if (coin == 0)
+                discard;
+            couleur = vec4(0.0) * couleur + coin * uPointColor;
+            break;
+        case 5 : /* Points + faces */
+            couleur = (1-coin) * couleur + coin * uPointColor;
+            break;
+        case 6 : /* Arretes + Points */
+            if (centre == 1 && coin == 0)
+                discard;
+            couleur = vec4(0.0) * couleur + (1.0 - centre) * uLineColor;
+            couleur = (1-coin) * couleur + coin * uPointColor;
+            break;
+        case 7 : /* Faces + arretes + points */
+            couleur = centre * couleur + (1.0 - centre) * uLineColor;
+            couleur = (1-coin) * couleur + coin * uPointColor;
+            break;
         }
     }
+
     couleur.xyz *= uLightColor * intensiteLumineuse;
     fragColor = couleur;
 }

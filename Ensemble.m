@@ -1,12 +1,10 @@
 classdef Ensemble < handle
-    %ENSEMBLE Summary of this class goes here
-    %   Detailed explanation goes here
+    %ENSEMBLE permet de regrouper plusieurs element pour les déplacer ensemble
 
     properties (GetAccess = public, SetAccess = protected)
         id int32
         sousElements containers.Map
         groupMatrix = eye(4);
-        typeOrientation uint16
     end
 
     properties (Access = public)
@@ -14,24 +12,37 @@ classdef Ensemble < handle
     end    
 
     methods
-        function obj = Ensemble(id, centre)
+        function obj = Ensemble(id)
         %ENSEMBLE Construct an instance of this class
-            if nargin == 2
-                obj.groupMatrix(1:3, 4) = centre;
-            end
             obj.id = id;
             obj.visible = true;
             obj.sousElements = containers.Map('KeyType', 'int32', 'ValueType', 'any');
-            obj.typeOrientation = 1;
-        end
+        end % fin du constructeur Ensemble
 
         function AddElem(obj, elem)
             obj.sousElements(elem.getId()) = elem;
-            elem.ModifyModelMatrix(MTrans3D(-obj.groupMatrix(1:3, 4)));
-            elem.typeOrientation = obj.typeOrientation;
+            elem.setParent(obj);
         end % fin de AddElem
 
-        function AddToModelMatrix(obj, model, after)
+        function mod = getModelMatrix(obj)
+            mod = obj.groupMatrix;
+        end % fin de getModelMatrix
+
+        function b = isVisible(obj)
+            b = obj.visible;
+        end % fin de isVisible
+
+        function elem = removeElem(obj, elemId)
+            if obj.sousElements.isKey(elemId)
+                elem = obj.sousElements(elemId);
+                elem.setParent([]);
+                obj.sousElements.remove(elemId);
+            else
+                disp('l objet a supprimer n est pas dans la liste')
+            end
+        end % fin de removeElem
+
+        function modifyModelMatrix(obj, model, after)
             %ADDTOMODELMATRIX multiplie la nouvelle matrice modele par
             %celle deja existante (avant ou apres selon after)
             if (nargin == 3 && after == 1)
@@ -44,27 +55,5 @@ classdef Ensemble < handle
         function setModelMatrix(obj, model)
             obj.groupMatrix = model;
         end % fin de setModelMatrix
-
-        function pos = getPosition(obj)
-            pos = obj.groupMatrix(1:3, 4);
-            pos = pos';
-        end % fin de getPosition
-
-        function setTypeOrientation(obj, newType)
-            obj.typeOrientation = newType;
-            listeElem = values(obj.sousElements);
-            for i=1:numel(listeElem)
-                elem = listeElem{i};
-                elem.typeOrientation = newType;
-            end
-        end
-
-        function Draw(obj, gl, camAttrib)
-            listeElem = values(obj.sousElements); % trié ?
-            for i=1:numel(listeElem)
-                elem = listeElem{i};
-                elem.Draw(gl, camAttrib, obj.groupMatrix * elem.getModelMatrix);
-            end
-        end
-    end
-end
+    end % fin methodes defauts
+end % fin classe Ensemble

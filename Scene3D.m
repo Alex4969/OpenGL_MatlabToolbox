@@ -8,12 +8,13 @@ classdef Scene3D < handle
         framebuffer Framebuffer % contient l'image 2D de la scène a afficher
 
         mapElements containers.Map  % map contenant les objets 3D de la scenes
+        mapGroups   containers.Map  % map contenant les ensembles
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
-        axes ElementLigne           % instance des axes lié au repere
-        gyroscope ElementLigne      % indication d'angle dans le repere
-        grille Grid         % instance de la grille lié au repere
+        axesId int32        % instance des axes lié au repere
+        gyroscopeId int32   % indication d'angle dans le repere
+        grilleId int32      % instance de la grille lié au repere
 
         cbk_manager javacallbackmanager
         startX              % position x de la souris lorsque je clique
@@ -43,6 +44,7 @@ classdef Scene3D < handle
             obj.context = obj.fenetre.canvas.javaObj.getContext();
 
             obj.mapElements = containers.Map('KeyType','int32','ValueType','any');
+            obj.mapGroups   = containers.Map('KeyType','int32','ValueType','any');
             obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
 
             gl = obj.getGL();
@@ -56,7 +58,7 @@ classdef Scene3D < handle
 
             obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light(gl, [obj.camera.getPosition], [1 1 1]);
-            obj.generateInternalObject(gl); % axes, gyroscope, grille & framebuffer
+            obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
             obj.context.release();
 
@@ -71,45 +73,44 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
 
             addlistener(obj,'evt_update',@obj.cbk_update);
-            
         end % fin du constructeur de Scene3D
 
-        function elem = AjouterTexte(obj, id, texte, police, typeAncre)
-            if nargin == 4, typeAncre = 0; end
-            elem = ElementTexte(obj.getGL(), id, texte, police, typeAncre);
-            obj.mapElements(id) = elem;
-            obj.context.release();
-        end % fin de ajouterTexte
-
-        function elem = AjouterGeom(obj, aGeom, type)
-            if nargin == 2, type = 'face'; end
+        function elem = AddComponent(obj, comp)
             gl = obj.getGL();
-            if isKey(obj.mapElements, aGeom.id)
+            if isKey(obj.mapElements, comp.id)
                 warning('Id deja existante remplace l ancient element');
             end
-            switch type
+            switch (comp.type)
                 case 'face'
-                    elem = ElementFace(gl, aGeom);
+                    elem = ElementFace(gl, comp);
                 case 'ligne'
-                    elem = ElementLigne(gl, aGeom);
+                    elem = ElementLigne(gl, comp);
                 case 'point'
-                    elem = ElementPoint(gl, aGeom);
+                    elem = ElementPoint(gl, comp);
+                case 'texte'
+                    elem = ElementTexte(gl, comp);
             end
             obj.mapElements(elem.getId()) = elem;
             addlistener(elem,'evt_update',@obj.cbk_update);
             obj.context.release();
         end % fin de ajouterGeom
 
-        function elem = RetirerObjet(obj, elemId) % element et texte
+        function group = CreateGroup(obj, groupId)
+            group = Ensemble(groupId);
+            obj.mapGroups(groupId) = group;
+        end % fin de createGroup
+
+        function elem = RemoveComponent(obj, elemId) % element et texte
             if isKey(obj.mapElements, elemId)
                 elem = obj.mapElements(elemId);
                 remove(obj.mapElements, elemId);
             else
                 disp('objet a supprimé n existe pas');
             end
-        end % fin de retirerObjet
+        end % fin de RemoveComponent
 
         function Draw(obj)
+            tic
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
             obj.lumiere.remplirUbo(gl);
@@ -119,15 +120,6 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_DEPTH_TEST);
 
             camAttrib = obj.camera.getAttributes();
-
-            %dessin des objets internes
-            obj.gyroscope.Draw(gl, camAttrib)
-            obj.axes.Draw(gl, camAttrib)
-            obj.grille.Draw(gl, camAttrib)
-            if ~isempty(obj.lumiere.forme)
-                obj.lumiere.forme.Draw(gl, camAttrib)
-            end
-
             %dessin des objets ajouter a la scene
             listeElem = obj.orderElem();
             for i=1:numel(listeElem)
@@ -143,17 +135,6 @@ classdef Scene3D < handle
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
 
-        function ens = makeGroup(obj, id, listeId, centre)
-            if nargin == 3
-                centre = [0 0 0];
-            end
-            ens = Ensemble(id, centre);
-            for i=listeId
-                ens.AddElem(obj.RetirerObjet(i));
-            end
-            obj.mapElements(id) = ens;
-        end
-
         function delete(obj)
             %DELETE Supprime les objets de la scene
             disp('deleting Scene3D...')
@@ -163,9 +144,6 @@ classdef Scene3D < handle
                 listeElem{i}.delete(gl);
             end
             Texture.DeleteAll(gl);
-            obj.axes.delete(gl);
-            obj.grille.delete(gl);
-            obj.gyroscope.delete(gl);
             if ~isempty(obj.lumiere.forme)
                 obj.lumiere.forme.delete(gl);
             end
@@ -187,19 +165,9 @@ classdef Scene3D < handle
             end
             notify(obj,'evt_update');
         end % fin setCouleurFond
-
-        function AddGeomToLight(obj, geom)
-            disp('ne fonctionne pas')
-            gl = obj.getGL();
-            elem = ElementFace(geom);
-            elem.Init(gl);
-            obj.lumiere.setForme(elem);
-            obj.context.release();
-        end
     end % fin des methodes defauts
 
     methods (Access = private)
-
         function gl = getGL(obj)
             if ~obj.context.isCurrent()
                 obj.context.makeCurrent();
@@ -207,27 +175,31 @@ classdef Scene3D < handle
             gl = obj.context.getCurrentGL();
         end % fin de getGL
 
-        function generateInternalObject(obj, gl)
+        function generateInternalObject(obj)
+            obj.axesId = -1;
             tailleAxe = 50;
-            [pos, idx, color] = Axes.generateAxes(-tailleAxe, tailleAxe);
-            axesGeom = Geometry(-1, pos, idx);
-            obj.axes = ElementLigne(gl, axesGeom);
-            obj.axes.AddColor(color);
+            [pos, idx, color] = generateAxis(-tailleAxe, tailleAxe);
+            axesGeom = MyGeom(obj.axesId, pos, idx, 'ligne');
+            elem = obj.AddComponent(axesGeom);
+            elem.AddColor(color);
 
-            [pos, idx] = Grid.generateGrid(tailleAxe, 2);
-            grilleGeom = Geometry(-2, pos, idx);
-            obj.grille = Grid(gl, grilleGeom, tailleAxe, 2);
+            obj.grilleId = -2;
+            [pos, idx] = generateGrid(tailleAxe, 2);
+            grilleGeom = MyGeom(obj.grilleId, pos, idx, 'ligne');
+            elem = obj.AddComponent(grilleGeom);
+            elem.setEpaisseur(1);
+            elem.setCouleur([0.3 0.3 0.3]);
 
+            obj.gyroscopeId = -3;
             tailleGysmo = 1;
-            [pos, idx, color] = Axes.generateAxes(0, tailleGysmo);
-            gysmoGeom = Geometry(-3, pos, idx);
-            obj.gyroscope = ElementLigne(gl, gysmoGeom);
-            obj.gyroscope.setEpaisseur(4);
-            obj.gyroscope.AddColor(color);
-            obj.gyroscope.setModelMatrix(MTrans3D([0, 0, 0]));
-            obj.gyroscope.typeOrientation = 4;
+            [pos, idx, color] = generateAxis(0, tailleGysmo);
+            gysmoGeom = MyGeom(obj.gyroscopeId, pos, idx, 'ligne');
+            elem = obj.AddComponent(gysmoGeom);
+            elem.AddColor(color);
+            elem.typeOrientation = 4;
+            elem.setEpaisseur(4);
 
-            obj.framebuffer = Framebuffer(gl, obj.canvas.getWidth(), obj.canvas.getHeight());
+            obj.framebuffer = Framebuffer(obj.getGL(), obj.canvas.getWidth(), obj.canvas.getHeight());
         end % fin de generateInternalObject
 
         function worldCoord = getWorldCoord(obj, clickPos)
@@ -379,7 +351,7 @@ classdef Scene3D < handle
                     end
                 case char(127) % SUPPR
                     if obj.selectObject.id ~= 0
-                        obj.RetirerObjet(obj.selectObject.id);
+                        obj.RemoveComponent(obj.selectObject.id);
                         obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
                     end
                 case 'i'

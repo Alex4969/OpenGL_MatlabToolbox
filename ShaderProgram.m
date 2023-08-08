@@ -7,7 +7,7 @@ classdef ShaderProgram < handle
     end
     
     methods
-        function obj = ShaderProgram(gl, nLayout, mode) %mode = 'D' dur, 'L' lisse, 'S' sans lumiere
+        function obj = ShaderProgram(gl, nLayout, mode, type) %mode = 'D' dur, 'L' lisse, 'S' sans lumiere
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
             motCle(1) = "POS" + nLayout(1);
@@ -18,13 +18,16 @@ classdef ShaderProgram < handle
             else
                 motCle(2) = "DEF";
             end
-            if mode == 'S'
-                obj.createProgNoLight(gl, motCle);
-            else
-                if mode == 'L' && nLayout(4) > 0 
-                    motCle(3) = "NORM";
+            if type == "Face"
+                if mode ~= 'S'
+                    motCle(3) = "LIGHT";
+                    if mode == 'L' && nLayout(4) > 0 
+                        motCle(4) = "NORM";
+                    end
                 end
                 obj.createProgWithLight(gl, motCle)
+            else
+                obj.createProgNoLight(gl, motCle);
             end
             gl.glLinkProgram(obj.shaderProgId);
             gl.glValidateProgram(obj.shaderProgId);
