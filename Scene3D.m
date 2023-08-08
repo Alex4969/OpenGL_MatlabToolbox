@@ -8,6 +8,7 @@ classdef Scene3D < handle
         framebuffer Framebuffer % contient l'image 2D de la scène a afficher
 
         mapElements containers.Map  % map contenant les objets 3D de la scenes
+        mapGroups   containers.Map  % map contenant les ensembles
 
         camera Camera       % instance de la camera
         lumiere Light       % instance de la lumiere
@@ -43,6 +44,7 @@ classdef Scene3D < handle
             obj.context = obj.fenetre.canvas.javaObj.getContext();
 
             obj.mapElements = containers.Map('KeyType','int32','ValueType','any');
+            obj.mapGroups   = containers.Map('KeyType','int32','ValueType','any');
             obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
 
             gl = obj.getGL();
@@ -78,7 +80,7 @@ classdef Scene3D < handle
             if isKey(obj.mapElements, comp.id)
                 warning('Id deja existante remplace l ancient element');
             end
-            switch comp.type
+            switch (comp.type)
                 case 'face'
                     elem = ElementFace(gl, comp);
                 case 'ligne'
@@ -93,14 +95,19 @@ classdef Scene3D < handle
             obj.context.release();
         end % fin de ajouterGeom
 
-        function elem = RetirerObjet(obj, elemId) % element et texte
+        function group = CreateGroup(obj, groupId)
+            group = Ensemble(groupId);
+            obj.mapGroups(groupId) = group;
+        end % fin de createGroup
+
+        function elem = RemoveComponent(obj, elemId) % element et texte
             if isKey(obj.mapElements, elemId)
                 elem = obj.mapElements(elemId);
                 remove(obj.mapElements, elemId);
             else
                 disp('objet a supprimé n existe pas');
             end
-        end % fin de retirerObjet
+        end % fin de RemoveComponent
 
         function Draw(obj)
             tic
@@ -134,7 +141,7 @@ classdef Scene3D < handle
             end
             ens = Ensemble(id, centre);
             for i=listeId
-                ens.AddElem(obj.RetirerObjet(i));
+                ens.AddElem(obj.RemoveComponent(i));
             end
             obj.mapElements(id) = ens;
         end
@@ -353,7 +360,7 @@ classdef Scene3D < handle
                     end
                 case char(127) % SUPPR
                     if obj.selectObject.id ~= 0
-                        obj.RetirerObjet(obj.selectObject.id);
+                        obj.RemoveComponent(obj.selectObject.id);
                         obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
                     end
                 case 'i'

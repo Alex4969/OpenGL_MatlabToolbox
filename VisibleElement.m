@@ -9,10 +9,12 @@ classdef (Abstract) VisibleElement < handle
         typeShading = 'S'       % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
         typeColoration = 'U'    % 'U' : Uniforme, 'C' : Color, 'T' : Texture
         newRendu logical
+
+        parent
     end
 
     properties (Access = public)
-        typeOrientation uint16 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe, '0000' rien (pour framebuffer)
+        typeOrientation uint8 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe, '0000' rien (pour framebuffer)
         visible = true
     end
 
@@ -32,8 +34,12 @@ classdef (Abstract) VisibleElement < handle
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
-            model = obj.Geom.modelMatrix;
-        end
+            if isempty(obj.parent)
+                model = obj.Geom.modelMatrix;
+            else
+                model = obj.parent.getModelMatrix() * obj.Geom.modelMatrix;
+            end
+        end % fin de getModelMatrix
 
         function setModelMatrix(obj, newModel)
             obj.Geom.setModelMatrix(newModel);
@@ -45,8 +51,8 @@ classdef (Abstract) VisibleElement < handle
         end
 
         function pos = getPosition(obj)
-            pos = obj.Geom.modelMatrix(1:3, 4);
-            pos = pos';
+            mod = obj.getModelMatrix();
+            pos = mod(1:3, 4)';
         end % fin de getPosition
 
         function AddColor(obj, matColor)
@@ -127,6 +133,10 @@ classdef (Abstract) VisibleElement < handle
             id = obj.Geom.id;
         end
 
+        function setParent(obj, newParent)
+            obj.parent = newParent;
+        end
+
         function toString(obj)
             nbPoint = size(obj.Geom.listePoints, 1);
             nbTriangle = numel(obj.Geom.listeConnection)/3;
@@ -174,7 +184,7 @@ classdef (Abstract) VisibleElement < handle
             obj.shader = ShaderProgram(gl, nLayout, typeL, obj.Type);
         end % fin de changerProg
 
-        function CommonDraw(obj, gl, camAttrib, model)
+        function CommonDraw(obj, gl, camAttrib)
             %COMMONDRAW, fonction appele au debut de tous les draw des
             %objets. Definie le programme et le mode d'orientation
             if obj.newRendu == true
@@ -183,6 +193,7 @@ classdef (Abstract) VisibleElement < handle
             end
             obj.shader.Bind(gl);
             obj.GLGeom.Bind(gl);
+            model = obj.getModelMatrix();
             if obj.typeOrientation == 0
                 cam = eye(4);
             elseif obj.typeOrientation == 1
@@ -211,7 +222,7 @@ classdef (Abstract) VisibleElement < handle
     end % fin des methodes defauts
 
     methods (Abstract = true)
-        Draw(obj, gl, camAttrib, model)
+        Draw(obj, gl, camAttrib)
         sNew = reverseSelect(obj, s)
         setCouleur(obj, matColor)
     end % fin des methodes abstraites
