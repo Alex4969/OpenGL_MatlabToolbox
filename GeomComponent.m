@@ -1,4 +1,4 @@
-classdef GeomComponent < handle
+classdef (Abstract) GeomComponent < handle
     %GEOMETRIE contient les propriété d'une géometrie
     %Cette classe ne permet que de faire des test et sera remplacer par la
     %vrai classe Geometrie en fin de projet
@@ -21,7 +21,7 @@ classdef GeomComponent < handle
             obj.id = id;
         end % fin du constructeur
 
-        function AddToModelMatrix(obj, model, after)
+        function modifyModelMatrix(obj, model, after)
             %ADDTOMODELMATRIX multiplie la nouvelle matrice modele par
             %celle deja existante (avant ou apres selon after)
             if (nargin == 3 && after == 1)
@@ -29,7 +29,7 @@ classdef GeomComponent < handle
             else
                 obj.modelMatrix = model * obj.modelMatrix;
             end
-        end % fin de addToModelMatrix
+        end % fin de modifyModelMatrix
 
         function setModelMatrix(obj, model)
             obj.modelMatrix = model;

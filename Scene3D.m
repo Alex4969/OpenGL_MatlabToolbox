@@ -135,17 +135,6 @@ classdef Scene3D < handle
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
 
-        function ens = makeGroup(obj, id, listeId, centre)
-            if nargin == 3
-                centre = [0 0 0];
-            end
-            ens = Ensemble(id, centre);
-            for i=listeId
-                ens.AddElem(obj.RemoveComponent(i));
-            end
-            obj.mapElements(id) = ens;
-        end
-
         function delete(obj)
             %DELETE Supprime les objets de la scene
             disp('deleting Scene3D...')

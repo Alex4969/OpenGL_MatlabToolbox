@@ -15,7 +15,7 @@ classdef (Abstract) VisibleElement < handle
 
     properties (Access = public)
         typeOrientation uint8 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe, '0000' rien (pour framebuffer)
-        visible = true
+        visible logical
     end
 
     events
@@ -28,6 +28,7 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom = aGeom;
             obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
             obj.newRendu = false;
+            obj.visible = true;
             obj.typeOrientation = 1;
 
             addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
@@ -43,17 +44,41 @@ classdef (Abstract) VisibleElement < handle
 
         function setModelMatrix(obj, newModel)
             obj.Geom.setModelMatrix(newModel);
-        end
+        end % fin de setModelMatrix
 
         function ModifyModelMatrix(obj, matrix, after)
             if nargin < 3, after = 0; end
-            obj.Geom.AddToModelMatrix(matrix, after);
-        end
+            obj.Geom.modifyModelMatrix(matrix, after);
+        end % fin de ModifymodelMatrix
 
         function pos = getPosition(obj)
             mod = obj.getModelMatrix();
             pos = mod(1:3, 4)';
         end % fin de getPosition
+
+        function b = isVisible(obj)
+            if isempty(obj.parent)
+                b = obj.visible;
+            else
+                b = (obj.visible && obj.parent.isVisible());
+            end
+        end % fin de isVisible
+
+        function id = getId(obj)
+            id = obj.Geom.id;
+        end % fin de getId
+
+        function setParent(obj, newParent)
+            obj.parent = newParent;
+        end % fin de setParent
+
+        function setModeRendu(obj, newTypeRendu, newTypeLumiere)
+            if nargin == 3
+                obj.typeShading = newTypeLumiere;
+            end
+            obj.typeColoration = newTypeRendu;
+            obj.newRendu = true;
+        end % fin de setModeRendu
 
         function AddColor(obj, matColor)
             if size(matColor, 1) == 1
@@ -64,30 +89,19 @@ classdef (Abstract) VisibleElement < handle
                 obj.typeColoration = 'C';
             end
             obj.newRendu = true;
-        end
+        end % fin de AddColor
 
         function AddMapping(obj, matMapping)
             obj.GLGeom.addDataToBuffer(matMapping, 3);
             obj.typeColoration = 'T';
             obj.newRendu = true;
-        end
+        end % fin de AddMapping
 
         function AddNormals(obj, matNormales)
             obj.GLGeom.addDataToBuffer(matNormales, 4);
             obj.typeShading = 'L';
             obj.newRendu = true;
-        end
-
-        function cbk_geomUpdate(obj, ~, ~)
-            obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection, true);
-            if size(obj.Geom.listePoints, 2) == 2
-                obj.typeShading = 'S';
-            else
-                obj.typeShading = 'D';
-            end
-            obj.typeColoration = 'U';
-            obj.newRendu = true;
-        end
+        end % fin de AddNormals
 
         function AddPoints(obj, plusDePoints, plusDeConnectivite)
             newDim = size(plusDePoints, 2);
@@ -122,20 +136,23 @@ classdef (Abstract) VisibleElement < handle
             end
         end % fin de AddPoints
 
+        function cbk_geomUpdate(obj, ~, ~)
+            obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection, true);
+            if size(obj.Geom.listePoints, 2) == 2
+                obj.typeShading = 'S';
+            else
+                obj.typeShading = 'D';
+            end
+            obj.typeColoration = 'U';
+            obj.newRendu = true;
+        end % fin de cbk_geomUpdate
+
         function GenerateNormals(obj)
             normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
             obj.GLGeom.addDataToBuffer(normales, 4);
             obj.typeShading = 'L';
             obj.newRendu = true;
         end % fin de GenerateNormals
-
-        function id = getId(obj)
-            id = obj.Geom.id;
-        end
-
-        function setParent(obj, newParent)
-            obj.parent = newParent;
-        end
 
         function toString(obj)
             nbPoint = size(obj.Geom.listePoints, 1);
@@ -150,14 +167,6 @@ classdef (Abstract) VisibleElement < handle
             obj.GLGeom.delete(gl);
             obj.shader.delete(gl);
         end % fin de delete
-
-        function setModeRendu(obj, newTypeRendu, newTypeLumiere)
-            if nargin == 3
-                obj.typeShading = newTypeLumiere;
-            end
-            obj.typeColoration = newTypeRendu;
-            obj.newRendu = true;
-        end % fin de setModeRendu
 
         function changerProg(obj, gl)
             nLayout = obj.GLGeom.nLayout;

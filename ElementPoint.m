@@ -17,7 +17,7 @@ classdef ElementPoint < VisibleElement
 
         function Draw(obj, gl, camAttrib)
             %DRAW dessine cet objet
-            if obj.visible == 0
+            if obj.isVisible() == false
                 return
             end
             obj.CommonDraw(gl, camAttrib);

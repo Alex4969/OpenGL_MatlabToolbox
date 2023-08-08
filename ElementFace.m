@@ -4,18 +4,17 @@ classdef ElementFace < VisibleElement
     properties %(GetAccess = public, SetAccess = protected)
         texture
         textureUpdate = false
-        epaisseurArretes = 1                    % float
-        epaisseurPoints  = 2                    % float
-        couleur          = [1 0 0 1]            % 1x4
-        couleurArretes   = [0 1 0 1]            % 1x4
-        couleurPoints    = [0 0 1 1]            % 1x4
+        epaisseurArretes = 1                % float
+        epaisseurPoints  = 2                % float
+        couleur          = [1 0 0 1]        % 1x4
+        couleurArretes   = [0 1 0 1]        % 1x4
+        couleurPoints    = [0 0 1 1]        % 1x4
     end
 
     properties (GetAccess = public, SetAccess = protected)
         quoiAfficher int32   % 1x3 logical, vrai s'il faut afficher Face, Arrete, Points
     end  
    
-    
     methods
         function obj = ElementFace(gl, aGeom)
             %FACEELEMENT 
@@ -24,11 +23,11 @@ classdef ElementFace < VisibleElement
             obj.typeShading = 'D';
             obj.quoiAfficher = 1;
             obj.changerProg(gl);
-        end
+        end % fin constructeur ElementFace
 
         function Draw(obj, gl, camAttrib)
             %DRAW dessine cet objet
-            if obj.visible == 0
+            if ~obj.isVisible()
                 return
             end
             obj.CommonDraw(gl, camAttrib);
@@ -68,7 +67,7 @@ classdef ElementFace < VisibleElement
             obj.setModeRendu('T');
             obj.textureUpdate = true;
             obj.texture = fileName;
-        end
+        end % fin de useTexture
 
         function setEpaisseurArretes(obj, newEp)
             obj.epaisseurArretes = newEp;

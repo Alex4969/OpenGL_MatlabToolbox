@@ -1,6 +1,5 @@
 classdef Ensemble < handle
-    %ENSEMBLE Summary of this class goes here
-    %   Detailed explanation goes here
+    %ENSEMBLE permet de regrouper plusieurs element pour les déplacer ensemble
 
     properties (GetAccess = public, SetAccess = protected)
         id int32
@@ -27,9 +26,23 @@ classdef Ensemble < handle
 
         function mod = getModelMatrix(obj)
             mod = obj.groupMatrix;
-        end
+        end % fin de getModelMatrix
 
-        function AddToModelMatrix(obj, model, after)
+        function b = isVisible(obj)
+            b = obj.visible;
+        end % fin de isVisible
+
+        function elem = removeElem(obj, elemId)
+            if obj.sousElements.isKey(elemId)
+                elem = obj.sousElements(elemId);
+                elem.setParent([]);
+                obj.sousElements.remove(elemId);
+            else
+                disp('l objet a supprimer n est pas dans la liste')
+            end
+        end % fin de removeElem
+
+        function modifyModelMatrix(obj, model, after)
             %ADDTOMODELMATRIX multiplie la nouvelle matrice modele par
             %celle deja existante (avant ou apres selon after)
             if (nargin == 3 && after == 1)
