@@ -5,7 +5,7 @@ classdef ElementFace < VisibleElement
         texture
         textureUpdate = false
         epaisseurArretes = 1                    % float
-        epaisseurPoints  = 4                    % float
+        epaisseurPoints  = 2                    % float
         couleur          = [1 0 0 1]            % 1x4
         couleurArretes   = [0 1 0 1]            % 1x4
         couleurPoints    = [0 0 1 1]            % 1x4
@@ -55,6 +55,7 @@ classdef ElementFace < VisibleElement
                 end
                 if bitand(obj.quoiAfficher, 4) > 0
                     obj.shader.SetUniform4f(gl, 'uPointColor', obj.couleurPoints);
+                    obj.shader.SetUniform1f(gl, 'uPointSize', obj.epaisseurPoints);
                 end
             end
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
@@ -128,4 +129,3 @@ classdef ElementFace < VisibleElement
         end % fin de testNewCol
     end % fin des methodes privees
 end % fin classe ElementFace
-
