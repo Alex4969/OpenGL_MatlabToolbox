@@ -16,7 +16,7 @@ classdef Framebuffer < handle
             CheckError(gl, 'Erreur lors de la création du frameBuffer');
 
             [pos, idx, mapping] = generatePlan(2, 2);
-            planGeom = Geometry(0, pos, idx);
+            planGeom = MyGeom(0, pos, idx, 'face');
             obj.forme = ElementFace(gl, planGeom);
             obj.forme.typeOrientation = 0;
             obj.forme.AddMapping(mapping);

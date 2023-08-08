@@ -73,26 +73,20 @@ classdef Scene3D < handle
             addlistener(obj,'evt_update',@obj.cbk_update);
         end % fin du constructeur de Scene3D
 
-        function elem = AjouterTexte(obj, id, texte, police, typeAncre)
-            if nargin == 4, typeAncre = 0; end
-            elem = ElementTexte(obj.getGL(), id, texte, police, typeAncre);
-            obj.mapElements(id) = elem;
-            obj.context.release();
-        end % fin de ajouterTexte
-
-        function elem = AjouterGeom(obj, aGeom, type)
-            if nargin == 2, type = 'face'; end
+        function elem = AddComponent(obj, comp)
             gl = obj.getGL();
-            if isKey(obj.mapElements, aGeom.id)
+            if isKey(obj.mapElements, comp.id)
                 warning('Id deja existante remplace l ancient element');
             end
-            switch type
+            switch comp.type
                 case 'face'
-                    elem = ElementFace(gl, aGeom);
+                    elem = ElementFace(gl, comp);
                 case 'ligne'
-                    elem = ElementLigne(gl, aGeom);
+                    elem = ElementLigne(gl, comp);
                 case 'point'
-                    elem = ElementPoint(gl, aGeom);
+                    elem = ElementPoint(gl, comp);
+                case 'texte'
+                    elem = ElementTexte(gl, comp);
             end
             obj.mapElements(elem.getId()) = elem;
             addlistener(elem,'evt_update',@obj.cbk_update);
@@ -109,6 +103,7 @@ classdef Scene3D < handle
         end % fin de retirerObjet
 
         function Draw(obj)
+            tic
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
             obj.lumiere.remplirUbo(gl);
@@ -188,22 +183,22 @@ classdef Scene3D < handle
             obj.axesId = -1;
             tailleAxe = 50;
             [pos, idx, color] = generateAxis(-tailleAxe, tailleAxe);
-            axesGeom = Geometry(obj.axesId, pos, idx);
-            elem = obj.AjouterGeom(axesGeom, 'ligne');
+            axesGeom = MyGeom(obj.axesId, pos, idx, 'ligne');
+            elem = obj.AddComponent(axesGeom);
             elem.AddColor(color);
 
             obj.grilleId = -2;
             [pos, idx] = generateGrid(tailleAxe, 2);
-            grilleGeom = Geometry(obj.grilleId, pos, idx);
-            elem = obj.AjouterGeom(grilleGeom, 'ligne');
+            grilleGeom = MyGeom(obj.grilleId, pos, idx, 'ligne');
+            elem = obj.AddComponent(grilleGeom);
             elem.setEpaisseur(1);
             elem.setCouleur([0.3 0.3 0.3]);
 
             obj.gyroscopeId = -3;
             tailleGysmo = 1;
             [pos, idx, color] = generateAxis(0, tailleGysmo);
-            gysmoGeom = Geometry(obj.gyroscopeId, pos, idx);
-            elem = obj.AjouterGeom(gysmoGeom, 'ligne');
+            gysmoGeom = MyGeom(obj.gyroscopeId, pos, idx, 'ligne');
+            elem = obj.AddComponent(gysmoGeom);
             elem.AddColor(color);
             elem.typeOrientation = 4;
             elem.setEpaisseur(4);

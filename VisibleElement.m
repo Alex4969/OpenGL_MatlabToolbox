@@ -2,8 +2,8 @@ classdef (Abstract) VisibleElement < handle
     %VISIBLEELEMENT 
     
     properties (GetAccess = public, SetAccess = protected)
-        Type string
-        Geom Geometry
+        Type char
+        Geom GeomComponent
         GLGeom GLGeometry
         shader ShaderProgram
         typeShading = 'S'       % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
