@@ -109,14 +109,6 @@ listeId = 31:34;
 ens = viewer.makeGroup(30, listeId, [0 2 0]);
 ens.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
 
-viewer.addEnsemble(30);%mapGroup
-viewer.mapGroup(30).addElement(31);
-
-
-
-viewer.addElement(composant)
-viewer.removeElement(id)
-
 % Ajout texte
 elementTexte = viewer.AjouterTexte(102, 'X', ravie, 0);
 elementTexte.setModelMatrix(MTrans3D([1 0 0]));

@@ -45,6 +45,25 @@ classdef Axes < ElementLigne
             sommetsCouleur = [1.0 0.0 0.0 ; 1.0 0.0 0.0 ; 0.0 1.0 0.0 ; 0.0 1.0 0.0 ; 0.0 0.0 1.0 ; 0.0 0.0 1.0 ];
             indices = [0 1 2 3 4 5];
         end %fin de generateAxes
+
+        function [sommetsValeurs, indices, sommetsCouleur] = generateExtremities(pSize, deb, fin)
+            dist=fin-deb;
+            ext=dist*pSize;
+            sommetsValeurs = [  fin   0.0   0.0 ;       % 0
+                                fin-ext   ext   0.0 ;   % 1
+                                fin-ext   -ext   0.0 ;  % 1
+                                0.0   fin   0.0 ;   % 2 
+                                ext   fin-ext   0.0 ;   % 3
+                                -ext   fin-ext   0.0 ;   % 3                                
+                                0.0   0.0   fin ;   % 4
+                                ext   0.0   fin-ext 
+                                -ext   0.0   fin-ext];  % 5
+            sommetsCouleur = [1.0 0.0 0.0 ; 1.0 0.0 0.0 ; 1.0 0.0 0.0 ;  ...
+                0.0 1.0 0.0 ; 0.0 1.0 0.0 ; 0.0 1.0 0.0 ; ...
+                0.0 0.0 1.0 ; 0.0 0.0 1.0 ; 0.0 0.0 1.0 ];
+            indices = [0 1 0 2 3 4 3 5 6 7 6 8];
+        end %fin de generateAxes
+
     end % fin des methodes static
 
 end % fin classe Axes

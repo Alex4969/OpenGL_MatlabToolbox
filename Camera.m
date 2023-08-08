@@ -223,6 +223,13 @@ classdef Camera < handle
             obj.computeView();
         end
 
+        function faceView(obj)
+            obj.position=[0 0 10];
+            obj.up=[0 1 0];
+            obj.target=[0 0 0];
+            obj.computeView();
+        end        
+
         function xorConstraint(obj, l)
             obj.constraint = bitxor(obj.constraint, l);
             if all(obj.constraint)

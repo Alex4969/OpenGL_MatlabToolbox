@@ -363,7 +363,9 @@ classdef Scene3D < handle
                 case 'o' %origin
                     obj.camera.defaultView;
                 case 'u' %up
-                    obj.camera.upView;                    
+                    obj.camera.upView;    
+                case 'f' %up
+                    obj.camera.faceView;                                            
                 case 'p' %perspective/ortho
                     obj.camera.switchProjType;
                 case '+' %increase cam speed
