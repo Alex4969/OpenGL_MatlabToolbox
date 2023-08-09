@@ -59,7 +59,9 @@ classdef Light < handle
         function setPosition(obj, newPos)
             obj.position = newPos;
             if ~isempty(obj.forme)
-                obj.forme.setModelMatrix(MTrans3D(obj.position));
+                model = obj.forme.Geom.modelMatrix;
+                model(1:3, 4) = newPos';
+                obj.forme.setModelMatrix(model);
             end
             obj.updateNeeded = true;
         end % fin de SetPosition
@@ -75,6 +77,16 @@ classdef Light < handle
         function setDirection(obj, newDir)
             obj.directionLumiere = newDir;
             obj.updateNeeded = true;
+            if ~isempty(obj.forme)
+                xAxis = cross([0 1 0], newDir);
+                xAxis = xAxis/vecnorm(xAxis);
+                yAxis = cross(newDir, xAxis);
+                yAxis = yAxis/vecnorm(yAxis);
+                newMod = [xAxis; yAxis; newDir];
+                newMod(1:3, 4) = obj.position';
+                newMod(4, 4) = 1
+                obj.forme.setModelMatrix(newMod);
+            end
         end % fin de setDirection
 
         function setParam(obj, newParam)
@@ -130,14 +142,13 @@ classdef Light < handle
             obj.updateNeeded = true;
         end % fin de directionalLight
 
-        function spotLight(obj, angle, direction)
+        function spotLight(obj, angle)
             if nargin == 1
-                angle = 20; direction = [0 -1 0];
+                angle = 20;
             end
             angles = [angle angle*1.3];
             angles = cos(deg2rad(angles));
             obj.paramsLumiere = [3 angles];
-            obj.directionLumiere = direction;
             obj.updateNeeded = true;
         end % fin de spotLight
 
@@ -166,9 +177,12 @@ classdef Light < handle
         function cbk_modelUpdate(obj, source, ~)
             % disp('je suis ici');
             newPos = source.modelMatrix(1:3, 4)';
-            if any(newPos == obj.position)
-                obj.setPosition(newPos);
-            end
+            obj.position = newPos;
+            %rot = source.modelMatrix(1:3, 1:3);
+            %newDir = [0 1 0] * rot;
+            %newDir = -newDir;
+            %obj.directionLumiere = newDir;
+            obj.updateNeeded = true;
         end
     end % fin des methodes defauts
 
