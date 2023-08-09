@@ -210,7 +210,7 @@ classdef Camera < handle
         end % fin de rotate
 
         function defaultView(obj)
-            obj.position=[0 0 10];
+            obj.position=[10 10 10];
             obj.up=[0 1 0];
             obj.target=[0 0 0];
             obj.computeView();
