@@ -54,7 +54,7 @@ elem.AddMapping(mappingBoule);
 elem.useTexture('textures/monde.jpg');
 elem.setModelMatrix(MTrans3D([3, 0, 0]));
 elem.ModifyModelMatrix(MRot3D([180 0 0]) * MScale3D(2), 1);
-elem.GenerateNormals();
+elem.AddNormals(posBoule);
 
 % % piece d'echec depuis un fichier
 chessGeom = FileGeom(5, 'objets3D/chess4_ascii.stl', 'face');
@@ -83,7 +83,7 @@ elementTexte.typeOrientation = 2 + 4;
     bouleNormalesGeom = MyGeom(31, posBoule, indBoule, 'face');
     bouleNormalesGeom.setModelMatrix(MTrans3D([0 0.8 0]) * MScale3D(0.8));
     elem = viewer.AddComponent(bouleNormalesGeom);
-    elem.GenerateNormals();
+    elem.AddNormals(posBoule);
     elem.setCouleurArretes([1 0 1 1]);
     
     % autre sphere

@@ -3,7 +3,7 @@ classdef GeomComponent < handle
     %Cette classe ne permet que de faire des test et sera remplacer par la
     %vrai classe Geometrie en fin de projet
     
-    properties
+    properties (GetAccess = public, SetAccess = protected)
         id int32            % id unique pour chaque géometrie, defini par le programmeur
         type string
         listePoints         % matrice nx3 ou nx2 contenant les points dans l'espace

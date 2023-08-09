@@ -19,6 +19,7 @@ classdef Light < handle
         updateNeeded logical
 
         modelListener
+        onCamera logical
     end
     
     methods
@@ -35,6 +36,7 @@ classdef Light < handle
             obj.generateUbo(gl);
             obj.remplirUbo(gl);
             obj.updateNeeded = false;
+            obj.onCamera = false;
         end % fin du constructeur de light
 
         function setForme(obj, elem)
@@ -50,6 +52,19 @@ classdef Light < handle
             obj.modelListener = addlistener(obj.forme.Geom,'modelUpdate',@obj.cbk_modelUpdate);
         end % fin de setForme
 
+        function putOnCamera(obj, b)
+            if nargin == 1, b = true; end
+            obj.onCamera = b;
+            if (~isempty(obj.forme))
+                if (b == true)
+                    obj.forme.visible = false;
+                else 
+                    obj.forme.visible = true;
+                    obj.cbk_modelUpdate(obj.forme.Geom)
+                end
+            end
+        end
+
         function removeForme(obj)
             if ~isempty(obj.forme)
                 obj.forme.setParent([]);
@@ -64,7 +79,14 @@ classdef Light < handle
                 obj.forme.setModelMatrix(model);
             end
             obj.updateNeeded = true;
+            obj.onCamera = false;
         end % fin de SetPosition
+
+        function setPositionCamera(obj, newPos, target)
+            obj.position = newPos;
+            obj.directionLumiere = target - newPos;
+            obj.updateNeeded = true;
+        end
 
         function setColor(obj, newCol)
             obj.couleurLumiere = newCol(1:3);

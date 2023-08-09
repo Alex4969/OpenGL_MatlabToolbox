@@ -318,7 +318,9 @@ classdef Scene3D < handle
                     obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
                 end
             end
-            %obj.lumiere.setPosition([obj.camera.getPosition]);
+            if (obj.lumiere.onCamera == true)
+                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
+            end
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
@@ -368,7 +370,9 @@ classdef Scene3D < handle
         function cbk_MouseWheelMoved(obj,source,event)
             obj.cbk_manager.rmCallback('MouseWheelMoved');
             obj.camera.zoom(event.getWheelRotation());
-            %obj.lumiere.setPosition([obj.camera.getPosition]);
+            if obj.lumiere.onCamera == true
+                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
+            end
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
         end
