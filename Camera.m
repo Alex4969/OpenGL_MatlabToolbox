@@ -287,7 +287,7 @@ classdef Camera < handle
             Mrot(1,1:3) = left;
             Mrot(2,1:3) = newUp;
             Mrot(3,1:3) = forward;
-        end
+        end % fin de computeRotationMatrix
 
         function computeProj(obj)
             if obj.type == 0 % vue ortho

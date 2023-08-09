@@ -115,10 +115,11 @@ elementTexte.typeOrientation = 2 + 4;
     group.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
 
 
-[posBoule, indBoule] = generatePyramide(8, 0.4);
+[posBoule, indBoule] = generateSphere(12, 12, 2*pi, 0.3);
 bouleLightGeom = MyGeom(1000, posBoule, indBoule, 'face');
 elem = viewer.AddComponent(bouleLightGeom);
 viewer.lumiere.setForme(elem);
+elem.setModelMatrix(MTrans3D([0 0 0]));
 
 %%%%  affichage  %%%%
 viewer.Draw();

@@ -77,16 +77,6 @@ classdef Light < handle
         function setDirection(obj, newDir)
             obj.directionLumiere = newDir;
             obj.updateNeeded = true;
-            if ~isempty(obj.forme)
-                xAxis = cross([0 1 0], newDir);
-                xAxis = xAxis/vecnorm(xAxis);
-                yAxis = cross(newDir, xAxis);
-                yAxis = yAxis/vecnorm(yAxis);
-                newMod = [xAxis; yAxis; newDir];
-                newMod(1:3, 4) = obj.position';
-                newMod(4, 4) = 1
-                obj.forme.setModelMatrix(newMod);
-            end
         end % fin de setDirection
 
         function setParam(obj, newParam)
@@ -175,13 +165,8 @@ classdef Light < handle
         end
 
         function cbk_modelUpdate(obj, source, ~)
-            % disp('je suis ici');
             newPos = source.modelMatrix(1:3, 4)';
             obj.position = newPos;
-            %rot = source.modelMatrix(1:3, 1:3);
-            %newDir = [0 1 0] * rot;
-            %newDir = -newDir;
-            %obj.directionLumiere = newDir;
             obj.updateNeeded = true;
         end
     end % fin des methodes defauts
