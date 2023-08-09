@@ -169,28 +169,7 @@ classdef (Abstract) VisibleElement < handle
         end % fin de delete
 
         function changerProg(obj, gl)
-            nLayout = obj.GLGeom.nLayout;
-            typeL = obj.typeShading;
-            if typeL == 'L' && nLayout(4) == 0
-                warning('L objet ne contient pas de normales aux sommets')
-                typeL = 'D';
-            end
-            if nLayout(3) > 0 && isempty(obj.texture)
-                nLayout(3) = 0;
-            end
-            switch obj.typeColoration
-                case 'T' % texture
-                    if nLayout(3) > 0
-                        nLayout(2) = 0;
-                    end
-                case 'C' % color
-                    if nLayout(2) > 0
-                        nLayout(3) = 0;
-                    end
-                case 'U'
-                    nLayout([2, 3]) = 0;
-            end
-            obj.shader = ShaderProgram(gl, nLayout, typeL, obj.Type);
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
         end % fin de changerProg
 
         function CommonDraw(obj, gl, camAttrib)
