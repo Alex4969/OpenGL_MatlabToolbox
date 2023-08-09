@@ -11,6 +11,7 @@ classdef (Abstract) VisibleElement < handle
         newRendu logical
 
         parent
+        geomListener
     end
 
     properties (Access = public)
@@ -31,7 +32,7 @@ classdef (Abstract) VisibleElement < handle
             obj.visible = true;
             obj.typeOrientation = 1;
 
-            addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
+            obj.geomListener = addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
@@ -103,48 +104,15 @@ classdef (Abstract) VisibleElement < handle
             obj.newRendu = true;
         end % fin de AddNormals
 
-        function AddPoints(obj, plusDePoints, plusDeConnectivite)
-            newDim = size(plusDePoints, 2);
-            if newDim ~= size(obj.GLGeom.vertexData, 2)
-                if newDim ~= obj.GLGeom.nLayout(1)
-                    warning('passage de 2D a 3D impossible, Annulation')
-                    return;
-                end
-                warning('Les sommets ne sont pas composés de la même facon, suppression des couleurs')
-                if newDim == 2
-                    obj.typeShading = 'S';
-                else
-                    obj.typeShading = 'D';
-                end
+        function cbk_geomUpdate(obj, source, ~)
+            obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
+            if source.type == "texte"
+                obj.AddMapping(source.mapping);
+                obj.changePolice(source.police.name);
+            else
                 obj.typeColoration = 'U';
                 obj.newRendu = true;
-                nbSommets = size(obj.Geom.listePoints, 1);
-                newPoints = [obj.Geom.listePoints(:, 1:newDim) ; plusDePoints];
-                newConnectivite = plusDeConnectivite + nbSommets;
-                newConnectivite = [obj.Geom.listeConnection, newConnectivite];
-                obj.Geom.nouvelleGeom(newPoints, newConnectivite);
-                obj.GLGeom.nouvelleGeom(newPoints, newConnectivite, true);
-            else
-                nPos = obj.GLGeom.nLayout(1);
-                newPoints = [obj.Geom.listePoints ; plusDePoints(:, 1:nPos)];
-                newVertexData = [obj.GLGeom.vertexData ; plusDePoints];
-                nbSommets = size(obj.Geom.listePoints, 1);
-                newConnectivite = plusDeConnectivite + nbSommets;
-                newConnectivite = [obj.Geom.listeConnection, newConnectivite];
-                obj.Geom.nouvelleGeom(newPoints, newConnectivite);
-                obj.GLGeom.nouvelleGeom(newVertexData, newConnectivite, false);
             end
-        end % fin de AddPoints
-
-        function cbk_geomUpdate(obj, ~, ~)
-            obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection, true);
-            if size(obj.Geom.listePoints, 2) == 2
-                obj.typeShading = 'S';
-            else
-                obj.typeShading = 'D';
-            end
-            obj.typeColoration = 'U';
-            obj.newRendu = true;
         end % fin de cbk_geomUpdate
 
         function GenerateNormals(obj)
@@ -169,28 +137,7 @@ classdef (Abstract) VisibleElement < handle
         end % fin de delete
 
         function changerProg(obj, gl)
-            nLayout = obj.GLGeom.nLayout;
-            typeL = obj.typeShading;
-            if typeL == 'L' && nLayout(4) == 0
-                warning('L objet ne contient pas de normales aux sommets')
-                typeL = 'D';
-            end
-            if nLayout(3) > 0 && isempty(obj.texture)
-                nLayout(3) = 0;
-            end
-            switch obj.typeColoration
-                case 'T' % texture
-                    if nLayout(3) > 0
-                        nLayout(2) = 0;
-                    end
-                case 'C' % color
-                    if nLayout(2) > 0
-                        nLayout(3) = 0;
-                    end
-                case 'U'
-                    nLayout([2, 3]) = 0;
-            end
-            obj.shader = ShaderProgram(gl, nLayout, typeL, obj.Type);
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
         end % fin de changerProg
 
         function CommonDraw(obj, gl, camAttrib)

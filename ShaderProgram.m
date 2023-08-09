@@ -7,21 +7,21 @@ classdef ShaderProgram < handle
     end
     
     methods
-        function obj = ShaderProgram(gl, nLayout, mode, type) %mode = 'D' dur, 'L' lisse, 'S' sans lumiere
+        function obj = ShaderProgram(gl, nLayout, type, typeCol, typeSha)
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
             motCle(1) = "POS" + nLayout(1);
-            if nLayout(2) > 0
+            if typeCol == 'C' && nLayout(2) > 0
                 motCle(2) = "COL" + nLayout(2);
-            elseif nLayout(3) > 0
+            elseif typeCol == 'T' && nLayout(3) > 0
                 motCle(2) = "TEX";
             else
                 motCle(2) = "DEF";
             end
             if type == "Face"
-                if mode ~= 'S'
+                if typeSha ~= 'S'
                     motCle(3) = "LIGHT";
-                    if mode == 'L' && nLayout(4) > 0 
+                    if typeSha == 'L' && nLayout(4) > 0 
                         motCle(4) = "NORM";
                     end
                 end

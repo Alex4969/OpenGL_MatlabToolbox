@@ -3,7 +3,7 @@ classdef GeomComponent < handle
     %Cette classe ne permet que de faire des test et sera remplacer par la
     %vrai classe Geometrie en fin de projet
     
-    properties
+    properties (GetAccess = public, SetAccess = protected)
         id int32            % id unique pour chaque géometrie, defini par le programmeur
         type string
         listePoints         % matrice nx3 ou nx2 contenant les points dans l'espace
@@ -38,23 +38,5 @@ classdef GeomComponent < handle
                 notify(obj, 'modelUpdate')
             end
         end % fin de setModelMatrix
-
-        function ajouterPoints(obj, plusDePoints, plusDeConnectivite)
-            if size(plusDePoints, 2) == size(obj.listePoints, 2)
-                nbSommet = size(obj.listePoints, 1);
-                obj.listePoints = [obj.listePoints ; plusDePoints];
-                obj.listeConnection = [obj.listeConnection, (plusDeConnectivite + nbSommet)];
-                if event.hasListener(obj, 'geomUpdate')
-                    notify(obj, 'geomUpdate');
-                end
-            else 
-                warning('Impossible de passer de la 2D a la 3D')
-            end
-        end % fin de ajouterPoints
-
-        function nouvelleGeom(obj, newPoints, newIndices)
-            obj.listePoints = newPoints;
-            obj.listeConnection = newIndices;
-        end
     end % fin des methodes defaut
 end % fin de la classe geometrie

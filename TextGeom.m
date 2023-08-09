@@ -2,11 +2,11 @@ classdef TextGeom < GeomComponent
     %TEXTGEOM Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties
-        str char
-        police Police
-        ancre int8
-        mapping
+    properties (GetAccess = public, SetAccess = protected)
+        str char        % doit reste un char pout etre lu correctement
+        police Police   % information sur la représentation des caracteres
+        ancre int8      % position de l'ancre par rapport au texte
+        mapping         % mapping de la texture de police
     end
     
     methods
@@ -17,17 +17,36 @@ classdef TextGeom < GeomComponent
             obj.police = police;
             obj.ancre = ancre;
             obj.constructText();
-            obj.type = 'texte';
+            obj.type = "texte";
         end % fin du constructeur TextGeom
 
-        function mapping = getMapping(obj)
-            mapping = obj.mapping;
+        function setPolice(obj, newPolice)
+            obj.police = newPolice;
+            obj.constructText();
+            if event.hasListener(obj, 'geomUpdate')
+                notify(obj, 'geomUpdate')
+            end
+        end
+
+        function setTexte(obj, newTexte)
+            obj.str = newTexte;
+            obj.constructText();
+            if event.hasListener(obj, 'geomUpdate')
+                notify(obj, 'geomUpdate')
+            end
+        end
+
+        function setAncrage(obj, newAncre)
+            %%Faire le changement
+            if event.hasListener(obj, 'geomUpdate')
+                notify(obj, 'geomUpdate')
+            end
         end
 
     end % fin des methodes defauts
 
     methods (Access = private)
-
+        
         function constructText(obj)
             pos = zeros(strlength(obj.str) * 4, 2);
             map = zeros(strlength(obj.str) * 4, 2);

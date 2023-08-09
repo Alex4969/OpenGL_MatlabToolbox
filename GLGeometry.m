@@ -95,13 +95,12 @@ classdef GLGeometry < handle
             gl.glDeleteBuffers(1, obj.EBOBuffer);
         end % fin de delete
 
-        function nouvelleGeom(obj, newVertexData, newIndices, changementDim)
+        function nouvelleGeom(obj, newVertexData, newIndices)
             obj.updateNeeded = true;
-            if changementDim == true
-                obj.nLayout(2:4) = 0;
-            end
             obj.vertexData = newVertexData;
             obj.indexData = uint32(newIndices);
+            nPos = size(newVertexData, 2);
+            obj.nLayout = [nPos, 0, 0, 0];
         end % fin de nouvelleGeom
     end % fin des methodes defauts
 
@@ -129,7 +128,7 @@ classdef GLGeometry < handle
             vertex = vertex';
             sommetsData.put(vertex(:));
             sommetsData.rewind();
-            gl.glBufferData(gl.GL_ARRAY_BUFFER, numel(vertex) * 4, sommetsData, gl.GL_STATIC_DRAW);
+            gl.glBufferData(gl.GL_ARRAY_BUFFER, numel(vertex) * 4, sommetsData, gl.GL_DYNAMIC_DRAW);
         end % fin de fillVBO
 
         function generateEBO(obj, gl)
@@ -145,7 +144,7 @@ classdef GLGeometry < handle
             idxBuffer = java.nio.IntBuffer.allocate(numel(obj.indexData));
             idxBuffer.put(obj.indexData(:));
             idxBuffer.rewind();
-            gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, numel(obj.indexData) * 4, idxBuffer, gl.GL_STATIC_DRAW);
+            gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, numel(obj.indexData) * 4, idxBuffer, gl.GL_DYNAMIC_DRAW);
         end % fin de fillEBO
 
         function declareVertexAttrib(obj, gl)

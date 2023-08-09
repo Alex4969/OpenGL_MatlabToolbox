@@ -54,7 +54,7 @@ elem.AddMapping(mappingBoule);
 elem.useTexture('textures/monde.jpg');
 elem.setModelMatrix(MTrans3D([3, 0, 0]));
 elem.ModifyModelMatrix(MRot3D([180 0 0]) * MScale3D(2), 1);
-elem.GenerateNormals();
+elem.AddNormals(posBoule);
 
 % % piece d'echec depuis un fichier
 chessGeom = FileGeom(5, 'objets3D/chess4_ascii.stl', 'face');
@@ -72,8 +72,8 @@ geomTexte = TextGeom(101, 'Hello World !', ravie, 1);
 elemtexte = viewer.AddComponent(geomTexte);
 elemtexte.setModelMatrix(MTrans3D([2 2.2 2]) * MScale3D(0.4));
 
-geomTexte = TextGeom(102, 'X', ravie, 0);
-elementTexte = viewer.AddComponent(geomTexte);
+geomTexteX = TextGeom(102, 'X', ravie, 0);
+elementTexte = viewer.AddComponent(geomTexteX);
 elementTexte.setModelMatrix(MTrans3D([1 0 0]));
 elementTexte.setCouleur([1 0 0]);
 elementTexte.typeOrientation = 2 + 4;
@@ -83,7 +83,7 @@ elementTexte.typeOrientation = 2 + 4;
     bouleNormalesGeom = MyGeom(31, posBoule, indBoule, 'face');
     bouleNormalesGeom.setModelMatrix(MTrans3D([0 0.8 0]) * MScale3D(0.8));
     elem = viewer.AddComponent(bouleNormalesGeom);
-    elem.GenerateNormals();
+    elem.AddNormals(posBoule);
     elem.setCouleurArretes([1 0 1 1]);
     
     % autre sphere
@@ -115,10 +115,15 @@ elementTexte.typeOrientation = 2 + 4;
     group.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
 
 
+
 [posBoule, indBoule] = generatePyramide(50, 1);
+
+%[posBoule, indBoule] = generateSphere(12, 12, 2*pi, 0.3);
+
 bouleLightGeom = MyGeom(1000, posBoule, indBoule, 'face');
 elem = viewer.AddComponent(bouleLightGeom);
 viewer.lumiere.setForme(elem);
+elem.setModelMatrix(MTrans3D([0 0 0]));
 
 %%%%  affichage  %%%%
 viewer.Draw();
