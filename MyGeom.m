@@ -13,6 +13,7 @@ classdef MyGeom < GeomComponent
             obj.listePoints = points;
             obj.listeConnection = connectivite;
             obj.type = type;
+            obj.enable = true;
         end % fin constructeur MyGeom
     end % fin des methodes defauts
 end % Fin classe GeomComponent

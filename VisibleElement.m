@@ -6,7 +6,7 @@ classdef (Abstract) VisibleElement < handle
         Geom GeomComponent
         GLGeom GLGeometry
         shader ShaderProgram
-        typeShading = 'S'       % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
+        typeShading    = 'S'    % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
         typeColoration = 'U'    % 'U' : Uniforme, 'C' : Color, 'T' : Texture
         newRendu logical
 
@@ -35,10 +35,10 @@ classdef (Abstract) VisibleElement < handle
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
-            if isempty(obj.parent)
-                model = obj.Geom.modelMatrix;
-            else
+            if isa(obj.parent, 'Ensemble')
                 model = obj.parent.getModelMatrix() * obj.Geom.modelMatrix;
+            else
+                model = obj.Geom.modelMatrix;
             end
         end % fin de getModelMatrix
 
@@ -57,10 +57,10 @@ classdef (Abstract) VisibleElement < handle
         end % fin de getPosition
 
         function b = isVisible(obj)
-            if isempty(obj.parent)
-                b = obj.visible;
-            else
+            if isa(obj.parent, 'Ensemble')
                 b = (obj.visible && obj.parent.isVisible());
+            else
+                b = obj.visible;
             end
         end % fin de isVisible
 
@@ -202,54 +202,34 @@ classdef (Abstract) VisibleElement < handle
             end
             obj.shader.Bind(gl);
             obj.GLGeom.Bind(gl);
-
-            %FAUX typeOrientation '1000' fixe, '0100' Normale a l'ecran, '0010' orthonorme, '0001' perspective, '0' rien
-            if obj.typeOrientation == 0 % seule modelMatrix (dans le repere ecran normalise) active
-                disp([ 'ID = ' num2str(obj.getId) ' obj.typeOrientation == 0 : SEULE MODELMATRIX IN SCREEN NORMALIZED COORDINATE'])
+            %typeOrientation '1000' fixe, '0100' Normale a l'ecran, '0010' orthonorme, '0001' perspective, '0' rien
             model = obj.getModelMatrix();
+            if obj.typeOrientation == 0 % seule modelMatrix (dans le repere ecran normalise) active
                 cam = eye(4);
             elseif obj.typeOrientation == 1 %'0001' PERSPECTIVE
-                disp([ 'ID = ' num2str(obj.getId) ' obj.typeOrientation == 1 : PERSPECTIVE'])
                 cam = camAttrib.proj * camAttrib.view;
             elseif obj.typeOrientation == 8 %'1000' fixe (pour texte)
                 % on utilise la matrice modele pour positionner le texte
                 % dans le repere ecran (-1;+1)
                 % pour changer la taille, on change le scaling de la
                 % matrice model
-                disp([ 'ID = ' num2str(obj.getId) ' obj.typeOrientation == 8 : EFFET ?'])
                 model(1, 4) = model(1, 4) * camAttrib.maxX;
                 model(2, 4) = model(2, 4) * camAttrib.maxY;
                 model(3, 4) = -camAttrib.near;
                 model = model * MScale3D(camAttrib.coef);%coef pour dimension identique en ortho ou perspective
                 cam =  camAttrib.proj;
             else
-                if bitand(obj.typeOrientation, 2) > 0 %0010 'face a l'ecran
-                    disp([ 'ID = ' num2str(obj.getId) ' bitand(obj.typeOrientation, 2) > 0'])
-                % if obj.typeOrientation == 3
-                    model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3); % idem : inv(camAttrib.view(1:3, 1:3)) * model(1:3, 1:3)
+                if bitand(obj.typeOrientation, 2) > 0 % 0010 'face a l'ecran
+                    model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3);
                     cam =  camAttrib.proj * camAttrib.view;
                     % cam*model = proj*view*inv(view)*model
-                    % model(1:3,4)=[2 1 0]';
                 end
                 if bitand(obj.typeOrientation, 4) > 0 %'0100' coin inferieur gauche 
                     % rotation seulement activée sur un point de l'ecran
-                    disp([ 'ID = ' num2str(obj.getId) ' bitand(obj.typeOrientation, 4) > 0'])
-                    camAttrib.ratio
-                % if obj.typeOrientation == 4
-                    T=Translation3D([2 0 0]);
-                    cam = MProj3D('O', [camAttrib.ratio*16 16 1 200]) * camAttrib.view;
-                    % cam = MProj3D('P', [camAttrib.ratio 30 1 200]) * camAttrib.view*T.M;
-% cam = MProj3D('O', [camAttrib.ratio*1 1 1 200]) * camAttrib.view;
-% camAttrib.view
+                    cam = MProj3D('O', [camAttrib.ratio*16 16 1 20]) * camAttrib.view;
                     cam(1,4) = -0.97 + 0.1/camAttrib.ratio;
                     cam(2,4) = -0.87;
                     cam(3,4) =  0;
-                    % model=T.M;
-                    % cam=eye(4);
-                    % if obj.getId==-3
-                    %     obj.setModelMatrix(model);
-                    % end
-                    
                 end
             end
             obj.shader.SetUniformMat4(gl, 'uCamMatrix', cam);

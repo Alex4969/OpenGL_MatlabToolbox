@@ -57,7 +57,7 @@ classdef Scene3D < handle
             % gl.glEnable(gl.GL_CULL_FACE); % optimisation : supprime l'affichage des faces arrieres
 
             obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
-            obj.lumiere = Light(gl, [obj.camera.getPosition], [1 1 1]);
+            obj.lumiere = Light(gl);
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
             obj.context.release();
@@ -76,6 +76,10 @@ classdef Scene3D < handle
         end % fin du constructeur de Scene3D
 
         function elem = AddComponent(obj, comp)
+            if ~isa(comp, 'GeomComponent')
+                warning('pas possible d ajouter un objet de ce type');
+                return
+            end
             gl = obj.getGL();
             if isKey(obj.mapElements, comp.id)
                 warning('Id deja existante remplace l ancient element');
@@ -144,9 +148,6 @@ classdef Scene3D < handle
                 listeElem{i}.delete(gl);
             end
             Texture.DeleteAll(gl);
-            if ~isempty(obj.lumiere.forme)
-                obj.lumiere.forme.delete(gl);
-            end
             obj.context.release();
         end % fin de delete
 
@@ -317,7 +318,7 @@ classdef Scene3D < handle
                     obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
                 end
             end
-            obj.lumiere.setPosition([obj.camera.getPosition]);
+            %obj.lumiere.setPosition([obj.camera.getPosition]);
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
@@ -335,9 +336,9 @@ classdef Scene3D < handle
                 case 'o' %origin
                     obj.camera.defaultView;
                 case 'u' %up
-                    obj.camera.upView;    
+                    obj.camera.upView;
                 case 'f' %up
-                    obj.camera.faceView;                                            
+                    obj.camera.faceView;    
                 case 'p' %perspective/ortho
                     obj.camera.switchProjType;
                 case '+' %increase cam speed
@@ -367,7 +368,7 @@ classdef Scene3D < handle
         function cbk_MouseWheelMoved(obj,source,event)
             obj.cbk_manager.rmCallback('MouseWheelMoved');
             obj.camera.zoom(event.getWheelRotation());
-            obj.lumiere.setPosition([obj.camera.getPosition]);
+            %obj.lumiere.setPosition([obj.camera.getPosition]);
             obj.Draw();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
         end

@@ -1,6 +1,7 @@
 function [pos, ind, mapping, norm] = generateCylinder(nPointsCercle, angleMax, rayon, hauteur, ferme)
 %GENERATECYLINDER genere un cylinder avec nPointsCercle par cercle
-%angle pour avoir des d
+% angle permet d'avoir des cylindre par complet
+% si ferme = 1, les extremités du cylindre sont fermés, sinon c'est un tube
     if nargin < 2
         angleMax = 2 * pi;
     elseif angleMax > 2*pi

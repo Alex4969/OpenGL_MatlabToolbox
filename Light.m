@@ -16,13 +16,15 @@ classdef Light < handle
 
         UBOId               % uniform block
         UBOBuffer           % uniform block buffer
-        updateNeeded = true
+        updateNeeded logical
+
+        modelListener
     end
     
     methods
         function obj = Light(gl, pos, col, dir, param)
             %LIGHT Construct an instance of this class
-            if nargin < 2, pos   = [-5 -5  5]; end
+            if nargin < 2, pos   = [ 5  5  5]; end
             if nargin < 3, col   = [ 1  1  1]; end
             if nargin < 4, dir   = [ 0 -1  0]; end
             if nargin < 5, param = [ 0  0  0]; end
@@ -31,14 +33,28 @@ classdef Light < handle
             obj.directionLumiere = dir;
             obj.paramsLumiere = param;
             obj.generateUbo(gl);
-            obj.updateNeeded = true;
+            obj.remplirUbo(gl);
+            obj.updateNeeded = false;
         end % fin du constructeur de light
 
         function setForme(obj, elem)
+            if ~isempty(obj.forme)
+                obj.forme.setParent([]);
+                delete(obj.modelListener);
+            end
             obj.forme = elem;
             obj.forme.setModelMatrix(MTrans3D(obj.position));
-            obj.forme.setCouleurFaces(obj.couleurLumiere);
-        end % fin de SetForme
+            obj.forme.setCouleur(obj.couleurLumiere);
+            obj.forme.setParent(obj);
+            obj.forme.setModeRendu('U', 'S');
+            obj.modelListener = addlistener(obj.forme.Geom,'modelUpdate',@obj.cbk_modelUpdate);
+        end % fin de setForme
+
+        function removeForme(obj)
+            if ~isempty(obj.forme)
+                obj.forme.setParent([]);
+            end
+        end % fin de removeForme
 
         function setPosition(obj, newPos)
             obj.position = newPos;
@@ -49,9 +65,9 @@ classdef Light < handle
         end % fin de SetPosition
 
         function setColor(obj, newCol)
-            obj.couleurLumiere = newCol;
-            if ~isempty(obj.forme)
-                obj.forme.setCouleurFaces(newCol);
+            obj.couleurLumiere = newCol(1:3);
+            if ~isempty(obj.forme) && any(obj.forme.couleur(1:3) ~= obj.couleurLumiere)
+                obj.forme.setCouleur(obj.couleurLumiere);
             end
             obj.updateNeeded = true;
         end % fin de setCouleur
@@ -59,12 +75,12 @@ classdef Light < handle
         function setDirection(obj, newDir)
             obj.directionLumiere = newDir;
             obj.updateNeeded = true;
-        end
+        end % fin de setDirection
 
         function setParam(obj, newParam)
             obj.paramsLumiere = newParam;
             obj.updateNeeded = true;
-        end
+        end % fin de setParam
 
         function pos = getPosition(obj)
             pos = obj.position;
@@ -145,6 +161,14 @@ classdef Light < handle
                 gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, 0);
             end
             obj.updateNeeded = false;
+        end
+
+        function cbk_modelUpdate(obj, source, ~)
+            % disp('je suis ici');
+            newPos = source.modelMatrix(1:3, 4)';
+            if any(newPos == obj.position)
+                obj.setPosition(newPos);
+            end
         end
     end % fin des methodes defauts
 
