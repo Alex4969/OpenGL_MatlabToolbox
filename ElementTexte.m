@@ -5,6 +5,7 @@ classdef ElementTexte < VisibleElement
     properties (GetAccess = public, SetAccess = protected)
         couleur = [1 1 1 1]    % 1x4 double entre 0 et 1
         texture
+        textureUpdate logical = false
     end
     
     methods
@@ -12,7 +13,7 @@ classdef ElementTexte < VisibleElement
             %ELEMENTTEXTE
             obj@VisibleElement(gl, geomComp);
             obj.Type = 'Texte';
-            obj.AddMapping(obj.Geom.getMapping());
+            obj.AddMapping(obj.Geom.mapping);
             obj.typeOrientation = 2; % normal a l'ecran
             obj.typeColoration = 'T';
             obj.texture = Texture(gl, obj.Geom.police.name + ".png");
@@ -23,6 +24,10 @@ classdef ElementTexte < VisibleElement
             %DRAW dessine cet objet
             if obj.isVisible() == false
                 return
+            end
+            if obj.textureUpdate == true
+                obj.texture = Texture(gl, obj.texture);
+                obj.textureUpdate = false;
             end
             obj.CommonDraw(gl, camAttrib);
 
@@ -45,6 +50,11 @@ classdef ElementTexte < VisibleElement
             end
             notify(obj,'evt_update');
         end % fin setCouleurFond
+
+        function changePolice(obj, policeName)
+            obj.texture = policeName + ".png";
+            obj.textureUpdate = true;
+        end % fin de changePolice
 
         function sNew = reverseSelect(obj, s)
             sNew.id          = obj.getId();

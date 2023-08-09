@@ -32,6 +32,9 @@ classdef MyGeom < GeomComponent
         function nouvelleGeom(obj, newPoints, newIndices)
             obj.listePoints = newPoints;
             obj.listeConnection = newIndices;
+            if event.hasListener(obj, 'geomUpdate')
+                notify(obj, 'geomUpdate');
+            end
         end
     end % fin des methodes defauts
 end % Fin classe GeomComponent

@@ -104,15 +104,15 @@ classdef (Abstract) VisibleElement < handle
             obj.newRendu = true;
         end % fin de AddNormals
 
-        function cbk_geomUpdate(obj, ~, ~)
+        function cbk_geomUpdate(obj, source, ~)
             obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
-            if size(obj.Geom.listePoints, 2) == 2
-                obj.typeShading = 'S';
+            if source.type == "texte"
+                obj.AddMapping(source.mapping);
+                obj.changePolice(source.police.name);
             else
-                obj.typeShading = 'D';
+                obj.typeColoration = 'U';
+                obj.newRendu = true;
             end
-            obj.typeColoration = 'U';
-            obj.newRendu = true;
         end % fin de cbk_geomUpdate
 
         function GenerateNormals(obj)

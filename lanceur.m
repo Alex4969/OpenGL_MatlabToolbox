@@ -72,8 +72,8 @@ geomTexte = TextGeom(101, 'Hello World !', ravie, 1);
 elemtexte = viewer.AddComponent(geomTexte);
 elemtexte.setModelMatrix(MTrans3D([2 2.2 2]) * MScale3D(0.4));
 
-geomTexte = TextGeom(102, 'X', ravie, 0);
-elementTexte = viewer.AddComponent(geomTexte);
+geomTexteX = TextGeom(102, 'X', ravie, 0);
+elementTexte = viewer.AddComponent(geomTexteX);
 elementTexte.setModelMatrix(MTrans3D([1 0 0]));
 elementTexte.setCouleur([1 0 0]);
 elementTexte.typeOrientation = 2 + 4;
