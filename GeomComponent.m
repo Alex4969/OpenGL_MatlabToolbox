@@ -38,23 +38,5 @@ classdef GeomComponent < handle
                 notify(obj, 'modelUpdate')
             end
         end % fin de setModelMatrix
-
-        function ajouterPoints(obj, plusDePoints, plusDeConnectivite)
-            if size(plusDePoints, 2) == size(obj.listePoints, 2)
-                nbSommet = size(obj.listePoints, 1);
-                obj.listePoints = [obj.listePoints ; plusDePoints];
-                obj.listeConnection = [obj.listeConnection, (plusDeConnectivite + nbSommet)];
-                if event.hasListener(obj, 'geomUpdate')
-                    notify(obj, 'geomUpdate');
-                end
-            else 
-                warning('Impossible de passer de la 2D a la 3D')
-            end
-        end % fin de ajouterPoints
-
-        function nouvelleGeom(obj, newPoints, newIndices)
-            obj.listePoints = newPoints;
-            obj.listeConnection = newIndices;
-        end
     end % fin des methodes defaut
 end % fin de la classe geometrie

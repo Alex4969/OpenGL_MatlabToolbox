@@ -114,7 +114,6 @@ classdef Scene3D < handle
         end % fin de RemoveComponent
 
         function Draw(obj)
-            tic
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
             obj.lumiere.remplirUbo(gl);
@@ -273,7 +272,7 @@ classdef Scene3D < handle
     end % fin des methodes privees
 
     methods % callback
-        function cbk_MousePressed(obj,source,event)
+        function cbk_MousePressed(obj, ~,event)
             %disp('MousePressed')
             obj.startX=event.getPoint.getX();
             obj.startY=event.getPoint.getY();
@@ -295,11 +294,11 @@ classdef Scene3D < handle
             end
         end
 
-        function cbk_MouseReleased(obj,source,event)
+        function cbk_MouseReleased(~,~,~)
             disp('MouseReleased')
         end
 
-        function cbk_MouseDragged(obj,source,event)
+        function cbk_MouseDragged(obj, ~, event)
             obj.cbk_manager.rmCallback('MouseDragged');
             %disp('MouseDragged')
             posX = event.getX();
@@ -325,7 +324,7 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 
-        function cbk_KeyPressed(obj,source,event)
+        function cbk_KeyPressed(obj, ~, event)
             % disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
             redraw = true;
             switch event.getKeyChar()
@@ -367,7 +366,7 @@ classdef Scene3D < handle
             end
         end
 
-        function cbk_MouseWheelMoved(obj,source,event)
+        function cbk_MouseWheelMoved(obj, ~,event)
             obj.cbk_manager.rmCallback('MouseWheelMoved');
             obj.camera.zoom(event.getWheelRotation());
             if obj.lumiere.onCamera == true
@@ -377,7 +376,7 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
         end
     
-        function cbk_ComponentResized(obj,source,event)
+        function cbk_ComponentResized(obj, source, ~)
             obj.cbk_manager.rmCallback('ComponentResized');
             w=source.getSize.getWidth;
             h=source.getSize.getHeight;
@@ -390,9 +389,9 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
 
-        function cbk_update(obj,source,event)
+        function cbk_update(obj, ~, ~)
             disp('cbk_Update');
-            % obj.Draw;
+            obj.Draw;
         end
     end % fin des methodes callback
 end % fin de la classe Scene3D

@@ -11,6 +11,7 @@ classdef (Abstract) VisibleElement < handle
         newRendu logical
 
         parent
+        geomListener
     end
 
     properties (Access = public)
@@ -31,7 +32,7 @@ classdef (Abstract) VisibleElement < handle
             obj.visible = true;
             obj.typeOrientation = 1;
 
-            addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
+            obj.geomListener = addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
@@ -103,41 +104,8 @@ classdef (Abstract) VisibleElement < handle
             obj.newRendu = true;
         end % fin de AddNormals
 
-        function AddPoints(obj, plusDePoints, plusDeConnectivite)
-            newDim = size(plusDePoints, 2);
-            if newDim ~= size(obj.GLGeom.vertexData, 2)
-                if newDim ~= obj.GLGeom.nLayout(1)
-                    warning('passage de 2D a 3D impossible, Annulation')
-                    return;
-                end
-                warning('Les sommets ne sont pas composés de la même facon, suppression des couleurs')
-                if newDim == 2
-                    obj.typeShading = 'S';
-                else
-                    obj.typeShading = 'D';
-                end
-                obj.typeColoration = 'U';
-                obj.newRendu = true;
-                nbSommets = size(obj.Geom.listePoints, 1);
-                newPoints = [obj.Geom.listePoints(:, 1:newDim) ; plusDePoints];
-                newConnectivite = plusDeConnectivite + nbSommets;
-                newConnectivite = [obj.Geom.listeConnection, newConnectivite];
-                obj.Geom.nouvelleGeom(newPoints, newConnectivite);
-                obj.GLGeom.nouvelleGeom(newPoints, newConnectivite, true);
-            else
-                nPos = obj.GLGeom.nLayout(1);
-                newPoints = [obj.Geom.listePoints ; plusDePoints(:, 1:nPos)];
-                newVertexData = [obj.GLGeom.vertexData ; plusDePoints];
-                nbSommets = size(obj.Geom.listePoints, 1);
-                newConnectivite = plusDeConnectivite + nbSommets;
-                newConnectivite = [obj.Geom.listeConnection, newConnectivite];
-                obj.Geom.nouvelleGeom(newPoints, newConnectivite);
-                obj.GLGeom.nouvelleGeom(newVertexData, newConnectivite, false);
-            end
-        end % fin de AddPoints
-
         function cbk_geomUpdate(obj, ~, ~)
-            obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection, true);
+            obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
             if size(obj.Geom.listePoints, 2) == 2
                 obj.typeShading = 'S';
             else
