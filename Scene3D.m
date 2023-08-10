@@ -54,6 +54,7 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_LINE_SMOOTH);
             gl.glEnable(gl.GL_BLEND);
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
+            gl.glEnable(gl.GL_DEPTH_TEST);
             % gl.glEnable(gl.GL_CULL_FACE); % optimisation : supprime l'affichage des faces arrieres
 
             obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
@@ -66,7 +67,7 @@ classdef Scene3D < handle
             obj.cbk_manager = javacallbackmanager(obj.canvas);
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MousePressed');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseReleased');
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
+            %obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
 
             obj.cbk_manager.setMethodCallbackWithSource(obj,'KeyPressed');
@@ -119,7 +120,6 @@ classdef Scene3D < handle
             obj.lumiere.remplirUbo(gl);
             obj.camera.remplirUbo(gl);
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
-            gl.glEnable(gl.GL_DEPTH_TEST);
 
             camAttrib = obj.camera.getAttributes();
             %dessin des objets ajouter a la scene
@@ -267,14 +267,22 @@ classdef Scene3D < handle
                 elem.Draw(gl, camAttrib);
                 elem.setShaderBack(oldShader, oldColo);
             end
+            shader2D.delete(gl);
+            shader3D.delete(gl);
 
             %lire le pixel de couleurs -> obtenir l'id
-            elemId = 0;
+            x = obj.startX;
+            y = obj.canvas.getHeight() - obj.startY;
+            buffer = java.nio.IntBuffer.allocate(1);
+            gl.glReadPixels(x, y, 1, 1, gl.GL_RED_INTEGER, gl.GL_INT, buffer);
+            elemId = typecast(buffer.array(), 'int32');
 
             %lire le pixel de profondeur -> obtenir la position projete dans le monde
 
             %unbind le frameBuffer
             obj.framebuffer.UnBind(gl);
+
+            obj.context.release();
         end
     end % fin des methodes privees
 
@@ -311,27 +319,27 @@ classdef Scene3D < handle
 
         function cbk_MouseDragged(obj, ~, event)
             obj.cbk_manager.rmCallback('MouseDragged');
-            %disp('MouseDragged')
-            posX = event.getX();
-            dx = posX - obj.startX;
-            obj.startX = posX;
-            posY = event.getY();
-            dy = posY - obj.startY;
-            obj.startY = posY;
-
-            mod = event.getModifiers();
-            ctrlPressed = bitand(mod,event.CTRL_MASK);
-            if ctrlPressed
-                obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-            else
-                if (obj.mouseButton == 3)
-                    obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-                end
-            end
-            if (obj.lumiere.onCamera == true)
-                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
-            end
-            obj.DrawScene();
+            disp('MouseDragged')
+            % posX = event.getX();
+            % dx = posX - obj.startX;
+            % obj.startX = posX;
+            % posY = event.getY();
+            % dy = posY - obj.startY;
+            % obj.startY = posY;
+            % 
+            % mod = event.getModifiers();
+            % ctrlPressed = bitand(mod,event.CTRL_MASK);
+            % if ctrlPressed
+            %     obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+            % else
+            %     if (obj.mouseButton == 3)
+            %         obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+            %     end
+            % end
+            % if (obj.lumiere.onCamera == true)
+            %     obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
+            % end
+            % obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 

@@ -22,7 +22,7 @@ classdef Framebuffer < handle
             gl.glBindTexture(gl.GL_TEXTURE_2D, obj.TexId);
 
             gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
-            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB32UI, width, height, 0, gl.GL_RGB_INTEGER, gl.GL_UNSIGNED_INT, []);
+            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_R32I, width, height, 0, gl.GL_RED_INTEGER, gl.GL_INT, []);
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST);
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST);
             gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_TEXTURE_2D, obj.TexId, 0);
@@ -35,16 +35,16 @@ classdef Framebuffer < handle
             obj.UnBind(gl);
         end % fin du constructeur Framebuffer
 
-        function Resize(obj, gl, width, height)
-            obj.Bind(gl);
-            gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, obj.FBOId);
-            gl.glActiveTexture(gl.GL_TEXTURE0);
-            gl.glBindTexture(gl.GL_TEXTURE_2D, obj.TexId);
-
-            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
-            gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, width, height);
-            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, width, height, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
-        end % fin de Resize
+        % function Resize(obj, gl, width, height)
+        %     obj.Bind(gl);
+        %     gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, obj.FBOId);
+        %     gl.glActiveTexture(gl.GL_TEXTURE0);
+        %     gl.glBindTexture(gl.GL_TEXTURE_2D, obj.TexId);
+        % 
+        %     gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
+        %     gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, width, height);
+        %     gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, width, height, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
+        % end % fin de Resize
 
         function Bind(obj, gl)
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, obj.FBOId);
