@@ -69,6 +69,7 @@ classdef GLGeometry < handle
 
         function Bind(obj, gl)
             %BIND Met en contexte le vertexBuffer. S'il a été modifié, applique la modification
+            CheckError(gl, 'Erreur avant  le Bind');
             gl.glBindVertexArray(obj.VAOId);
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
             CheckError(gl, 'Erreur du Bind');

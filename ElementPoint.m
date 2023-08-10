@@ -23,7 +23,9 @@ classdef ElementPoint < VisibleElement
             obj.CommonDraw(gl, camAttrib);
 
             gl.glPointSize(obj.epaisseur);
-            if obj.typeColoration ~= 'I'
+            if obj.typeColoration == 'I'
+                obj.shader.SetUniform1i(gl, 'id', obj.getId());
+            else
                 if obj.typeColoration == 'C' && obj.GLGeom.nLayout(2) == 0
                     obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
                 end

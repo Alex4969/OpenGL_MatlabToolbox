@@ -30,7 +30,9 @@ classdef ElementTexte < VisibleElement
                 obj.textureUpdate = false;
             end
             obj.CommonDraw(gl, camAttrib);
-            if obj.typeColoration ~= 'I'
+            if obj.typeColoration == 'I'
+                obj.shader.SetUniform1i(gl, 'id', obj.getId());
+            else
                 obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
                 obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
             end

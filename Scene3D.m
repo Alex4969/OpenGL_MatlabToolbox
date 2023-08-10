@@ -247,8 +247,10 @@ classdef Scene3D < handle
         function elemId = pickObject(obj)
             disp('pickObject');
             gl = obj.getGL();
+            CheckError(gl, 'debut de pick')
             %bind frameBuffer
             obj.framebuffer.Bind(gl);
+            gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
 
             % resize frameBuffer
 
@@ -273,15 +275,25 @@ classdef Scene3D < handle
             %lire le pixel de couleurs -> obtenir l'id
             x = obj.startX;
             y = obj.canvas.getHeight() - obj.startY;
+            % buffer = java.nio.FloatBuffer.allocate(1);
+            % gl.glReadPixels(x, y, 1, 1, gl.GL_RED, gl.GL_FLOAT, buffer);
+            % elemId = typecast(buffer.array(), 'single'); % fonctionne
+            % pour la composante rouge dquand je genere l'image similaire
+
+            CheckError(gl, 'la')
             buffer = java.nio.IntBuffer.allocate(1);
             gl.glReadPixels(x, y, 1, 1, gl.GL_RED_INTEGER, gl.GL_INT, buffer);
-            elemId = typecast(buffer.array(), 'int32');
+            elemId = typecast(buffer.array(), 'int32'); % fonctionne
 
             %lire le pixel de profondeur -> obtenir la position projete dans le monde
+            buffer = java.nio.FloatBuffer.allocate(1);
+            gl.glReadPixels(x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
+            profondeur = typecast(buffer.array(), 'single') %fonctionne
 
             %unbind le frameBuffer
             obj.framebuffer.UnBind(gl);
 
+            CheckError(gl, 'fin de pick')
             obj.context.release();
         end
     end % fin des methodes privees
@@ -294,8 +306,11 @@ classdef Scene3D < handle
             obj.mouseButton = event.getButton();
 
             if obj.mouseButton == 1
+                tic
                 elemId = obj.pickObject()
+                toc
             end
+            obj.DrawScene();
             
             %worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
             % disp(worldCoord)

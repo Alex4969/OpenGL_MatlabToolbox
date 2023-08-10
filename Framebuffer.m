@@ -7,25 +7,16 @@ classdef Framebuffer < handle
         FBOId               %Frame Buffer Id
         RBOBuffer           %Render Buffer Object
         RBOId               %Render Buffer Id
-        TexBuffer
-        TexId
+        texture Texture
     end
 
     methods
         function obj = Framebuffer(gl, width, height)
             obj.generateFramebuffer(gl);
             CheckError(gl, 'Erreur lors de la création du frameBuffer');
-
-            obj.TexBuffer = java.nio.IntBuffer.allocate(1);
-            gl.glGenTextures(1, obj.TexBuffer);
-            obj.TexId = typecast(obj.TexBuffer.array, 'uint32');
-            gl.glBindTexture(gl.GL_TEXTURE_2D, obj.TexId);
-
-            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
-            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_R32I, width, height, 0, gl.GL_RED_INTEGER, gl.GL_INT, []);
-            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST);
-            gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST);
-            gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_TEXTURE_2D, obj.TexId, 0);
+            
+            obj.texture = Texture(gl, '', width, height);
+            gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_TEXTURE_2D, obj.texture.textureId, 0);
 
             CheckError(gl, 'Erreur de la texture frameBuffer');
             obj.addRenderBuffer(gl, width, height);
