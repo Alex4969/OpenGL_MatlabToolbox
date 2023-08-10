@@ -1,0 +1,43 @@
+<mxfile host="Electron" modified="2023-08-10T09:55:36.867Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.5 Chrome/114.0.5735.243 Electron/25.3.1 Safari/537.36" etag="hwX8rIV2bKZ36HMckS_N" version="21.6.5" type="device">
+  <diagram name="Page-1" id="yS_WpjF09PlQinqDMSA5">
+    <mxGraphModel dx="1802" dy="908" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="wgXICcgmTGoCi-5RA5b1-1" value="GeomComponant" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="40" width="200" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="wgXICcgmTGoCi-5RA5b1-2" value="FreeShape" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="305" y="290" width="200" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="wgXICcgmTGoCi-5RA5b1-14" value="add Points&lt;br&gt;Modify Points" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="wgXICcgmTGoCi-5RA5b1-2">
+          <mxGeometry x="25" y="55" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="wgXICcgmTGoCi-5RA5b1-3" value="Contraint shape" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="595" y="290" width="200" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="wgXICcgmTGoCi-5RA5b1-4" value="Texte" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="630" y="540" width="130" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="wgXICcgmTGoCi-5RA5b1-8" value="generation geometry" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="wgXICcgmTGoCi-5RA5b1-4">
+          <mxGeometry y="38" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="wgXICcgmTGoCi-5RA5b1-5" value="Forme STL" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="540" width="130" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="wgXICcgmTGoCi-5RA5b1-6" value="Ligne" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="190" y="540" width="130" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="wgXICcgmTGoCi-5RA5b1-7" value="Point" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="540" width="130" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="wgXICcgmTGoCi-5RA5b1-9" value="Axes" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="780" y="540" width="130" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="wgXICcgmTGoCi-5RA5b1-10" value="generation geometry" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="wgXICcgmTGoCi-5RA5b1-9">
+          <mxGeometry y="38" width="130" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
