@@ -197,38 +197,6 @@ classdef Scene3D < handle
             obj.pickingTexture = Framebuffer(obj.getGL(), obj.canvas.getWidth(), obj.canvas.getHeight());
         end % fin de generateInternalObject
 
-        function worldCoord = getWorldCoord(obj, clickPos)
-            gl = obj.getGL();
-            obj.pickingTexture.Bind(gl);
-
-            r = 2;      % click radius (square box) px
-            w = 2*r+1;  % square side length px
-
-            buffer = java.nio.FloatBuffer.allocate(w*w);
-            sz = [obj.canvas.getWidth() ; obj.canvas.getHeight()];
-            clickPos(2) = sz(2) - clickPos(2);
-            gl.glReadPixels(clickPos(1)-r, clickPos(2)-r, w, w, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
-            profondeur = typecast(buffer.array(), 'single');
-            n = (profondeur == 1);
-
-            if all(n, "all")
-                worldCoord = 0;
-                % disp('le lancer n a pas touché de cible');
-            else
-                profondeur(n) = nan; % pourquoi ?
-                profondeur = rot90(profondeur);
-
-                [m, k] = min(profondeur(:));
-                [y, x] = ind2sub([w, w], k);
-                NDC = [ (clickPos + [x-r-0.5 ; r-y+1.5])./sz ; m ; 1 ].*2 - 1; % coordonnées dans un cube -1 -> 1
-
-                worldCoord = obj.camera.getProjMatrix * obj.camera.getViewMatrix \ NDC;
-                worldCoord = worldCoord(1:3)./worldCoord(4);
-                worldCoord = worldCoord';
-            end
-            obj.context.release();
-        end % fin de getWorldCoord
-
         function listeTrie = orderElem(obj)
             %ORDERELEM : trie les objet du plus loin au plus pres, indispensable pour la transparence
             listeTrie = values(obj.mapElements);
@@ -287,7 +255,7 @@ classdef Scene3D < handle
                 disp('le lancer n a pas touché de cible');
             else
                 % a revoir
-                NDC = [ ([x; y] + [x-1 ; -y])./[w; h] ; profondeur ; 1 ].*2 - 1; % coordonnées dans un cube -1 -> 1
+                NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans un cube -1 -> 1
 
                 worldCoord = obj.camera.getProjMatrix * obj.camera.getViewMatrix \ NDC;
                 worldCoord = worldCoord(1:3)./worldCoord(4);
@@ -297,6 +265,18 @@ classdef Scene3D < handle
             obj.pickingTexture.UnBind(gl);
             obj.context.release();
         end
+
+        function screenShot(~, gl, w, h)
+            disp('capture en cours...')
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
+            buffer = java.nio.ByteBuffer.allocate(3 * w * h);
+            gl.glReadPixels(0, 0, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer);
+            img = typecast(buffer.array, 'uint8');
+            img = reshape(img, [3 w h]);
+            img = permute(img,[2 3 1]);
+            img = rot90(img);
+            imshow(img);
+        end % fin de screenShot
     end % fin des methodes privees
 
     methods % callback
@@ -325,25 +305,13 @@ classdef Scene3D < handle
             end
         end
 
-        function screenShot(~, gl, w, h)
-            disp('capture en cours...')
-            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
-            buffer = java.nio.ByteBuffer.allocate(3 * w * h);
-            gl.glReadPixels(0, 0, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer);
-            img = typecast(buffer.array, 'uint8');
-            img = reshape(img, [3 w h]);
-            img = permute(img,[2 3 1]);
-            img = rot90(img);
-            imshow(img);
-        end % fin de screenShot
-
         function cbk_MouseReleased(~,~,~)
             disp('MouseReleased')
         end
 
         function cbk_MouseDragged(obj, ~, event)
             obj.cbk_manager.rmCallback('MouseDragged');
-            disp('MouseDragged')
+            %disp('MouseDragged')
             posX = event.getX();
             dx = posX - obj.startX;
             obj.startX = posX;
