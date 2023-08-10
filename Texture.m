@@ -86,7 +86,6 @@ classdef Texture < handle
             gl.glBindTexture(gl.GL_TEXTURE_2D, obj.textureId);
             gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
             gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_R32I, w, h, 0, gl.GL_RED_INTEGER, gl.GL_INT, []);
-            %gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, w, h, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
 
         	gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR);	
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR);	

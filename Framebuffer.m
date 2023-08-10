@@ -7,7 +7,7 @@ classdef Framebuffer < handle
         FBOId               %Frame Buffer Id
         RBOBuffer           %Render Buffer Object
         RBOId               %Render Buffer Id
-        texture Texture
+        texture Texture     %Texture dans laquelle on ecrit l'image d'id
     end
 
     methods
@@ -26,16 +26,15 @@ classdef Framebuffer < handle
             obj.UnBind(gl);
         end % fin du constructeur Framebuffer
 
-        % function Resize(obj, gl, width, height)
-        %     obj.Bind(gl);
-        %     gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, obj.FBOId);
-        %     gl.glActiveTexture(gl.GL_TEXTURE0);
-        %     gl.glBindTexture(gl.GL_TEXTURE_2D, obj.TexId);
-        % 
-        %     gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
-        %     gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, width, height);
-        %     gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, width, height, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
-        % end % fin de Resize
+        function Resize(obj, gl, width, height)
+            obj.Bind(gl);
+            gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, obj.FBOId);
+            obj.texture.Bind(gl);
+
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
+            gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, width, height);
+            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_R32I, width, height, 0, gl.GL_RED_INTEGER, gl.GL_INT, []);
+        end % fin de Resize
 
         function Bind(obj, gl)
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, obj.FBOId);
@@ -44,17 +43,6 @@ classdef Framebuffer < handle
         function UnBind(~, gl)
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
         end
-
-        % function screenShot(obj, gl, w, h)
-        %     gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,obj.FBOId);
-        %     buffer = java.nio.ByteBuffer.allocate(3 * w * h);
-        %     gl.glReadPixels(0, 0, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer);
-        %     img = typecast(buffer.array, 'uint8');
-        %     img = reshape(img, [3 w h]);
-        %     img = permute(img,[2 3 1]);
-        %     img = rot90(img);
-        %     imshow(img);
-        % end % fin de screenShot
     end % fin des methodes defauts
 
     methods (Access = private)

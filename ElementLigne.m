@@ -26,7 +26,7 @@ classdef ElementLigne < VisibleElement
             if obj.typeColoration == 'I'
                 obj.shader.SetUniform1i(gl, 'id', obj.getId());
             else
-                if obj.typeColoration == 'C' && obj.GLGeom.nLayout(2) == 0
+                if obj.typeColoration == 'U'
                     obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
                 end
             end

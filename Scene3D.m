@@ -5,7 +5,7 @@ classdef Scene3D < handle
         fenetre jOGLframe   % jOGLframe contient la fenetre, un panel, le canvas, la toolbar ...
         canvas              % GLCanvas dans lequel on peut utiliser les fonction openGL
         context             % GLContext
-        framebuffer Framebuffer % contient l'image 2D de la scène a afficher
+        pickingTexture Framebuffer % contient l'image 2D de la scène a afficher
 
         mapElements containers.Map  % map contenant les objets 3D de la scenes
         mapGroups   containers.Map  % map contenant les ensembles
@@ -66,8 +66,8 @@ classdef Scene3D < handle
             %Listeners
             obj.cbk_manager = javacallbackmanager(obj.canvas);
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MousePressed');
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseReleased');
-            %obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
+            %obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseReleased');
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
 
             obj.cbk_manager.setMethodCallbackWithSource(obj,'KeyPressed');
@@ -194,12 +194,12 @@ classdef Scene3D < handle
             elem.typeOrientation = 4;
             elem.setEpaisseur(4);
 
-            obj.framebuffer = Framebuffer(obj.getGL(), obj.canvas.getWidth(), obj.canvas.getHeight());
+            obj.pickingTexture = Framebuffer(obj.getGL(), obj.canvas.getWidth(), obj.canvas.getHeight());
         end % fin de generateInternalObject
 
         function worldCoord = getWorldCoord(obj, clickPos)
             gl = obj.getGL();
-            obj.framebuffer.Bind(gl);
+            obj.pickingTexture.Bind(gl);
 
             r = 2;      % click radius (square box) px
             w = 2*r+1;  % square side length px
@@ -244,17 +244,15 @@ classdef Scene3D < handle
             listeTrie = listeTrie(newOrder);
         end % fin de orderElem
 
-        function elemId = pickObject(obj)
-            disp('pickObject');
+        function [elemId, worldCoord] = pickObject(obj)
             gl = obj.getGL();
-            CheckError(gl, 'debut de pick')
-            %bind frameBuffer
-            obj.framebuffer.Bind(gl);
-            gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
 
-            % resize frameBuffer
+            % resize & bind frameBuffer
+            w = obj.canvas.getWidth();
+            h = obj.canvas.getHeight();
+            obj.pickingTexture.Resize(gl, w, h);
 
-            %create new Prog
+            %create programme d'id
             shader3D = ShaderProgram(gl, [3 0 0 0], "id");
             shader2D = ShaderProgram(gl, [2 0 0 0], "id");
 
@@ -263,6 +261,7 @@ classdef Scene3D < handle
 
             %dessiner les objets
             camAttrib = obj.camera.getAttributes();
+            gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             for i=1:numel(listeElem)
                 elem = listeElem{i};
                 [oldShader, oldColo] = elem.setShaderId(gl, shader2D, shader3D);
@@ -274,26 +273,28 @@ classdef Scene3D < handle
 
             %lire le pixel de couleurs -> obtenir l'id
             x = obj.startX;
-            y = obj.canvas.getHeight() - obj.startY;
-            % buffer = java.nio.FloatBuffer.allocate(1);
-            % gl.glReadPixels(x, y, 1, 1, gl.GL_RED, gl.GL_FLOAT, buffer);
-            % elemId = typecast(buffer.array(), 'single'); % fonctionne
-            % pour la composante rouge dquand je genere l'image similaire
-
-            CheckError(gl, 'la')
+            y = h - obj.startY;
             buffer = java.nio.IntBuffer.allocate(1);
             gl.glReadPixels(x, y, 1, 1, gl.GL_RED_INTEGER, gl.GL_INT, buffer);
-            elemId = typecast(buffer.array(), 'int32'); % fonctionne
+            elemId = typecast(buffer.array(), 'int32');
 
-            %lire le pixel de profondeur -> obtenir la position projete dans le monde
-            buffer = java.nio.FloatBuffer.allocate(1);
+            %lire la valeur de profondeur -> position du monde
             gl.glReadPixels(x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
-            profondeur = typecast(buffer.array(), 'single') %fonctionne
+            profondeur = typecast(buffer.array(), 'single');
 
+            if profondeur == 1
+                worldCoord = 0;
+                disp('le lancer n a pas touché de cible');
+            else
+                % a revoir
+                NDC = [ ([x; y] + [x-1 ; -y])./[w; h] ; profondeur ; 1 ].*2 - 1; % coordonnées dans un cube -1 -> 1
+
+                worldCoord = obj.camera.getProjMatrix * obj.camera.getViewMatrix \ NDC;
+                worldCoord = worldCoord(1:3)./worldCoord(4);
+                worldCoord = worldCoord';
+            end
             %unbind le frameBuffer
-            obj.framebuffer.UnBind(gl);
-
-            CheckError(gl, 'fin de pick')
+            obj.pickingTexture.UnBind(gl);
             obj.context.release();
         end
     end % fin des methodes privees
@@ -307,26 +308,34 @@ classdef Scene3D < handle
 
             if obj.mouseButton == 1
                 tic
-                elemId = obj.pickObject()
+                [elemId, worldCoord] = obj.pickObject();
+                obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
+                disp(worldCoord)
                 toc
-            end
-            obj.DrawScene();
             
-            %worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
-            % disp(worldCoord)
-            % if numel(worldCoord) == 3
-            %     mod = event.getModifiers();
-            %     if mod==18 %CTRL LEFT CLICK
-            %         elem = obj.getPointedObject(worldCoord);
-            %         disp(['element touched : ' num2str(elem.getId())]);
-            %         obj.colorSelection(elem);
-            %         obj.fenetre.setTextRight(['ID = ' num2str(elem.getId()) '  ']);
-            %     elseif mod==24 %ALT LEFT CLICK
-            %         obj.camera.setTarget(worldCoord);
-            %     end
-            %     obj.Draw;
-            % end
+                % if numel(worldCoord) == 3
+                %     mod = event.getModifiers();
+                %     if mod==18 %CTRL LEFT CLICK
+                %         %obj.colorSelection(elem);
+                %     elseif mod==24 %ALT LEFT CLICK
+                %         obj.camera.setTarget(worldCoord);
+                %     end
+                %     obj.DrawScene;
+                % end
+            end
         end
+
+        function screenShot(~, gl, w, h)
+            disp('capture en cours...')
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
+            buffer = java.nio.ByteBuffer.allocate(3 * w * h);
+            gl.glReadPixels(0, 0, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer);
+            img = typecast(buffer.array, 'uint8');
+            img = reshape(img, [3 w h]);
+            img = permute(img,[2 3 1]);
+            img = rot90(img);
+            imshow(img);
+        end % fin de screenShot
 
         function cbk_MouseReleased(~,~,~)
             disp('MouseReleased')
@@ -335,26 +344,26 @@ classdef Scene3D < handle
         function cbk_MouseDragged(obj, ~, event)
             obj.cbk_manager.rmCallback('MouseDragged');
             disp('MouseDragged')
-            % posX = event.getX();
-            % dx = posX - obj.startX;
-            % obj.startX = posX;
-            % posY = event.getY();
-            % dy = posY - obj.startY;
-            % obj.startY = posY;
-            % 
-            % mod = event.getModifiers();
-            % ctrlPressed = bitand(mod,event.CTRL_MASK);
-            % if ctrlPressed
-            %     obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-            % else
-            %     if (obj.mouseButton == 3)
-            %         obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-            %     end
-            % end
-            % if (obj.lumiere.onCamera == true)
-            %     obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
-            % end
-            % obj.DrawScene();
+            posX = event.getX();
+            dx = posX - obj.startX;
+            obj.startX = posX;
+            posY = event.getY();
+            dy = posY - obj.startY;
+            obj.startY = posY;
+
+            mod = event.getModifiers();
+            ctrlPressed = bitand(mod,event.CTRL_MASK);
+            if ctrlPressed
+                obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+            else
+                if (obj.mouseButton == 3)
+                    obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+                end
+            end
+            if (obj.lumiere.onCamera == true)
+                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
+            end
+            obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 
@@ -390,8 +399,8 @@ classdef Scene3D < handle
                         obj.RemoveComponent(obj.selectObject.id);
                         obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
                     end
-                % case 'i'
-                %     obj.framebuffer.screenShot(obj.getGL, obj.canvas.getWidth(), obj.canvas.getHeight());
+               case 'i'
+                     obj.pickingTexture.screenShot(obj.getGL, obj.canvas.getWidth(), obj.canvas.getHeight());
                 otherwise
                     redraw = false;
             end
@@ -418,7 +427,6 @@ classdef Scene3D < handle
             gl = obj.getGL();
             gl.glViewport(0, 0, w, h);
             obj.camera.setRatio(w/h);
-            %obj.framebuffer.Resize(gl, w, h);
             obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
