@@ -31,7 +31,7 @@ classdef ElementFace < VisibleElement
                 return
             end
             obj.CommonDraw(gl, camAttrib);
-            if obj.typeOrientation > 0
+            if obj.typeColoration ~= 'I'
                 obj.shader.SetUniform1i(gl, 'uQuoiAfficher', obj.quoiAfficher);
                 if bitand(obj.quoiAfficher, 1) > 0
                     if obj.typeColoration == 'T' && ~isempty(obj.texture)

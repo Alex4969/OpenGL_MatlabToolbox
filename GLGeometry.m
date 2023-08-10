@@ -95,6 +95,14 @@ classdef GLGeometry < handle
             gl.glDeleteBuffers(1, obj.EBOBuffer);
         end % fin de delete
 
+        function b = is2D(obj)
+            if obj.nLayout(1) == 2
+                b = true;
+            else
+                b = false;
+            end
+        end
+
         function nouvelleGeom(obj, newVertexData, newIndices)
             obj.updateNeeded = true;
             obj.vertexData = newVertexData;

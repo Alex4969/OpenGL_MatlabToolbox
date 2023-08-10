@@ -113,7 +113,7 @@ classdef Scene3D < handle
             end
         end % fin de RemoveComponent
 
-        function Draw(obj)
+        function DrawScene(obj)
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
             obj.lumiere.remplirUbo(gl);
@@ -194,7 +194,7 @@ classdef Scene3D < handle
             elem.typeOrientation = 4;
             elem.setEpaisseur(4);
 
-            %obj.framebuffer = Framebuffer(obj.getGL(), obj.canvas.getWidth(), obj.canvas.getHeight());
+            obj.framebuffer = Framebuffer(obj.getGL(), obj.canvas.getWidth(), obj.canvas.getHeight());
         end % fin de generateInternalObject
 
         function worldCoord = getWorldCoord(obj, clickPos)
@@ -243,14 +243,51 @@ classdef Scene3D < handle
             [~, newOrder] = sort(distance, 'descend');
             listeTrie = listeTrie(newOrder);
         end % fin de orderElem
+
+        function elemId = pickObject(obj)
+            disp('pickObject');
+            gl = obj.getGL();
+            %bind frameBuffer
+            obj.framebuffer.Bind(gl);
+
+            % resize frameBuffer
+
+            %create new Prog
+            shader3D = ShaderProgram(gl, [3 0 0 0], "id");
+            shader2D = ShaderProgram(gl, [2 0 0 0], "id");
+
+            %trier les objets
+            listeElem = obj.orderElem();
+
+            %dessiner les objets
+            camAttrib = obj.camera.getAttributes();
+            for i=1:numel(listeElem)
+                elem = listeElem{i};
+                [oldShader, oldColo] = elem.setShaderId(gl, shader2D, shader3D);
+                elem.Draw(gl, camAttrib);
+                elem.setShaderBack(oldShader, oldColo);
+            end
+
+            %lire le pixel de couleurs -> obtenir l'id
+            elemId = 0;
+
+            %lire le pixel de profondeur -> obtenir la position projete dans le monde
+
+            %unbind le frameBuffer
+            obj.framebuffer.UnBind(gl);
+        end
     end % fin des methodes privees
 
     methods % callback
-        function cbk_MousePressed(obj, ~,event)
+        function cbk_MousePressed(obj, ~, event)
             %disp('MousePressed')
             obj.startX=event.getPoint.getX();
             obj.startY=event.getPoint.getY();
             obj.mouseButton = event.getButton();
+
+            if obj.mouseButton == 1
+                elemId = obj.pickObject()
+            end
             
             %worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
             % disp(worldCoord)
@@ -294,7 +331,7 @@ classdef Scene3D < handle
             if (obj.lumiere.onCamera == true)
                 obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
             end
-            obj.Draw();
+            obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 
@@ -336,7 +373,7 @@ classdef Scene3D < handle
                     redraw = false;
             end
             if redraw
-                obj.Draw();
+                obj.DrawScene();
             end
         end
 
@@ -346,7 +383,7 @@ classdef Scene3D < handle
             if obj.lumiere.onCamera == true
                 obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
             end
-            obj.Draw();
+            obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
         end
     
@@ -359,13 +396,13 @@ classdef Scene3D < handle
             gl.glViewport(0, 0, w, h);
             obj.camera.setRatio(w/h);
             %obj.framebuffer.Resize(gl, w, h);
-            obj.Draw();
+            obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
 
         function cbk_update(obj, ~, ~)
             disp('cbk_Update');
-            obj.Draw;
+            obj.DrawScene;
         end
     end % fin des methodes callback
 end % fin de la classe Scene3D

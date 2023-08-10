@@ -139,7 +139,7 @@ elementTexte.typeOrientation = 2 + 4;
 % viewer.AddGeomToLight(bouleLightGeom);
 
 %%%%  affichage  %%%%
-viewer.Draw();
+viewer.DrawScene();
 
 %%%%  suppression  %%%%
 % viewer.delete();

@@ -23,8 +23,10 @@ classdef ElementLigne < VisibleElement
             obj.CommonDraw(gl, camAttrib);
 
             gl.glLineWidth(obj.epaisseur);
-            if (obj.GLGeom.nLayout(2) == 0)
-                obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
+            if obj.typeColoration ~= 'I'
+                if obj.typeColoration == 'C' && obj.GLGeom.nLayout(2) == 0
+                    obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
+                end
             end
             gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
 

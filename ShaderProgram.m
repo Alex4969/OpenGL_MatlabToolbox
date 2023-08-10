@@ -11,23 +11,27 @@ classdef ShaderProgram < handle
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
             motCle(1) = "POS" + nLayout(1);
-            if typeCol == 'C' && nLayout(2) > 0
-                motCle(2) = "COL" + nLayout(2);
-            elseif typeCol == 'T' && nLayout(3) > 0
-                motCle(2) = "TEX";
+            if type == "id"
+                obj.createProgPickId(gl, motCle);
             else
-                motCle(2) = "DEF";
-            end
-            if type == "Face"
-                if typeSha ~= 'S'
-                    motCle(3) = "LIGHT";
-                    if typeSha == 'L' && nLayout(4) > 0 
-                        motCle(4) = "NORM";
-                    end
+                if typeCol == 'C' && nLayout(2) > 0
+                    motCle(2) = "COL" + nLayout(2);
+                elseif typeCol == 'T' && nLayout(3) > 0
+                    motCle(2) = "TEX";
+                else
+                    motCle(2) = "DEF";
                 end
-                obj.createProgWithLight(gl, motCle)
-            else
-                obj.createProgNoLight(gl, motCle);
+                if type == "Face"
+                    if typeSha ~= 'S'
+                        motCle(3) = "LIGHT";
+                        if typeSha == 'L' && nLayout(4) > 0 
+                            motCle(4) = "NORM";
+                        end
+                    end
+                    obj.createProgWithLight(gl, motCle)
+                else
+                    obj.createProgNoLight(gl, motCle);
+                end
             end
             gl.glLinkProgram(obj.shaderProgId);
             gl.glValidateProgram(obj.shaderProgId);
@@ -85,6 +89,14 @@ classdef ShaderProgram < handle
                 end
             end
         end % fin de findLocation
+
+        function createProgPickId(obj, gl, motCle)
+            srcVert = obj.readIfContains("shaders/drawId.vert.glsl", motCle);
+            obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
+
+            srcFrag = obj.readIfContains("shaders/drawId.frag.glsl", motCle);
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
+        end % fin de create Program
 
         function createProgWithLight(obj, gl, motCle)
             srcVert = obj.readIfContains("shaders/all.vert.glsl", motCle);

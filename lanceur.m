@@ -126,7 +126,7 @@ viewer.lumiere.setForme(elem);
 elem.setModelMatrix(MTrans3D([0 0 0]));
 
 %%%%  affichage  %%%%
-viewer.Draw();
+viewer.DrawScene();
 
 %%%%  suppression  %%%%
 % viewer.delete();

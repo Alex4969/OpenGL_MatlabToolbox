@@ -30,9 +30,10 @@ classdef ElementTexte < VisibleElement
                 obj.textureUpdate = false;
             end
             obj.CommonDraw(gl, camAttrib);
-
-            obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
-            obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
+            if obj.typeColoration ~= 'I'
+                obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
+                obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
+            end
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             CheckError(gl, 'apres le dessin d un texte');
         end % fin de Draw

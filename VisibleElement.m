@@ -140,6 +140,26 @@ classdef (Abstract) VisibleElement < handle
             obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
         end % fin de changerProg
 
+        function [oldShader, oldColo] = setShaderId(obj, gl, shader2D, shader3D)
+            if (obj.newRendu == true)
+                obj.changerProg(gl);
+            end
+            oldShader = obj.shader;
+            oldColo = obj.typeColoration;
+
+            obj.typeColoration = 'I';
+            if obj.GLGeom.is2D
+                obj.shader = shader2D;
+            else
+                obj.shader = shader3D;
+            end
+        end % fin de setShaderId
+
+        function setShaderBack(obj, shader, typeColo)
+            obj.shader = shader;
+            obj.typeColoration = typeColo;
+        end % fin de setShaderBack
+
         function CommonDraw(obj, gl, camAttrib)
             %COMMONDRAW, fonction appele au debut de tous les draw des
             %objets. Definie le programme et le mode d'orientation
@@ -151,7 +171,7 @@ classdef (Abstract) VisibleElement < handle
             obj.GLGeom.Bind(gl);
             %typeOrientation '1000' fixe, '0100' Normale a l'ecran, '0010' orthonorme, '0001' perspective, '0' rien
             model = obj.getModelMatrix();
-            if obj.typeOrientation == 0 % seule modelMatrix (dans le repere ecran normalise) active
+            if obj.typeColoration == 0 % seule modelMatrix (dans le repere ecran normalise) active
                 cam = eye(4);
             elseif obj.typeOrientation == 1 %'0001' PERSPECTIVE
                 cam = camAttrib.proj * camAttrib.view;

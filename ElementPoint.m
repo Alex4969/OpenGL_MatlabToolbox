@@ -23,8 +23,10 @@ classdef ElementPoint < VisibleElement
             obj.CommonDraw(gl, camAttrib);
 
             gl.glPointSize(obj.epaisseur);
-            if (obj.GLGeom.nLayout(2) == 0)
-                obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
+            if obj.typeColoration ~= 'I'
+                if obj.typeColoration == 'C' && obj.GLGeom.nLayout(2) == 0
+                    obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
+                end
             end
             % gl.glDrawArrays(gl.GL_POINTS, 0, size(obj.Geom.listePoints, 1));
             gl.glDrawElements(gl.GL_POINTS, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
