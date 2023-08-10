@@ -13,6 +13,7 @@ classdef myClass < handle
       end
 
       function sendEvent(obj,eventData)
+          disp('Event is send')
           notify(obj,'myEvent',eventData)
       end
 
