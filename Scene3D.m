@@ -20,7 +20,8 @@ classdef Scene3D < handle
         startX              % position x de la souris lorsque je clique
         startY              % position y de la souris lorsque je clique
         mouseButton = -1    % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
-        selectObject        % struct qui contient les données de l'objets selectionné 
+        selectObject        % struct qui contient les données de l'objets selectionné
+        couleurFond
     end %fin de propriete defaut
     
     events
@@ -49,7 +50,8 @@ classdef Scene3D < handle
 
             gl = obj.getGL();
             gl.glViewport(0, 0, obj.canvas.getWidth(), obj.canvas.getHeight());
-            gl.glClearColor(0.0, 0.0, 0.4, 1.0);
+            obj.couleurFond = [0, 0, 0.4, 1.0];
+            obj.setCouleurFond(obj.couleurFond);
             gl.glDepthFunc(gl.GL_LESS);
             gl.glEnable(gl.GL_LINE_SMOOTH);
             gl.glEnable(gl.GL_BLEND);
@@ -60,8 +62,6 @@ classdef Scene3D < handle
             obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light(gl);
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
-
-            %obj.context.release();
 
             %Listeners
             obj.cbk_manager = javacallbackmanager(obj.canvas);
@@ -97,7 +97,7 @@ classdef Scene3D < handle
             end
             obj.mapElements(elem.getId()) = elem;
             addlistener(elem,'evt_update',@obj.cbk_update);
-            obj.context.release();
+            obj.removeGL();
         end % fin de ajouterGeom
 
         function group = CreateGroup(obj, groupId)
@@ -129,7 +129,7 @@ classdef Scene3D < handle
                 elem.Draw(gl, camAttrib);
             end
 
-            obj.context.release();
+            obj.removeGL();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
 
@@ -142,7 +142,7 @@ classdef Scene3D < handle
                 listeElem{i}.delete(gl);
             end
             Texture.DeleteAll(gl);
-            obj.context.release();
+            obj.removeGL();
         end % fin de delete
 
         function setCouleurFond(obj, newColor)
@@ -153,8 +153,8 @@ classdef Scene3D < handle
             end
             if numel(newColor) == 4
                 gl = obj.getGL();
+                obj.couleurFond = newColor;
                 gl.glClearColor(newColor(1), newColor(2), newColor(3), newColor(4));
-                obj.context.release();
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
@@ -169,6 +169,12 @@ classdef Scene3D < handle
             end
             gl = obj.context.getCurrentGL();
         end % fin de getGL
+
+        function removeGL(obj)
+            if obj.context.isCurrent()
+                obj.context.release();
+            end
+        end
 
         function generateInternalObject(obj)
             obj.axesId = -1;
@@ -218,6 +224,8 @@ classdef Scene3D < handle
             % resize & bind frameBuffer
             w = obj.canvas.getWidth();
             h = obj.canvas.getHeight();
+            x = obj.startX;
+            y = h - obj.startY;
             obj.pickingTexture.Resize(gl, w, h);
 
             %create programme d'id
@@ -227,21 +235,28 @@ classdef Scene3D < handle
             %trier les objets
             listeElem = obj.orderElem();
 
-            %dessiner les objets
+            %dessiner les objets uniquement sur le pixel qui nous interresse
             camAttrib = obj.camera.getAttributes();
+            gl.glEnable(gl.GL_SCISSOR_TEST);
+            gl.glScissor(x, y, 1, 1);
+            if obj.couleurFond(1) > 0
+                gl.glClearColor(0, 0, 0, 0);
+            end
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             for i=1:numel(listeElem)
                 elem = listeElem{i};
-                [oldShader, oldColo] = elem.setShaderId(gl, shader2D, shader3D);
-                elem.Draw(gl, camAttrib);
-                elem.setShaderBack(oldShader, oldColo);
+                if elem.GLGeom.is2D
+                    oldShader = elem.setShader(gl, shader2D);
+                else
+                    oldShader = elem.setShader(gl, shader3D);
+                end
+                elem.DrawId(gl, camAttrib);
+                elem.setShader(gl, oldShader);
             end
             shader2D.delete(gl);
             shader3D.delete(gl);
 
             %lire le pixel de couleurs -> obtenir l'id
-            x = obj.startX;
-            y = h - obj.startY;
             buffer = java.nio.IntBuffer.allocate(1);
             gl.glReadPixels(x, y, 1, 1, gl.GL_RED_INTEGER, gl.GL_INT, buffer);
             elemId = typecast(buffer.array(), 'int32');
@@ -254,16 +269,19 @@ classdef Scene3D < handle
                 worldCoord = 0;
                 disp('le lancer n a pas touché de cible');
             else
-                % a revoir
-                NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans un cube -1 -> 1
+                NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
 
                 worldCoord = obj.camera.getProjMatrix * obj.camera.getViewMatrix \ NDC;
                 worldCoord = worldCoord(1:3)./worldCoord(4);
                 worldCoord = worldCoord';
             end
-            %unbind le frameBuffer
+            %unbind le frameBuffer, remise des parametre de la scene
             obj.pickingTexture.UnBind(gl);
-            obj.context.release();
+            gl.glDisable(gl.GL_SCISSOR_TEST);
+            if obj.couleurFond(1) > 0
+                obj.setCouleurFond(obj.couleurFond);
+            end
+            obj.removeGL();
         end
 
         function screenShot(~, gl, w, h)
@@ -287,11 +305,9 @@ classdef Scene3D < handle
             obj.mouseButton = event.getButton();
 
             if obj.mouseButton == 1
-                tic
                 [elemId, worldCoord] = obj.pickObject();
                 obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
                 disp(worldCoord)
-                toc
             
                 % if numel(worldCoord) == 3
                 %     mod = event.getModifiers();

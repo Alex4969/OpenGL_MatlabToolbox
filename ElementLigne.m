@@ -23,17 +23,20 @@ classdef ElementLigne < VisibleElement
             obj.CommonDraw(gl, camAttrib);
 
             gl.glLineWidth(obj.epaisseur);
-            if obj.typeColoration == 'I'
-                obj.shader.SetUniform1i(gl, 'id', obj.getId());
-            else
-                if obj.typeColoration == 'U'
-                    obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
-                end
+            if obj.typeColoration == 'U'
+                obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
             end
             gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
 
             CheckError(gl, 'apres le dessin');
         end % fin de Draw
+
+        function DrawId(obj, gl, camAttrib)
+            % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
+            obj.CommonDraw(gl, camAttrib);
+            obj.shader.SetUniform1i(gl, 'id', obj.getId());
+            gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+        end % fin de drawID
 
         function setEpaisseur(obj, newEp)
             obj.epaisseur = newEp;

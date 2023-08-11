@@ -114,8 +114,6 @@ elementTexte.typeOrientation = 2 + 4;
     group.AddElem(viewer.mapElements(34));
     group.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
 
-
-
 [posBoule, indBoule] = generatePyramide(50, 1);
 
 planGeomTex = MyGeom(41, pos, ind, 'face');

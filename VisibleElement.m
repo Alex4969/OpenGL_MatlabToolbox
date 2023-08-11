@@ -2,21 +2,21 @@ classdef (Abstract) VisibleElement < handle
     %VISIBLEELEMENT 
     
     properties (GetAccess = public, SetAccess = protected)
-        Type char
+        Type string
         Geom GeomComponent
         GLGeom GLGeometry
         shader ShaderProgram
         typeShading    = 'S'    % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
         typeColoration = 'U'    % 'U' : Uniforme, 'C' : Color, 'T' : Texture
-        newRendu logical
+        newRendu logical = false
 
         parent
         geomListener
     end
 
     properties (Access = public)
-        typeOrientation uint8 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe, '0000' rien (pour framebuffer)
-        visible logical
+        typeOrientation uint8 = 1 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe, '0000' rien (pour framebuffer)
+        visible logical = true
     end
 
     events
@@ -28,9 +28,6 @@ classdef (Abstract) VisibleElement < handle
             %VISIBLEELEMENT
             obj.Geom = aGeom;
             obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
-            obj.newRendu = false;
-            obj.visible = true;
-            obj.typeOrientation = 1;
 
             obj.geomListener = addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
         end % fin du constructeur de VisibleElement
@@ -104,6 +101,13 @@ classdef (Abstract) VisibleElement < handle
             obj.newRendu = true;
         end % fin de AddNormals
 
+        function GenerateNormals(obj)
+            normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
+            obj.GLGeom.addDataToBuffer(normales, 4);
+            obj.typeShading = 'L';
+            obj.newRendu = true;
+        end % fin de GenerateNormals
+
         function cbk_geomUpdate(obj, source, ~)
             obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
             if source.type == "texte"
@@ -114,13 +118,6 @@ classdef (Abstract) VisibleElement < handle
                 obj.newRendu = true;
             end
         end % fin de cbk_geomUpdate
-
-        function GenerateNormals(obj)
-            normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
-            obj.GLGeom.addDataToBuffer(normales, 4);
-            obj.typeShading = 'L';
-            obj.newRendu = true;
-        end % fin de GenerateNormals
 
         function toString(obj)
             nbPoint = size(obj.Geom.listePoints, 1);
@@ -138,33 +135,21 @@ classdef (Abstract) VisibleElement < handle
 
         function changerProg(obj, gl)
             obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
+            obj.newRendu = false;
         end % fin de changerProg
 
-        function [oldShader, oldColo] = setShaderId(obj, gl, shader2D, shader3D)
-            if (obj.newRendu == true)
+        function oldShader = setShader(obj, gl, newShader)
+            if obj.newRendu == true
                 obj.changerProg(gl);
             end
             oldShader = obj.shader;
-            oldColo = obj.typeColoration;
-
-            obj.typeColoration = 'I';
-            if obj.GLGeom.is2D
-                obj.shader = shader2D;
-            else
-                obj.shader = shader3D;
-            end
-        end % fin de setShaderId
-
-        function setShaderBack(obj, shader, typeColo)
-            obj.shader = shader;
-            obj.typeColoration = typeColo;
-        end % fin de setShaderBack
+            obj.shader = newShader;
+        end % fin de setShader
 
         function CommonDraw(obj, gl, camAttrib)
             %COMMONDRAW, fonction appele au debut de tous les draw des
             %objets. Definie le programme et le mode d'orientation
             if obj.newRendu == true
-                obj.newRendu = false;
                 obj.changerProg(gl);
             end
             obj.shader.Bind(gl);

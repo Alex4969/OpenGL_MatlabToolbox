@@ -30,15 +30,18 @@ classdef ElementTexte < VisibleElement
                 obj.textureUpdate = false;
             end
             obj.CommonDraw(gl, camAttrib);
-            if obj.typeColoration == 'I'
-                obj.shader.SetUniform1i(gl, 'id', obj.getId());
-            else
-                obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
-                obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
-            end
+            obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
+            obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             CheckError(gl, 'apres le dessin d un texte');
         end % fin de Draw
+
+        function DrawId(obj, gl, camAttrib)
+            % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
+            obj.CommonDraw(gl, camAttrib);
+            obj.shader.SetUniform1i(gl, 'id', obj.getId());
+            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+        end % fin de drawID
 
         function setCouleur(obj, newColor)
             %SETCOULEURFOND change la couleur du texte
