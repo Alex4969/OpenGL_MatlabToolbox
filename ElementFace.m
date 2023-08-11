@@ -25,12 +25,16 @@ classdef ElementFace < VisibleElement
             obj.changerProg(gl);
         end % fin constructeur ElementFace
 
-        function Draw(obj, gl, camAttrib)
+        function Draw(obj, gl)
             %DRAW dessine cet objet
             if ~obj.isVisible()
                 return
             end
-            obj.CommonDraw(gl, camAttrib);
+            obj.shader.Bind(gl);
+            obj.GLGeom.Bind(gl);
+
+            obj.CommonDraw(gl);
+
             if obj.typeOrientation > 0
                 obj.shader.SetUniform1i(gl, 'uQuoiAfficher', obj.quoiAfficher);
                 if bitand(obj.quoiAfficher, 1) > 0

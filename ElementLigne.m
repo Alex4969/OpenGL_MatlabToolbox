@@ -15,12 +15,15 @@ classdef ElementLigne < VisibleElement
             obj.changerProg(gl);
         end % fin du constructeur ElementLigne
 
-        function Draw(obj, gl, camAttrib)
+        function Draw(obj, gl)
             %DRAW dessine cet objet
             if obj.isVisible() == false
                 return
             end
-            obj.CommonDraw(gl, camAttrib);
+
+            obj.shader.Bind(gl);
+            obj.GLGeom.Bind(gl);
+            obj.CommonDraw(gl);
 
             gl.glLineWidth(obj.epaisseur);
             if (obj.GLGeom.nLayout(2) == 0)

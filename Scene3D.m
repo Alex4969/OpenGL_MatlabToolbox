@@ -127,7 +127,12 @@ classdef Scene3D < handle
             listeElem = obj.orderElem();
             for i=1:numel(listeElem)
                 elem = listeElem{i};
-                elem.Draw(gl, camAttrib);
+
+                elem.Draw(gl);
+                [cam,model]=obj.getOrientationMatrix(elem);
+                elem.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
+                elem.shader.SetUniformMat4(gl, 'uModelMatrix', model);
+                % elem.Draw(gl, camAttrib);
             end
 
             obj.framebuffer.UnBind(gl);
@@ -137,6 +142,44 @@ classdef Scene3D < handle
             obj.context.release();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
+
+        function [cam,model]=getOrientationMatrix(obj,elem)
+                                            %typeOrientation '1000' fixe, '0100' Normale a l'ecran, '0010' orthonorme, '0001' perspective, '0' rien
+                                            model = elem.getModelMatrix();
+                                            camAttrib = obj.camera.getAttributes();
+                                            if elem.typeOrientation == 0 % seule modelMatrix (dans le repere ecran normalise) active
+                                                cam = eye(4);
+                                                % model(1, 4) = 0.;
+                                                % model(2, 4) = 0.;
+                                                % model(3, 4) =0;
+                                            elseif elem.typeOrientation == 1 %'0001' PERSPECTIVE
+                                                cam = obj.camera.getProjMatrix*obj.camera.getViewMatrix;%camAttrib.proj * camAttrib.view;
+                                            elseif elem.typeOrientation == 8 %'1000' fixe (pour texte)
+                                                % on utilise la matrice modele pour positionner le texte
+                                                % dans le repere ecran (-1;+1)
+                                                % pour changer la taille, on change le scaling de la
+                                                % matrice model
+                                                model(1, 4) = model(1, 4) * obj.camera.max;
+                                                model(2, 4) = model(2, 4) * camAttrib.maxY;
+                                                model(3, 4) = -camAttrib.near;
+                                                model = model * MScale3D(camAttrib.coef);%coef pour dimension identique en ortho ou perspective
+                                                cam =  camAttrib.proj;
+                                            else
+                                                if bitand(elem.typeOrientation, 2) > 0 % 0010 'face a l'ecran
+                                                    model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3);
+                                                    cam =  obj.camera.getProjMatrix*obj.camera.getViewMatrix;%camAttrib.proj * camAttrib.view;
+                                                    % cam*model = proj*view*inv(view)*model
+                                                end
+                                                if bitand(elem.typeOrientation, 4) > 0 %'0100' coin inferieur gauche 
+                                                    % rotation seulement activée sur un point de l'ecran
+                                                    cam = MProj3D('O', [obj.camera.ratio*16 16 1 20]) * obj.camera.getViewMatrix;
+                                                    cam(1,4) = -0.97 + 0.1/obj.camera.ratio;
+                                                    cam(2,4) = -0.87;
+                                                    cam(3,4) =  0;
+                                                end
+                                            end
+
+        end
 
         function delete(obj)
             %DELETE Supprime les objets de la scene
@@ -279,7 +322,7 @@ classdef Scene3D < handle
             obj.mouseButton = event.getButton();
             
             worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
-            % disp(worldCoord)
+            disp(worldCoord)
             if numel(worldCoord) == 3
                 mod = event.getModifiers();
                 if mod==18 %CTRL LEFT CLICK
