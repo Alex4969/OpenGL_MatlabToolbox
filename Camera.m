@@ -167,7 +167,6 @@ classdef Camera < handle
                 left = cross(obj.position - obj.target, obj.up);
                 left = left/norm(left);
                 translation = translation + dx * left;
-                translation = translation * (1 + obj.speed);
             end
             obj.position = obj.position + translation * obj.speed;
             obj.target   = obj.target   + translation * obj.speed;

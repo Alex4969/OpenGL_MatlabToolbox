@@ -6,6 +6,8 @@ classdef TextGeom < GeomComponent
         str char        % doit reste un char pout etre lu correctement
         police Police   % information sur la représentation des caracteres
         ancre int8      % position de l'ancre par rapport au texte
+                        % 0:centre, 1:haut-gauche, 2:haut-droite,
+                        % 3:bas-gauche, 4:bas-droite
         mapping         % mapping de la texture de police
     end
     
@@ -37,7 +39,37 @@ classdef TextGeom < GeomComponent
         end
 
         function setAncrage(obj, newAncre)
-            %%Faire le changement
+            if newAncre == obj.ancre
+                disp('ancre similaire');
+                return;
+            end
+            obj.ancre = newAncre;
+            minX = min(obj.listePoints(:,1));
+            maxX = max(obj.listePoints(:,1));
+            minY = min(obj.listePoints(:,2));
+            maxY = max(obj.listePoints(:,2));
+            switch (obj.ancre)
+                case 0 % centre
+                    xDep = minX + ( (maxX - minX) / 2 );
+                    yDep = maxY - ( (maxY - minY) / 2 );
+                case 1 % haut gauche
+                    xDep = minX;
+                    yDep = maxY;
+                case 2 % haut droite
+                    xDep = maxX;
+                    yDep = maxY;
+                case 3 % bas gauche
+                    xDep = minX;
+                    yDep = minY;
+                case 4 % bas droite
+                    xDep = maxX;
+                    yDep = minY;
+            end
+            obj.listePoints(:, 1) = obj.listePoints(:, 1) - xDep;
+            obj.listePoints(:, 2) = obj.listePoints(:, 2) - yDep;
+
+            % A FAIRE
+            
             if event.hasListener(obj, 'geomUpdate')
                 notify(obj, 'geomUpdate')
             end
@@ -78,7 +110,7 @@ classdef TextGeom < GeomComponent
             switch (obj.ancre)
                 case 0 % centre
                     xDep = (maxX - minX) / 2;
-                    yDep = (maxY - minY) / 2;
+                    yDep = (minY - maxY) / 2;
                 case 1 % haut gauche
                     xDep = minX;
                     yDep = maxY;
@@ -87,13 +119,13 @@ classdef TextGeom < GeomComponent
                     yDep = maxY;
                 case 3 % bas gauche
                     xDep = -minX;
-                    yDep = -minY;
+                    yDep = minY;
                 case 4 % bas droite
                     xDep = maxX;
-                    yDep = -minY;
+                    yDep = minY;
             end
             pos(:, 1) = pos(:, 1) - xDep;
-            pos(:, 2) = pos(:, 2) + yDep;
+            pos(:, 2) = pos(:, 2) - yDep;
             map = map/512;
             obj.mapping = map;
             obj.listeConnection = ind;
