@@ -7,6 +7,7 @@ classdef Light < handle
         couleurLumiere      % 1x3 couleur de la lumière
 
         forme ElementFace   % donne une forme a la lumiere
+        comp  GeomComponent % component avant de devenir un elementFace
 
         directionLumiere    % 1x3 direction souhaité de la lumière (pour la lumière directionel ou spot)
         paramsLumiere       % [t a b] t = type (0 : desactivé, 1 : pointLight, 2 : directionel, 3 : spotLight)
@@ -16,10 +17,14 @@ classdef Light < handle
 
         UBOId               % uniform block
         UBOBuffer           % uniform block buffer
-        updateNeeded logical
+        updateNeeded logical = false
 
         modelListener
-        onCamera logical
+        onCamera logical = false
+    end
+
+    events
+        newModel
     end
     
     methods
@@ -35,21 +40,16 @@ classdef Light < handle
             obj.paramsLumiere = param;
             obj.generateUbo(gl);
             obj.remplirUbo(gl);
-            obj.updateNeeded = false;
-            obj.onCamera = false;
         end % fin du constructeur de light
 
-        function setForme(obj, elem)
+        function elem = setForme(obj, comp)
             if ~isempty(obj.forme)
-                obj.forme.setParent([]);
                 delete(obj.modelListener);
+                obj.forme = ElementFace.empty;
             end
-            obj.forme = elem;
-            obj.forme.setModelMatrix(MTrans3D(obj.position));
-            obj.forme.setCouleur(obj.couleurLumiere);
-            obj.forme.setParent(obj);
-            obj.forme.setModeRendu('U', 'S');
-            obj.modelListener = addlistener(obj.forme.Geom,'modelUpdate',@obj.cbk_modelUpdate);
+            obj.comp = comp;
+            notify(obj, 'newModel');
+            elem = obj.forme;
         end % fin de setForme
 
         function putOnCamera(obj, b)
@@ -67,7 +67,8 @@ classdef Light < handle
 
         function removeForme(obj)
             if ~isempty(obj.forme)
-                obj.forme.setParent([]);
+                delete(obj.modelListener);
+                obj.forme = ElementFace.empty;
             end
         end % fin de removeForme
 
@@ -191,6 +192,17 @@ classdef Light < handle
             obj.position = newPos;
             obj.updateNeeded = true;
         end
+
+        function glUpdate(obj, gl)
+            if ~isempty(obj.comp)
+                obj.forme = ElementFace(gl, obj.comp);
+                obj.forme.setModelMatrix(MTrans3D(obj.position));
+                obj.forme.setCouleur(obj.couleurLumiere);
+                obj.forme.setModeRendu('U', 'S');
+                obj.modelListener = addlistener(obj.forme.Geom,'modelUpdate',@obj.cbk_modelUpdate);
+                obj.comp = GeomComponent.empty;
+            end
+        end % fin de glUpdate
     end % fin des methodes defauts
 
     methods (Access = private)

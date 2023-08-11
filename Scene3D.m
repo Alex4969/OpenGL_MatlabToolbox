@@ -61,6 +61,7 @@ classdef Scene3D < handle
 
             obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light(gl);
+            addlistener(obj.lumiere, 'newModel', @obj.cbk_giveGL);
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
             %Listeners
@@ -129,6 +130,12 @@ classdef Scene3D < handle
 
             camAttrib = obj.camera.getAttributes();
             %dessin des objets ajouter a la scene
+            
+            %dessiner les objet interne a la scene
+            if ~isempty(obj.lumiere.forme)
+                obj.lumiere.forme.Draw(gl, camAttrib);
+            end
+            %dessiner les objets de l'experience
             listeElem = obj.orderElem();
             for i=1:numel(listeElem)
                 elem = listeElem{i};
@@ -255,6 +262,7 @@ classdef Scene3D < handle
             shader2D = ShaderProgram(gl, [2 0 0 0], "id");
 
             %trier les objets
+            %% pas bseoin de les trier !!
             listeElem = obj.orderElem();
 
             %dessiner les objets uniquement sur le pixel qui nous interresse
@@ -265,6 +273,7 @@ classdef Scene3D < handle
                 gl.glClearColor(0, 0, 0, 0);
             end
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
+            % dessiner la lumiere
             for i=1:numel(listeElem)
                 elem = listeElem{i};
                 if elem.GLGeom.is2D() == true
@@ -457,6 +466,11 @@ classdef Scene3D < handle
         function cbk_update(obj, ~, ~)
             disp('cbk_Update');
             obj.DrawScene;
+        end
+
+        function cbk_giveGL(obj, source, event)
+            source.glUpdate(obj.getGL());
+            obj.removeGL();
         end
     end % fin des methodes callback
 end % fin de la classe Scene3D
