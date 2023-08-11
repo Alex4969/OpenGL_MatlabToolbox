@@ -182,6 +182,23 @@ classdef Scene3D < handle
             end
             notify(obj,'evt_update');
         end % fin setCouleurFond
+    
+        function screenShot(obj)
+            gl = obj.getGL();
+            w = obj.canvas.getWidth();
+            h = obj.canvas.getHeight();
+            disp('capture en cours...')
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
+            buffer = java.nio.ByteBuffer.allocate(3 * w * h);
+            gl.glReadPixels(0, 0, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer);
+            img = typecast(buffer.array, 'uint8');
+            img = reshape(img, [3 w h]);
+            img = permute(img,[2 3 1]);
+            img = rot90(img);
+            imshow(img);
+            obj.removeGL();
+        end % fin de screenShot        
+    
     end % fin des methodes defauts
 
     methods (Access = private)
@@ -306,21 +323,6 @@ classdef Scene3D < handle
             obj.removeGL();
         end % fin de pickingObject
 
-        function screenShot(obj)
-            gl = obj.getGL();
-            w = obj.canvas.getWidth();
-            h = obj.canvas.getHeight();
-            disp('capture en cours...')
-            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
-            buffer = java.nio.ByteBuffer.allocate(3 * w * h);
-            gl.glReadPixels(0, 0, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer);
-            img = typecast(buffer.array, 'uint8');
-            img = reshape(img, [3 w h]);
-            img = permute(img,[2 3 1]);
-            img = rot90(img);
-            imshow(img);
-            obj.removeGL();
-        end % fin de screenShot
 
         function colorSelection(obj, elemId)
             newElem = obj.mapElements(elemId);
