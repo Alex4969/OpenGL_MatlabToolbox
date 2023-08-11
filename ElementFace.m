@@ -112,13 +112,30 @@ classdef ElementFace < VisibleElement
             end
         end % fin de setQuoiAfficher
 
-        function sNew = reverseSelect(obj, s)
-            sNew.id        = obj.getId();
-            sNew.couleur   = obj.couleurArretes;
+        function sNew = select(obj, s)
+            sNew.id = obj.getId();
+            sNew.couleur = obj.couleurArretes;
             sNew.epaisseur = obj.epaisseurArretes;
-            obj.couleurArretes   = s.couleur;
+            if bitand(obj.quoiAfficher, 2) == 2
+                sNew.arretesActives = true;
+            else
+                sNew.arretesActives = false;
+            end
+            obj.quoiAfficher = bitor(obj.quoiAfficher, 2);
+            obj.couleurArretes = s.couleur;
             obj.epaisseurArretes = s.epaisseur;
-        end % fin de reverseSelect
+        end % fin de select
+
+        function sNew = deselect(obj, s)
+            sNew.id = 0;
+            sNew.couleur = obj.couleurArretes;
+            sNew.epaisseur = obj.epaisseurArretes;
+            obj.couleurArretes = s.couleur;
+            obj.epaisseurArretes = s.epaisseur;
+            if (s.arretesActives == false)
+                obj.quoiAfficher = bitand(obj.quoiAfficher, 5);
+            end
+        end % fin de deselect
     end % fin de methodes defauts
 
     methods (Access = private)

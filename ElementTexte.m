@@ -62,11 +62,18 @@ classdef ElementTexte < VisibleElement
             obj.textureUpdate = true;
         end % fin de changePolice
 
-        function sNew = reverseSelect(obj, s)
-            sNew.id          = obj.getId();
-            sNew.couleur     = obj.couleur;
-            sNew.epaisseur   = s.epaisseur;
+        function sNew = select(obj, s)
+            sNew.id = obj.getId();
+            sNew.couleur = obj.couleur;
+            sNew.epaisseur = s.epaisseur;
             obj.couleur = s.couleur;
-        end % fin de reverseSlect
+        end % fin de select
+
+        function sNew = deselect(obj, s)
+            sNew.id = 0;
+            sNew.couleur = obj.couleur;
+            sNew.epaisseur = s.epaisseur;
+            obj.couleur = s.couleur;
+        end % fin de deselect
     end % fin des methodes defauts
 end % fin classe Texte

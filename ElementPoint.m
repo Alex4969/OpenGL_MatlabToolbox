@@ -61,6 +61,27 @@ classdef ElementPoint < VisibleElement
             obj.couleur   = s.couleur;
             obj.epaisseur = s.epaisseur;
         end
+
+        function sNew = select(obj, s)
+            sNew.id = obj.getId();
+            sNew.couleur = obj.couleur;
+            sNew.epaisseur = obj.epaisseur;
+            sNew.oldType = obj.typeColoration;
+            obj.couleur = s.couleur;
+            obj.epaisseur = s.epaisseur;
+            obj.setModeRendu('U');
+        end % fin de select
+
+        function sNew = deselect(obj, s)
+            sNew.id = 0;
+            sNew.couleur = obj.couleur;
+            sNew.epaisseur = obj.epaisseur;
+            obj.couleur = s.couleur;
+            obj.epaisseur = s.epaisseur;
+            if obj.typeColoration ~= s.oldType
+                obj.setModeRendu(s.oldType);
+            end
+        end % fin de deselect
         
     end % fin des methodes defauts
 end  % fin classe ElementLigne

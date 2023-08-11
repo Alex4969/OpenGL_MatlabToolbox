@@ -191,7 +191,8 @@ classdef (Abstract) VisibleElement < handle
 
     methods (Abstract = true)
         Draw(obj, gl, camAttrib)
-        sNew = reverseSelect(obj, s)
         setCouleur(obj, matColor)
+        sNew = select(obj, s)
+        sNew = deselect(obj, s)
     end % fin des methodes abstraites
 end % fin de la classe VisibleElement

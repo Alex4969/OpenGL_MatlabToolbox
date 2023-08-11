@@ -108,6 +108,12 @@ classdef Scene3D < handle
         function elem = RemoveComponent(obj, elemId) % element et texte
             if isKey(obj.mapElements, elemId)
                 elem = obj.mapElements(elemId);
+                if (obj.selectObject.id == elemId)
+                    obj.selectObject = elem.deselect(obj.selectObject);
+                end
+                if ~isempty(elem.parent)
+                    elem.parent.removeElem(elemId);
+                end
                 remove(obj.mapElements, elemId);
             else
                 disp('objet a supprimé n existe pas');
@@ -144,6 +150,22 @@ classdef Scene3D < handle
             Texture.DeleteAll(gl);
             obj.removeGL();
         end % fin de delete
+
+        function setCouleurSelection(obj, newColor)
+            if (numel(newColor) == 3)
+                newColor(4) = 1;
+            end
+            if numel(newColor) == 4
+                if obj.selectObject.id ~= 0
+                    elem = obj.mapElements(obj.selectObject.id);
+                    obj.selectObject = elem.deselect(obj.selectObject);
+                    obj.selectObject.couleur = newColor;
+                    obj.selectObject = elem.select(obj.selectObject);
+                else
+                    obj.selectObject.couleur = newColor;
+                end
+            end
+        end % fin de setCouleurSelection
 
         function setCouleurFond(obj, newColor)
             %SETCOULEURFOND change la couleur du fond de l'écran.
@@ -245,7 +267,7 @@ classdef Scene3D < handle
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             for i=1:numel(listeElem)
                 elem = listeElem{i};
-                if elem.GLGeom.is2D
+                if elem.GLGeom.is2D() == true
                     oldShader = elem.setShader(gl, shader2D);
                 else
                     oldShader = elem.setShader(gl, shader3D);
@@ -282,9 +304,12 @@ classdef Scene3D < handle
                 obj.setCouleurFond(obj.couleurFond);
             end
             obj.removeGL();
-        end
+        end % fin de pickingObject
 
-        function screenShot(~, gl, w, h)
+        function screenShot(obj)
+            gl = obj.getGL();
+            w = obj.canvas.getWidth();
+            h = obj.canvas.getHeight();
             disp('capture en cours...')
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
             buffer = java.nio.ByteBuffer.allocate(3 * w * h);
@@ -294,7 +319,21 @@ classdef Scene3D < handle
             img = permute(img,[2 3 1]);
             img = rot90(img);
             imshow(img);
+            obj.removeGL();
         end % fin de screenShot
+
+        function colorSelection(obj, elemId)
+            newElem = obj.mapElements(elemId);
+            if obj.selectObject.id == elemId
+                obj.selectObject = newElem.deselect(obj.selectObject);
+            else
+                if obj.selectObject.id ~= 0
+                    oldElem = obj.mapElements(obj.selectObject.id);
+                    obj.selectObject = oldElem.deselect(obj.selectObject);
+                end
+                obj.selectObject = newElem.select(obj.selectObject);
+            end
+        end % fin de colorSelection
     end % fin des methodes privees
 
     methods % callback
@@ -309,15 +348,15 @@ classdef Scene3D < handle
                 obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
                 disp(worldCoord)
             
-                % if numel(worldCoord) == 3
-                %     mod = event.getModifiers();
-                %     if mod==18 %CTRL LEFT CLICK
-                %         %obj.colorSelection(elem);
-                %     elseif mod==24 %ALT LEFT CLICK
-                %         obj.camera.setTarget(worldCoord);
-                %     end
-                %     obj.DrawScene;
-                % end
+                if elemId ~= 0
+                    mod = event.getModifiers();
+                    if mod==18 %CTRL LEFT CLICK
+                        obj.colorSelection(elemId);
+                    elseif mod==24 %ALT LEFT CLICK
+                        obj.camera.setTarget(worldCoord);
+                    end
+                end
+                obj.DrawScene();
             end
         end
 
@@ -375,8 +414,8 @@ classdef Scene3D < handle
                     obj.camera.speed=max(5,obj.camera.speed-1);                   
                 case char(27) % ECHAP
                     if obj.selectObject.id ~= 0
-                        obj.selectObject = obj.mapElements(obj.selectObject.id).reverseSelect(obj.selectObject);
-                        obj.selectObject.id = 0;
+                        elem = obj.mapElements(obj.selectObject.id);
+                        obj.selectObject = elem.deselect(obj.selectObject);
                     end
                 case char(127) % SUPPR
                     if obj.selectObject.id ~= 0
@@ -384,7 +423,7 @@ classdef Scene3D < handle
                         obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
                     end
                case 'i'
-                     obj.pickingTexture.screenShot(obj.getGL, obj.canvas.getWidth(), obj.canvas.getHeight());
+                     obj.screenShot();
                 otherwise
                     redraw = false;
             end
