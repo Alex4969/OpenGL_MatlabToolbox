@@ -69,6 +69,7 @@ classdef GLGeometry < handle
 
         function Bind(obj, gl)
             %BIND Met en contexte le vertexBuffer. S'il a été modifié, applique la modification
+            CheckError(gl, 'Erreur avant  le Bind');
             gl.glBindVertexArray(obj.VAOId);
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
             CheckError(gl, 'Erreur du Bind');
@@ -94,6 +95,14 @@ classdef GLGeometry < handle
             gl.glDeleteBuffers(1, obj.VBOBuffer);
             gl.glDeleteBuffers(1, obj.EBOBuffer);
         end % fin de delete
+
+        function b = is2D(obj)
+            if obj.nLayout(1) == 2
+                b = true;
+            else
+                b = false;
+            end
+        end
 
         function nouvelleGeom(obj, newVertexData, newIndices)
             obj.updateNeeded = true;

@@ -23,7 +23,7 @@ classdef ElementPoint < VisibleElement
             obj.CommonDraw(gl, camAttrib);
 
             gl.glPointSize(obj.epaisseur);
-            if (obj.GLGeom.nLayout(2) == 0)
+            if obj.typeColoration == 'U'
                 obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
             end
             % gl.glDrawArrays(gl.GL_POINTS, 0, size(obj.Geom.listePoints, 1));
@@ -31,6 +31,13 @@ classdef ElementPoint < VisibleElement
 
             CheckError(gl, 'apres le dessin');
         end % fin de Draw
+
+        function DrawId(obj, gl, camAttrib)
+            % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
+            obj.CommonDraw(gl, camAttrib);
+            obj.shader.SetUniform1i(gl, 'id', obj.getId());
+            gl.glDrawElements(gl.GL_POINTS, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+        end % fin de drawID
 
         function setEpaisseur(obj, newEp)
             obj.epaisseur = newEp;
@@ -54,6 +61,27 @@ classdef ElementPoint < VisibleElement
             obj.couleur   = s.couleur;
             obj.epaisseur = s.epaisseur;
         end
+
+        function sNew = select(obj, s)
+            sNew.id = obj.getId();
+            sNew.couleur = obj.couleur;
+            sNew.epaisseur = obj.epaisseur;
+            sNew.oldType = obj.typeColoration;
+            obj.couleur = s.couleur;
+            obj.epaisseur = s.epaisseur;
+            obj.setModeRendu('U');
+        end % fin de select
+
+        function sNew = deselect(obj, s)
+            sNew.id = 0;
+            sNew.couleur = obj.couleur;
+            sNew.epaisseur = obj.epaisseur;
+            obj.couleur = s.couleur;
+            obj.epaisseur = s.epaisseur;
+            if obj.typeColoration ~= s.oldType
+                obj.setModeRendu(s.oldType);
+            end
+        end % fin de deselect
         
     end % fin des methodes defauts
 end  % fin classe ElementLigne

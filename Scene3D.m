@@ -5,7 +5,7 @@ classdef Scene3D < handle
         fenetre jOGLframe   % jOGLframe contient la fenetre, un panel, le canvas, la toolbar ...
         canvas              % GLCanvas dans lequel on peut utiliser les fonction openGL
         context             % GLContext
-        framebuffer Framebuffer % contient l'image 2D de la scène a afficher
+        pickingTexture Framebuffer % contient l'image 2D de la scène a afficher
 
         mapElements containers.Map  % map contenant les objets 3D de la scenes
         mapGroups   containers.Map  % map contenant les ensembles
@@ -20,7 +20,8 @@ classdef Scene3D < handle
         startX              % position x de la souris lorsque je clique
         startY              % position y de la souris lorsque je clique
         mouseButton = -1    % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
-        selectObject        % struct qui contient les données de l'objets selectionné 
+        selectObject        % struct qui contient les données de l'objets selectionné
+        couleurFond
     end %fin de propriete defaut
     
     events
@@ -49,23 +50,23 @@ classdef Scene3D < handle
 
             gl = obj.getGL();
             gl.glViewport(0, 0, obj.canvas.getWidth(), obj.canvas.getHeight());
-            gl.glClearColor(0.0, 0.0, 0.4, 1.0);
+            obj.couleurFond = [0, 0, 0.4, 1.0];
+            obj.setCouleurFond(obj.couleurFond);
             gl.glDepthFunc(gl.GL_LESS);
             gl.glEnable(gl.GL_LINE_SMOOTH);
             gl.glEnable(gl.GL_BLEND);
             gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA);
+            gl.glEnable(gl.GL_DEPTH_TEST);
             % gl.glEnable(gl.GL_CULL_FACE); % optimisation : supprime l'affichage des faces arrieres
 
             obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light(gl);
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
-            obj.context.release();
-
             %Listeners
             obj.cbk_manager = javacallbackmanager(obj.canvas);
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MousePressed');
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseReleased');
+            %obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseReleased');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
 
@@ -96,7 +97,7 @@ classdef Scene3D < handle
             end
             obj.mapElements(elem.getId()) = elem;
             addlistener(elem,'evt_update',@obj.cbk_update);
-            obj.context.release();
+            obj.removeGL();
         end % fin de ajouterGeom
 
         function group = CreateGroup(obj, groupId)
@@ -107,20 +108,24 @@ classdef Scene3D < handle
         function elem = RemoveComponent(obj, elemId) % element et texte
             if isKey(obj.mapElements, elemId)
                 elem = obj.mapElements(elemId);
+                if (obj.selectObject.id == elemId)
+                    obj.selectObject = elem.deselect(obj.selectObject);
+                end
+                if ~isempty(elem.parent)
+                    elem.parent.removeElem(elemId);
+                end
                 remove(obj.mapElements, elemId);
             else
                 disp('objet a supprimé n existe pas');
             end
         end % fin de RemoveComponent
 
-        function Draw(obj)
+        function DrawScene(obj)
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
             obj.lumiere.remplirUbo(gl);
             obj.camera.remplirUbo(gl);
-            obj.framebuffer.Bind(gl);
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
-            gl.glEnable(gl.GL_DEPTH_TEST);
 
             camAttrib = obj.camera.getAttributes();
             %dessin des objets ajouter a la scene
@@ -130,11 +135,7 @@ classdef Scene3D < handle
                 elem.Draw(gl, camAttrib);
             end
 
-            obj.framebuffer.UnBind(gl);
-            gl.glDisable(gl.GL_DEPTH_TEST);
-            obj.framebuffer.forme.Draw(gl, camAttrib);
-
-            obj.context.release();
+            obj.removeGL();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
         end % fin de Draw
 
@@ -147,8 +148,24 @@ classdef Scene3D < handle
                 listeElem{i}.delete(gl);
             end
             Texture.DeleteAll(gl);
-            obj.context.release();
+            obj.removeGL();
         end % fin de delete
+
+        function setCouleurSelection(obj, newColor)
+            if (numel(newColor) == 3)
+                newColor(4) = 1;
+            end
+            if numel(newColor) == 4
+                if obj.selectObject.id ~= 0
+                    elem = obj.mapElements(obj.selectObject.id);
+                    obj.selectObject = elem.deselect(obj.selectObject);
+                    obj.selectObject.couleur = newColor;
+                    obj.selectObject = elem.select(obj.selectObject);
+                else
+                    obj.selectObject.couleur = newColor;
+                end
+            end
+        end % fin de setCouleurSelection
 
         function setCouleurFond(obj, newColor)
             %SETCOULEURFOND change la couleur du fond de l'écran.
@@ -158,8 +175,8 @@ classdef Scene3D < handle
             end
             if numel(newColor) == 4
                 gl = obj.getGL();
+                obj.couleurFond = newColor;
                 gl.glClearColor(newColor(1), newColor(2), newColor(3), newColor(4));
-                obj.context.release();
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
@@ -174,6 +191,12 @@ classdef Scene3D < handle
             end
             gl = obj.context.getCurrentGL();
         end % fin de getGL
+
+        function removeGL(obj)
+            if obj.context.isCurrent()
+                obj.context.release();
+            end
+        end
 
         function generateInternalObject(obj)
             obj.axesId = -1;
@@ -199,40 +222,8 @@ classdef Scene3D < handle
             elem.typeOrientation = 4;
             elem.setEpaisseur(4);
 
-            obj.framebuffer = Framebuffer(obj.getGL(), obj.canvas.getWidth(), obj.canvas.getHeight());
+            obj.pickingTexture = Framebuffer(obj.getGL(), obj.canvas.getWidth(), obj.canvas.getHeight());
         end % fin de generateInternalObject
-
-        function worldCoord = getWorldCoord(obj, clickPos)
-            gl = obj.getGL();
-            obj.framebuffer.Bind(gl);
-
-            r = 2;      % click radius (square box) px
-            w = 2*r+1;  % square side length px
-
-            buffer = java.nio.FloatBuffer.allocate(w*w);
-            sz = [obj.canvas.getWidth() ; obj.canvas.getHeight()];
-            clickPos(2) = sz(2) - clickPos(2);
-            gl.glReadPixels(clickPos(1)-r, clickPos(2)-r, w, w, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
-            profondeur = typecast(buffer.array(), 'single');
-            n = (profondeur == 1);
-
-            if all(n, "all")
-                worldCoord = 0;
-                % disp('le lancer n a pas touché de cible');
-            else
-                profondeur(n) = nan; % pourquoi ?
-                profondeur = rot90(profondeur);
-
-                [m, k] = min(profondeur(:));
-                [y, x] = ind2sub([w, w], k);
-                NDC = [ (clickPos + [x-r-0.5 ; r-y+1.5])./sz ; m ; 1 ].*2 - 1; % coordonnées dans un cube -1 -> 1
-
-                worldCoord = obj.camera.getProjMatrix * obj.camera.getViewMatrix \ NDC;
-                worldCoord = worldCoord(1:3)./worldCoord(4);
-                worldCoord = worldCoord';
-            end
-            obj.context.release();
-        end % fin de getWorldCoord
 
         function listeTrie = orderElem(obj)
             %ORDERELEM : trie les objet du plus loin au plus pres, indispensable pour la transparence
@@ -249,48 +240,123 @@ classdef Scene3D < handle
             listeTrie = listeTrie(newOrder);
         end % fin de orderElem
 
-        function elem = getPointedObject(obj, mouseCoord)
-            listeElem = values(obj.mapElements);
-            distance = zeros(1, numel(listeElem));
-            for i=1:numel(listeElem)
-                distance(i) = norm(listeElem{i}.getPosition() - mouseCoord);
-            end
-            [~, idx] = min(distance);
-            elem = listeElem{idx};
-        end % fin de getPointedObject
+        function [elemId, worldCoord] = pickObject(obj)
+            gl = obj.getGL();
 
-        function colorSelection(obj, elem)
-            if obj.selectObject.id ~= 0
-                obj.selectObject = obj.mapElements(obj.selectObject.id).reverseSelect(obj.selectObject);
+            % resize & bind frameBuffer
+            w = obj.canvas.getWidth();
+            h = obj.canvas.getHeight();
+            x = obj.startX;
+            y = h - obj.startY;
+            obj.pickingTexture.Resize(gl, w, h);
+
+            %create programme d'id
+            shader3D = ShaderProgram(gl, [3 0 0 0], "id");
+            shader2D = ShaderProgram(gl, [2 0 0 0], "id");
+
+            %trier les objets
+            listeElem = obj.orderElem();
+
+            %dessiner les objets uniquement sur le pixel qui nous interresse
+            camAttrib = obj.camera.getAttributes();
+            gl.glEnable(gl.GL_SCISSOR_TEST);
+            gl.glScissor(x, y, 1, 1);
+            if obj.couleurFond(1) > 0
+                gl.glClearColor(0, 0, 0, 0);
             end
-            if elem.getId() == obj.selectObject.id
-                obj.selectObject.id = 0;
+            gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
+            for i=1:numel(listeElem)
+                elem = listeElem{i};
+                if elem.GLGeom.is2D() == true
+                    oldShader = elem.setShader(gl, shader2D);
+                else
+                    oldShader = elem.setShader(gl, shader3D);
+                end
+                elem.DrawId(gl, camAttrib);
+                elem.setShader(gl, oldShader);
+            end
+            shader2D.delete(gl);
+            shader3D.delete(gl);
+
+            %lire le pixel de couleurs -> obtenir l'id
+            buffer = java.nio.IntBuffer.allocate(1);
+            gl.glReadPixels(x, y, 1, 1, gl.GL_RED_INTEGER, gl.GL_INT, buffer);
+            elemId = typecast(buffer.array(), 'int32');
+
+            %lire la valeur de profondeur -> position du monde
+            gl.glReadPixels(x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
+            profondeur = typecast(buffer.array(), 'single');
+
+            if profondeur == 1
+                worldCoord = 0;
+                disp('le lancer n a pas touché de cible');
             else
-                obj.selectObject = elem.reverseSelect(obj.selectObject);
+                NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
+
+                worldCoord = obj.camera.getProjMatrix * obj.camera.getViewMatrix \ NDC;
+                worldCoord = worldCoord(1:3)./worldCoord(4);
+                worldCoord = worldCoord';
             end
-        end % fin de colorSelection  
+            %unbind le frameBuffer, remise des parametre de la scene
+            obj.pickingTexture.UnBind(gl);
+            gl.glDisable(gl.GL_SCISSOR_TEST);
+            if obj.couleurFond(1) > 0
+                obj.setCouleurFond(obj.couleurFond);
+            end
+            obj.removeGL();
+        end % fin de pickingObject
+
+        function screenShot(obj)
+            gl = obj.getGL();
+            w = obj.canvas.getWidth();
+            h = obj.canvas.getHeight();
+            disp('capture en cours...')
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
+            buffer = java.nio.ByteBuffer.allocate(3 * w * h);
+            gl.glReadPixels(0, 0, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer);
+            img = typecast(buffer.array, 'uint8');
+            img = reshape(img, [3 w h]);
+            img = permute(img,[2 3 1]);
+            img = rot90(img);
+            imshow(img);
+            obj.removeGL();
+        end % fin de screenShot
+
+        function colorSelection(obj, elemId)
+            newElem = obj.mapElements(elemId);
+            if obj.selectObject.id == elemId
+                obj.selectObject = newElem.deselect(obj.selectObject);
+            else
+                if obj.selectObject.id ~= 0
+                    oldElem = obj.mapElements(obj.selectObject.id);
+                    obj.selectObject = oldElem.deselect(obj.selectObject);
+                end
+                obj.selectObject = newElem.select(obj.selectObject);
+            end
+        end % fin de colorSelection
     end % fin des methodes privees
 
     methods % callback
-        function cbk_MousePressed(obj, ~,event)
+        function cbk_MousePressed(obj, ~, event)
             %disp('MousePressed')
             obj.startX=event.getPoint.getX();
             obj.startY=event.getPoint.getY();
             obj.mouseButton = event.getButton();
+
+            if obj.mouseButton == 1
+                [elemId, worldCoord] = obj.pickObject();
+                obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
+                disp(worldCoord)
             
-            worldCoord = obj.getWorldCoord([obj.startX; obj.startY]);
-            % disp(worldCoord)
-            if numel(worldCoord) == 3
-                mod = event.getModifiers();
-                if mod==18 %CTRL LEFT CLICK
-                    elem = obj.getPointedObject(worldCoord);
-                    disp(['element touched : ' num2str(elem.getId())]);
-                    obj.colorSelection(elem);
-                    obj.fenetre.setTextRight(['ID = ' num2str(elem.getId()) '  ']);
-                elseif mod==24 %ALT LEFT CLICK
-                    obj.camera.setTarget(worldCoord);
+                if elemId ~= 0
+                    mod = event.getModifiers();
+                    if mod==18 %CTRL LEFT CLICK
+                        obj.colorSelection(elemId);
+                    elseif mod==24 %ALT LEFT CLICK
+                        obj.camera.setTarget(worldCoord);
+                    end
                 end
-                obj.Draw;
+                obj.DrawScene();
             end
         end
 
@@ -320,7 +386,7 @@ classdef Scene3D < handle
             if (obj.lumiere.onCamera == true)
                 obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
             end
-            obj.Draw();
+            obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 
@@ -348,21 +414,21 @@ classdef Scene3D < handle
                     obj.camera.speed=max(5,obj.camera.speed-1);                   
                 case char(27) % ECHAP
                     if obj.selectObject.id ~= 0
-                        obj.selectObject = obj.mapElements(obj.selectObject.id).reverseSelect(obj.selectObject);
-                        obj.selectObject.id = 0;
+                        elem = obj.mapElements(obj.selectObject.id);
+                        obj.selectObject = elem.deselect(obj.selectObject);
                     end
                 case char(127) % SUPPR
                     if obj.selectObject.id ~= 0
                         obj.RemoveComponent(obj.selectObject.id);
                         obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
                     end
-                case 'i'
-                    obj.framebuffer.screenShot(obj.getGL, obj.canvas.getWidth(), obj.canvas.getHeight());
+               case 'i'
+                     obj.screenShot();
                 otherwise
                     redraw = false;
             end
             if redraw
-                obj.Draw();
+                obj.DrawScene();
             end
         end
 
@@ -372,7 +438,7 @@ classdef Scene3D < handle
             if obj.lumiere.onCamera == true
                 obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
             end
-            obj.Draw();
+            obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
         end
     
@@ -384,14 +450,13 @@ classdef Scene3D < handle
             gl = obj.getGL();
             gl.glViewport(0, 0, w, h);
             obj.camera.setRatio(w/h);
-            obj.framebuffer.Resize(gl, w, h);
-            obj.Draw();
+            obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
 
         function cbk_update(obj, ~, ~)
             disp('cbk_Update');
-            obj.Draw;
+            obj.DrawScene;
         end
     end % fin des methodes callback
 end % fin de la classe Scene3D

@@ -101,7 +101,7 @@ elementTexte.typeOrientation = 2 + 4;
     elem.useTexture('textures/briques.jpg');
     
     % plan
-    [pos, ind] = generatePlan(3, 3);
+    [pos, ind, map] = generatePlan(3, 3);
     planGeom = MyGeom(34, pos, ind, 'face');
     planGeom.setModelMatrix(MRot3D([90 0 0]));
     viewer.AddComponent(planGeom);
@@ -114,11 +114,13 @@ elementTexte.typeOrientation = 2 + 4;
     group.AddElem(viewer.mapElements(34));
     group.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
 
-
-
 [posBoule, indBoule] = generatePyramide(50, 1);
 
-%[posBoule, indBoule] = generateSphere(12, 12, 2*pi, 0.3);
+planGeomTex = MyGeom(41, pos, ind, 'face');
+planGeomTex.setModelMatrix(MTrans3D([0 0 -2]));
+elem = viewer.AddComponent(planGeomTex);
+elem.AddMapping(map);
+elem.useTexture('textures/briques.jpg')
 
 bouleLightGeom = MyGeom(1000, posBoule, indBoule, 'face');
 elem = viewer.AddComponent(bouleLightGeom);
@@ -126,7 +128,7 @@ viewer.lumiere.setForme(elem);
 elem.setModelMatrix(MTrans3D([0 0 0]));
 
 %%%%  affichage  %%%%
-viewer.Draw();
+viewer.DrawScene();
 
 %%%%  suppression  %%%%
 % viewer.delete();

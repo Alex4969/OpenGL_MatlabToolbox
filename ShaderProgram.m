@@ -4,6 +4,8 @@ classdef ShaderProgram < handle
     properties
         shaderProgId        % uint32 : id de la texture
         mapUniformLocation  % char -> int32 : associe un nom d'uniform (variable GLSL) a sa location
+
+        srcFrag
     end
     
     methods
@@ -11,23 +13,27 @@ classdef ShaderProgram < handle
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
             motCle(1) = "POS" + nLayout(1);
-            if typeCol == 'C' && nLayout(2) > 0
-                motCle(2) = "COL" + nLayout(2);
-            elseif typeCol == 'T' && nLayout(3) > 0
-                motCle(2) = "TEX";
+            if type == "id"
+                obj.createProgPickId(gl, motCle);
             else
-                motCle(2) = "DEF";
-            end
-            if type == "Face"
-                if typeSha ~= 'S'
-                    motCle(3) = "LIGHT";
-                    if typeSha == 'L' && nLayout(4) > 0 
-                        motCle(4) = "NORM";
-                    end
+                if typeCol == 'C' && nLayout(2) > 0
+                    motCle(2) = "COL" + nLayout(2);
+                elseif typeCol == 'T' && nLayout(3) > 0
+                    motCle(2) = "TEX";
+                else
+                    motCle(2) = "DEF";
                 end
-                obj.createProgWithLight(gl, motCle)
-            else
-                obj.createProgNoLight(gl, motCle);
+                if type == "Face"
+                    if typeSha ~= 'S'
+                        motCle(3) = "LIGHT";
+                        if typeSha == 'L' && nLayout(4) > 0 
+                            motCle(4) = "NORM";
+                        end
+                    end
+                    obj.createProgWithLight(gl, motCle)
+                else
+                    obj.createProgNoLight(gl, motCle);
+                end
             end
             gl.glLinkProgram(obj.shaderProgId);
             gl.glValidateProgram(obj.shaderProgId);
@@ -86,6 +92,14 @@ classdef ShaderProgram < handle
             end
         end % fin de findLocation
 
+        function createProgPickId(obj, gl, motCle)
+            srcVert = obj.readIfContains("shaders/drawId.vert.glsl", motCle);
+            obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
+
+            obj.srcFrag = obj.readIfContains("shaders/drawId.frag.glsl", motCle);
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, obj.srcFrag);
+        end % fin de create Program
+
         function createProgWithLight(obj, gl, motCle)
             srcVert = obj.readIfContains("shaders/all.vert.glsl", motCle);
             obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
@@ -93,16 +107,16 @@ classdef ShaderProgram < handle
             srcGeom = obj.readIfContains("shaders/all.geom.glsl", motCle);
             obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, srcGeom);
 
-            srcFrag = obj.readIfContains("shaders/all.frag.glsl", motCle);
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
+            obj.srcFrag = obj.readIfContains("shaders/all.frag.glsl", motCle);
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, obj.srcFrag);
         end % fin de create Program
 
         function createProgNoLight(obj, gl, motCle)
             srcVert = obj.readIfContains("shaders/noLight.vert.glsl", motCle);
             obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
 
-            srcFrag = obj.readIfContains("shaders/noLight.frag.glsl", motCle);
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
+            obj.srcFrag = obj.readIfContains("shaders/noLight.frag.glsl", motCle);
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, obj.srcFrag);
         end % fin de create Program
 
         function src = readIfContains(~, filePath, keyWords)

@@ -7,29 +7,21 @@ classdef Framebuffer < handle
         FBOId               %Frame Buffer Id
         RBOBuffer           %Render Buffer Object
         RBOId               %Render Buffer Id
-        forme ElementFace   %Le carré sur lequel on affiche la texture=la scène
+        texture Texture     %Texture dans laquelle on ecrit l'image d'id
     end
 
     methods
         function obj = Framebuffer(gl, width, height)
             obj.generateFramebuffer(gl);
             CheckError(gl, 'Erreur lors de la création du frameBuffer');
+            
+            obj.texture = Texture(gl, '', width, height);
+            gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_TEXTURE_2D, obj.texture.textureId, 0);
 
-            [pos, idx, mapping] = generatePlan(2, 2);
-            planGeom = MyGeom(0, pos, idx, 'face');
-            obj.forme = ElementFace(gl, planGeom);
-            obj.forme.typeOrientation = 0;
-            obj.forme.AddMapping(mapping);
-
-            obj.forme.texture = Texture(gl, '', width, height);
-            gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_TEXTURE_2D, obj.forme.texture.textureId, 0);
             CheckError(gl, 'Erreur de la texture frameBuffer');
             obj.addRenderBuffer(gl, width, height);
             CheckError(gl, 'Erreur du renderbuffer du frameBuffer');
             obj.checkFrameBuffer(gl);
-
-            obj.forme.setModeRendu('T', 'S');
-            obj.forme.changerProg(gl);
 
             obj.UnBind(gl);
         end % fin du constructeur Framebuffer
@@ -37,12 +29,11 @@ classdef Framebuffer < handle
         function Resize(obj, gl, width, height)
             obj.Bind(gl);
             gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, obj.FBOId);
-            gl.glActiveTexture(gl.GL_TEXTURE0);
-            obj.forme.texture.Bind(gl);
+            obj.texture.Bind(gl);
 
             gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
             gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH24_STENCIL8, width, height);
-            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, width, height, 0, gl.GL_RGB, gl.GL_UNSIGNED_INT, []);
+            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_R32I, width, height, 0, gl.GL_RED_INTEGER, gl.GL_INT, []);
         end % fin de Resize
 
         function Bind(obj, gl)
@@ -52,17 +43,6 @@ classdef Framebuffer < handle
         function UnBind(~, gl)
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
         end
-
-        function screenShot(obj, gl, w, h)
-            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,obj.FBOId);
-            buffer = java.nio.ByteBuffer.allocate(3 * w * h);
-            gl.glReadPixels(0, 0, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer);
-            img = typecast(buffer.array, 'uint8');
-            img = reshape(img, [3 w h]);
-            img = permute(img,[2 3 1]);
-            img = rot90(img);
-            imshow(img);
-        end % fin de screenShot
     end % fin des methodes defauts
 
     methods (Access = private)
@@ -87,6 +67,8 @@ classdef Framebuffer < handle
             fboStatus = gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER);
             if (fboStatus ~= gl.GL_FRAMEBUFFER_COMPLETE)
                 warning('frame buffer  mal construit');
+            % else 
+            %     disp('frameBuffer OK !');
             end
         end % fin de checkRenderBuffer
 

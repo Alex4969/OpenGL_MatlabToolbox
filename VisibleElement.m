@@ -2,21 +2,21 @@ classdef (Abstract) VisibleElement < handle
     %VISIBLEELEMENT 
     
     properties (GetAccess = public, SetAccess = protected)
-        Type char
+        Type string
         Geom GeomComponent
         GLGeom GLGeometry
         shader ShaderProgram
         typeShading    = 'S'    % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
         typeColoration = 'U'    % 'U' : Uniforme, 'C' : Color, 'T' : Texture
-        newRendu logical
+        newRendu logical = false
 
         parent
         geomListener
     end
 
     properties (Access = public)
-        typeOrientation uint8 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe, '0000' rien (pour framebuffer)
-        visible logical
+        typeOrientation uint8 = 1 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe, '0000' rien (pour framebuffer)
+        visible logical = true
     end
 
     events
@@ -28,9 +28,6 @@ classdef (Abstract) VisibleElement < handle
             %VISIBLEELEMENT
             obj.Geom = aGeom;
             obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
-            obj.newRendu = false;
-            obj.visible = true;
-            obj.typeOrientation = 1;
 
             obj.geomListener = addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
         end % fin du constructeur de VisibleElement
@@ -104,6 +101,13 @@ classdef (Abstract) VisibleElement < handle
             obj.newRendu = true;
         end % fin de AddNormals
 
+        function GenerateNormals(obj)
+            normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
+            obj.GLGeom.addDataToBuffer(normales, 4);
+            obj.typeShading = 'L';
+            obj.newRendu = true;
+        end % fin de GenerateNormals
+
         function cbk_geomUpdate(obj, source, ~)
             obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
             if source.type == "texte"
@@ -114,13 +118,6 @@ classdef (Abstract) VisibleElement < handle
                 obj.newRendu = true;
             end
         end % fin de cbk_geomUpdate
-
-        function GenerateNormals(obj)
-            normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
-            obj.GLGeom.addDataToBuffer(normales, 4);
-            obj.typeShading = 'L';
-            obj.newRendu = true;
-        end % fin de GenerateNormals
 
         function toString(obj)
             nbPoint = size(obj.Geom.listePoints, 1);
@@ -138,20 +135,28 @@ classdef (Abstract) VisibleElement < handle
 
         function changerProg(obj, gl)
             obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
+            obj.newRendu = false;
         end % fin de changerProg
+
+        function oldShader = setShader(obj, gl, newShader)
+            if obj.newRendu == true
+                obj.changerProg(gl);
+            end
+            oldShader = obj.shader;
+            obj.shader = newShader;
+        end % fin de setShader
 
         function CommonDraw(obj, gl, camAttrib)
             %COMMONDRAW, fonction appele au debut de tous les draw des
             %objets. Definie le programme et le mode d'orientation
             if obj.newRendu == true
-                obj.newRendu = false;
                 obj.changerProg(gl);
             end
             obj.shader.Bind(gl);
             obj.GLGeom.Bind(gl);
             %typeOrientation '1000' fixe, '0100' Normale a l'ecran, '0010' orthonorme, '0001' perspective, '0' rien
             model = obj.getModelMatrix();
-            if obj.typeOrientation == 0 % seule modelMatrix (dans le repere ecran normalise) active
+            if obj.typeColoration == 0 % seule modelMatrix (dans le repere ecran normalise) active
                 cam = eye(4);
             elseif obj.typeOrientation == 1 %'0001' PERSPECTIVE
                 cam = camAttrib.proj * camAttrib.view;
@@ -186,7 +191,8 @@ classdef (Abstract) VisibleElement < handle
 
     methods (Abstract = true)
         Draw(obj, gl, camAttrib)
-        sNew = reverseSelect(obj, s)
         setCouleur(obj, matColor)
+        sNew = select(obj, s)
+        sNew = deselect(obj, s)
     end % fin des methodes abstraites
 end % fin de la classe VisibleElement
