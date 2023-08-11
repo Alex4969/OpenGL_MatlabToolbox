@@ -86,9 +86,6 @@ classdef ElementFace < VisibleElement
             obj.couleur = obj.testNewCol(newCol);
             obj.quoiAfficher = bitor(obj.quoiAfficher, 1);
             notify(obj,'evt_update');
-            if isa(obj.parent, 'Light')
-                obj.parent.setColor(obj.couleur);
-            end
         end
 
         function setCouleurArretes(obj, newCol)

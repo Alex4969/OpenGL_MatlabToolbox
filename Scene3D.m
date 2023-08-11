@@ -61,6 +61,7 @@ classdef Scene3D < handle
 
             obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
             obj.lumiere = Light(gl);
+            addlistener(obj.lumiere, 'newModel', @obj.cbk_giveGL);
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
             %Listeners
@@ -76,7 +77,7 @@ classdef Scene3D < handle
             addlistener(obj,'evt_update',@obj.cbk_update);
         end % fin du constructeur de Scene3D
 
-        function elem = AddComponent(obj, comp)
+        function elem = AddElement(obj, comp)
             if ~isa(comp, 'GeomComponent')
                 warning('pas possible d ajouter un objet de ce type');
                 return
@@ -98,14 +99,14 @@ classdef Scene3D < handle
             obj.mapElements(elem.getId()) = elem;
             addlistener(elem,'evt_update',@obj.cbk_update);
             obj.removeGL();
-        end % fin de ajouterGeom
+        end % fin de AddElement
 
         function group = CreateGroup(obj, groupId)
             group = Ensemble(groupId);
             obj.mapGroups(groupId) = group;
         end % fin de createGroup
 
-        function elem = RemoveComponent(obj, elemId) % element et texte
+        function elem = RemoveElement(obj, elemId) % element et texte
             if isKey(obj.mapElements, elemId)
                 elem = obj.mapElements(elemId);
                 if (obj.selectObject.id == elemId)
@@ -118,7 +119,7 @@ classdef Scene3D < handle
             else
                 disp('objet a supprimé n existe pas');
             end
-        end % fin de RemoveComponent
+        end % fin de RemoveElement
 
         function DrawScene(obj)
             %DRAW dessine la scene avec tous ses objets
@@ -129,6 +130,12 @@ classdef Scene3D < handle
 
             camAttrib = obj.camera.getAttributes();
             %dessin des objets ajouter a la scene
+            
+            %dessiner les objet interne a la scene
+            if ~isempty(obj.lumiere.forme)
+                obj.lumiere.forme.Draw(gl, camAttrib);
+            end
+            %dessiner les objets de l'experience
             listeElem = obj.orderElem();
             for i=1:numel(listeElem)
                 elem = listeElem{i};
@@ -220,13 +227,13 @@ classdef Scene3D < handle
             tailleAxe = 50;
             [pos, idx, color] = generateAxis(-tailleAxe, tailleAxe);
             axesGeom = MyGeom(obj.axesId, pos, idx, 'ligne');
-            elem = obj.AddComponent(axesGeom);
+            elem = obj.AddElement(axesGeom);
             elem.AddColor(color);
 
             obj.grilleId = -2;
             [pos, idx] = generateGrid(tailleAxe, 2);
             grilleGeom = MyGeom(obj.grilleId, pos, idx, 'ligne');
-            elem = obj.AddComponent(grilleGeom);
+            elem = obj.AddElement(grilleGeom);
             elem.setEpaisseur(1);
             elem.setCouleur([0.3 0.3 0.3]);
 
@@ -234,7 +241,7 @@ classdef Scene3D < handle
             tailleGysmo = 1;
             [pos, idx, color] = generateAxis(0, tailleGysmo);
             gysmoGeom = MyGeom(obj.gyroscopeId, pos, idx, 'ligne');
-            elem = obj.AddComponent(gysmoGeom);
+            elem = obj.AddElement(gysmoGeom);
             elem.AddColor(color);
             elem.typeOrientation = 4;
             elem.setEpaisseur(4);
@@ -272,6 +279,7 @@ classdef Scene3D < handle
             shader2D = ShaderProgram(gl, [2 0 0 0], "id");
 
             %trier les objets
+            %% pas bseoin de les trier !!
             listeElem = obj.orderElem();
 
             %dessiner les objets uniquement sur le pixel qui nous interresse
@@ -282,6 +290,7 @@ classdef Scene3D < handle
                 gl.glClearColor(0, 0, 0, 0);
             end
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
+            % dessiner la lumiere
             for i=1:numel(listeElem)
                 elem = listeElem{i};
                 if elem.GLGeom.is2D() == true
@@ -341,14 +350,14 @@ classdef Scene3D < handle
     methods % callback
         function cbk_MousePressed(obj, ~, event)
             %disp('MousePressed')
-            obj.startX=event.getPoint.getX();
-            obj.startY=event.getPoint.getY();
+            obj.startX = event.getPoint.getX();
+            obj.startY = event.getPoint.getY();
             obj.mouseButton = event.getButton();
 
             if obj.mouseButton == 1
                 [elemId, worldCoord] = obj.pickObject();
                 obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
-                disp(worldCoord)
+                disp(worldCoord);
             
                 if elemId ~= 0
                     mod = event.getModifiers();
@@ -421,7 +430,7 @@ classdef Scene3D < handle
                     end
                 case char(127) % SUPPR
                     if obj.selectObject.id ~= 0
-                        obj.RemoveComponent(obj.selectObject.id);
+                        obj.RemoveElement(obj.selectObject.id);
                         obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
                     end
                case 'i'
@@ -459,6 +468,11 @@ classdef Scene3D < handle
         function cbk_update(obj, ~, ~)
             disp('cbk_Update');
             obj.DrawScene;
+        end
+
+        function cbk_giveGL(obj, source, event)
+            source.glUpdate(obj.getGL());
+            obj.removeGL();
         end
     end % fin des methodes callback
 end % fin de la classe Scene3D
