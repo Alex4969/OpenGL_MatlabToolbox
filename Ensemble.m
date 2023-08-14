@@ -55,5 +55,12 @@ classdef Ensemble < handle
         function setModelMatrix(obj, model)
             obj.groupMatrix = model;
         end % fin de setModelMatrix
+
+        function delete(obj)
+            listeElem = obj.sousElements.values;
+            for i=1:numel(listeElem)
+                listeElem{i}.setParent([]);
+            end
+        end
     end % fin methodes defauts
 end % fin classe Ensemble

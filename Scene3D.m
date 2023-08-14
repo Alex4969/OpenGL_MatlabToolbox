@@ -126,6 +126,17 @@ classdef Scene3D < handle
             end
         end % fin de RemoveElement
 
+        function RemoveGroup(obj, groupId)
+            if isKey(obj.mapGroups, groupId)
+                group = obj.mapGroups(groupId);
+                group.delete();
+                obj.mapGroups.remove(groupId);
+                notify(obj, 'evt_update');
+            else
+                disp('objet a supprimé n existe pas');
+            end
+        end
+
         function DrawScene(obj)
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();

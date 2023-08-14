@@ -88,25 +88,6 @@ classdef (Abstract) VisibleElement < handle
             notify(obj, 'evt_newRendu');
         end % fin de AddColor
 
-        function AddMapping(obj, matMapping)
-            obj.GLGeom.addDataToBuffer(matMapping, 3);
-            obj.typeColoration = 'T';
-            notify(obj, 'evt_newRendu');
-        end % fin de AddMapping
-
-        function AddNormals(obj, matNormales)
-            obj.GLGeom.addDataToBuffer(matNormales, 4);
-            obj.typeShading = 'L';
-            notify(obj, 'evt_newRendu');
-        end % fin de AddNormals
-
-        function GenerateNormals(obj)
-            normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
-            obj.GLGeom.addDataToBuffer(normales, 4);
-            obj.typeShading = 'L';
-            notify(obj, 'evt_newRendu');
-        end % fin de GenerateNormals
-
         function cbk_geomUpdate(obj, source, ~)
             obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
             if obj.Type == "Texte"

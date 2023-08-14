@@ -70,6 +70,12 @@ classdef ElementTexte < VisibleElement
             notify(obj, 'evt_textureUpdate');
         end
 
+        function AddMapping(obj, matMapping)
+            obj.GLGeom.addDataToBuffer(matMapping, 3);
+            obj.typeColoration = 'T';
+            notify(obj, 'evt_newRendu');
+        end % fin de AddMapping
+
         function sNew = select(obj, s)
             sNew.id = obj.getId();
             sNew.couleur = obj.couleur;
