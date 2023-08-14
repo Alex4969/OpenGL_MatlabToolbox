@@ -146,51 +146,17 @@ classdef (Abstract) VisibleElement < handle
             obj.shader = newShader;
         end % fin de setShader
 
-        function CommonDraw(obj, gl, camAttrib)
+        function CommonDraw(obj, gl)
             %COMMONDRAW, fonction appele au debut de tous les draw des
             %objets. Definie le programme et le mode d'orientation
             if obj.newRendu == true
                 obj.changerProg(gl);
             end
-            obj.shader.Bind(gl);
-            obj.GLGeom.Bind(gl);
-            %typeOrientation '1000' fixe, '0100' Normale a l'ecran, '0010' orthonorme, '0001' perspective, '0' rien
-            model = obj.getModelMatrix();
-            if obj.typeColoration == 0 % seule modelMatrix (dans le repere ecran normalise) active
-                cam = eye(4);
-            elseif obj.typeOrientation == 1 %'0001' PERSPECTIVE
-                cam = camAttrib.proj * camAttrib.view;
-            elseif obj.typeOrientation == 8 %'1000' fixe (pour texte)
-                % on utilise la matrice modele pour positionner le texte
-                % dans le repere ecran (-1;+1)
-                % pour changer la taille, on change le scaling de la
-                % matrice model
-                model(1, 4) = model(1, 4) * camAttrib.maxX;
-                model(2, 4) = model(2, 4) * camAttrib.maxY;
-                model(3, 4) = -camAttrib.near;
-                model = model * MScale3D(camAttrib.coef);%coef pour dimension identique en ortho ou perspective
-                cam =  camAttrib.proj;
-            else
-                if bitand(obj.typeOrientation, 2) > 0 % 0010 'face a l'ecran
-                    model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3);
-                    cam =  camAttrib.proj * camAttrib.view;
-                    % cam*model = proj*view*inv(view)*model
-                end
-                if bitand(obj.typeOrientation, 4) > 0 %'0100' coin inferieur gauche 
-                    % rotation seulement activée sur un point de l'ecran
-                    cam = MProj3D('O', [camAttrib.ratio*16 16 1 20]) * camAttrib.view;
-                    cam(1,4) = -0.97 + 0.1/camAttrib.ratio;
-                    cam(2,4) = -0.87;
-                    cam(3,4) =  0;
-                end
-            end
-            obj.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
-            obj.shader.SetUniformMat4(gl, 'uModelMatrix', model);
         end % fin de commonDraw
     end % fin des methodes defauts
 
     methods (Abstract = true)
-        Draw(obj, gl, camAttrib)
+        Draw(obj, gl)
         setCouleur(obj, matColor)
         sNew = select(obj, s)
         sNew = deselect(obj, s)

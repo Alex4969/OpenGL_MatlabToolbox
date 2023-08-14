@@ -20,7 +20,7 @@ classdef ElementTexte < VisibleElement
             obj.changerProg(gl);
         end % fin du constructeur Texte
 
-        function Draw(obj, gl, camAttrib)
+        function Draw(obj, gl)
             %DRAW dessine cet objet
             if obj.isVisible() == false
                 return
@@ -29,16 +29,20 @@ classdef ElementTexte < VisibleElement
                 obj.texture = Texture(gl, obj.texture);
                 obj.textureUpdate = false;
             end
-            obj.CommonDraw(gl, camAttrib);
+            obj.CommonDraw(gl);
+            obj.shader.Bind(gl);
+            obj.GLGeom.Bind(gl);
             obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
             obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
             CheckError(gl, 'apres le dessin d un texte');
         end % fin de Draw
 
-        function DrawId(obj, gl, camAttrib)
+        function DrawId(obj, gl)
             % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
-            obj.CommonDraw(gl, camAttrib);
+            obj.CommonDraw(gl);
+            obj.shader.Bind(gl);
+            obj.GLGeom.Bind(gl);
             obj.shader.SetUniform1i(gl, 'id', obj.getId());
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
         end % fin de drawID

@@ -15,12 +15,14 @@ classdef ElementPoint < VisibleElement
             obj.changerProg(gl);
         end % fin du constructeur ElementLigne
 
-        function Draw(obj, gl, camAttrib)
+        function Draw(obj, gl)
             %DRAW dessine cet objet
             if obj.isVisible() == false
                 return
             end
-            obj.CommonDraw(gl, camAttrib);
+            obj.CommonDraw(gl);
+            obj.shader.Bind(gl);
+            obj.GLGeom.Bind(gl);
 
             gl.glPointSize(obj.epaisseur);
             if obj.typeColoration == 'U'
@@ -32,9 +34,11 @@ classdef ElementPoint < VisibleElement
             CheckError(gl, 'apres le dessin');
         end % fin de Draw
 
-        function DrawId(obj, gl, camAttrib)
+        function DrawId(obj, gl)
             % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
-            obj.CommonDraw(gl, camAttrib);
+            obj.CommonDraw(gl);
+            obj.shader.Bind(gl);
+            obj.GLGeom.Bind(gl);
             obj.shader.SetUniform1i(gl, 'id', obj.getId());
             gl.glDrawElements(gl.GL_POINTS, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
         end % fin de drawID

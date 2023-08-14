@@ -3,11 +3,11 @@ clear all
 addpath('outils\');
 addpath('java\');
 
-viewer = Scene3D;
+viewer = Scene3D();
 viewer.setCouleurFond([0 0 0.4])
 viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
 viewer.lumiere.setColor([1 1 1]);
-
+viewer.DrawScene();
 %%%%  definition des objets  %%%%
 
 % generation des parametre de la pyramide
@@ -22,6 +22,8 @@ elem = viewer.mapElements(1);
 elem.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 elem.AddColor(couleurPyramide);
 elem.setCouleurArretes([1 0 1]);
+
+viewer.DrawScene
 
 % % nuage de points avec une couleur par sommet
 N = 10000;
@@ -113,14 +115,6 @@ elementTexte.typeOrientation = 2 + 4;
     group.AddElem(viewer.mapElements(33));
     group.AddElem(viewer.mapElements(34));
     group.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
-
-
-
-planGeomTex = MyGeom(41, pos, ind, 'face');
-planGeomTex.setModelMatrix(MTrans3D([0 0 -2]));
-elem = viewer.AddElement(planGeomTex);
-elem.AddMapping(map);
-elem.useTexture('textures/briques.jpg')
 
 [posLight, indLight] = generatePyramide(50, 1);
 bouleLightGeom = MyGeom(1000, posLight, indLight, 'face');
