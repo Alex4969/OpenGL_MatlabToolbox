@@ -12,8 +12,8 @@ classdef GeomComponent < handle
     end
 
     events
-        geomUpdate
-        modelUpdate
+        geomUpdate          % modification de la geometrie
+        modelUpdate         % modification de la matrice model ( pour redessiner ou modfifier la lumiere)
     end
     
     methods

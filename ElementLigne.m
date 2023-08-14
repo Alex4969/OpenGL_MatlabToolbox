@@ -40,6 +40,7 @@ classdef ElementLigne < VisibleElement
 
         function setEpaisseur(obj, newEp)
             obj.epaisseur = newEp;
+            notify(obj,'evt_update');
         end
 
         function setCouleur(obj, newColor)
@@ -48,6 +49,7 @@ classdef ElementLigne < VisibleElement
             end
             if numel(newColor) == 4
                 obj.couleur = newColor;
+                notify(obj,'evt_update');
             else
                 warning('mauvaise matrice de couleur, annulation');
             end

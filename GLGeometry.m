@@ -15,7 +15,10 @@ classdef GLGeometry < handle
                                 % contient les composantes de couleurs / mapping / normales
         indexData
         nLayout                 % [nPos, nColor, NTextureMapping, nNormales] : compte le nombre de valeurs pour chaque attribut
-        updateNeeded = false
+    end
+
+    events
+        evt_updateLayout
     end
     
     methods
@@ -44,9 +47,7 @@ classdef GLGeometry < handle
             end
             obj.vertexData = [obj.vertexData(:,1:nAvant) mat obj.vertexData(:,(nAvant+1):size(obj.vertexData, 2))];
             obj.nLayout(pos) = size(mat, 2);
-            if ~isempty(obj.VBOId) % les modifications seront visibles au prochain draw de scene3D
-                obj.updateNeeded = true;
-            end
+            notify(obj, 'evt_updateLayout');
         end % fin de addDataToBuffer
         
         function CreateGLObject(obj, gl)
@@ -73,14 +74,16 @@ classdef GLGeometry < handle
             gl.glBindVertexArray(obj.VAOId);
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
             CheckError(gl, 'Erreur du Bind');
-            if obj.updateNeeded
-                obj.declareVertexAttrib(gl);
-                obj.fillVBO(gl);
-                obj.fillEBO(gl);
-                obj.updateNeeded = false;
-                CheckError(gl, 'Erreur de la mise a jour');
-            end
         end % fin de bind
+
+        function glUpdate(obj, gl, ~)
+            obj.Bind(gl);
+            obj.fillVBO(gl);
+            obj.fillEBO(gl);
+            obj.declareVertexAttrib(gl);
+            CheckError(gl, 'Erreur de la mise a jour');
+            obj.Unbind(gl);
+        end
 
         function Unbind(~, gl)
             %UNBIND retire les objets du contexte OpenGL
@@ -105,11 +108,11 @@ classdef GLGeometry < handle
         end
 
         function nouvelleGeom(obj, newVertexData, newIndices)
-            obj.updateNeeded = true;
             obj.vertexData = newVertexData;
             obj.indexData = uint32(newIndices);
             nPos = size(newVertexData, 2);
             obj.nLayout = [nPos, 0, 0, 0];
+            notify(obj, 'evt_updateLayout');
         end % fin de nouvelleGeom
     end % fin des methodes defauts
 

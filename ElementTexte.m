@@ -5,7 +5,10 @@ classdef ElementTexte < VisibleElement
     properties (GetAccess = public, SetAccess = protected)
         couleur = [1 1 1 1]    % 1x4 double entre 0 et 1
         texture
-        textureUpdate logical = false
+    end
+
+    events
+        evt_textureUpdate
     end
     
     methods
@@ -14,6 +17,7 @@ classdef ElementTexte < VisibleElement
             obj@VisibleElement(gl, geomComp);
             obj.Type = 'Texte';
             obj.AddMapping(obj.Geom.mapping);
+            obj.GLGeom.glUpdate(gl)
             obj.typeOrientation = 2; % normal a l'ecran
             obj.typeColoration = 'T';
             obj.texture = Texture(gl, obj.Geom.police.name + ".png");
@@ -24,10 +28,6 @@ classdef ElementTexte < VisibleElement
             %DRAW dessine cet objet
             if obj.isVisible() == false
                 return
-            end
-            if obj.textureUpdate == true
-                obj.texture = Texture(gl, obj.texture);
-                obj.textureUpdate = false;
             end
             obj.GLGeom.Bind(gl);
             obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
@@ -51,16 +51,24 @@ classdef ElementTexte < VisibleElement
             end
             if numel(newColor) == 4
                 obj.couleur = newColor;
+                notify(obj,'evt_update');
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
-            notify(obj,'evt_update');
         end % fin setCouleurFond
 
-        function changePolice(obj, policeName)
-            obj.texture = policeName + ".png";
-            obj.textureUpdate = true;
-        end % fin de changePolice
+        function glUpdate(obj, gl, eventName)
+            if eventName == "evt_textureUpdate"
+                obj.texture = Texture(gl, obj.texture);
+            else
+                glUpdate@VisibleElement(obj, gl, eventName);
+            end
+        end % fin de glUpdate
+
+        function changePolice(obj)
+            obj.texture = obj.Geom.police.name + ".png";
+            notify(obj, 'evt_textureUpdate');
+        end
 
         function sNew = select(obj, s)
             sNew.id = obj.getId();

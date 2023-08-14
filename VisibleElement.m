@@ -10,7 +10,6 @@ classdef (Abstract) VisibleElement < handle
         typeColoration = 'U'    % 'U' : Uniforme, 'C' : Color, 'T' : Texture
 
         parent
-        geomListener
     end
 
     properties (Access = public)
@@ -29,7 +28,7 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom = aGeom;
             obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
 
-            obj.geomListener = addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
+            addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
@@ -110,9 +109,9 @@ classdef (Abstract) VisibleElement < handle
 
         function cbk_geomUpdate(obj, source, ~)
             obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
-            if source.type == "texte"
+            if obj.Type == "Texte"
                 obj.AddMapping(source.mapping);
-                obj.changePolice(source.police.name);
+                obj.changePolice();
             else
                 obj.typeColoration = 'U';
                 notify(obj, 'evt_newRendu');
@@ -138,7 +137,7 @@ classdef (Abstract) VisibleElement < handle
             obj.shader = newShader;
         end % fin de setShader
 
-        function glUpdate(obj, gl)
+        function glUpdate(obj, gl, evtName)
             obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
         end % fin de glUpdate
     end % fin des methodes defauts

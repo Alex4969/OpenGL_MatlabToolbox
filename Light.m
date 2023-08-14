@@ -193,13 +193,13 @@ classdef Light < handle
             obj.updateNeeded = true;
         end
 
-        function glUpdate(obj, gl)
+        function glUpdate(obj, gl, ~)
             if ~isempty(obj.comp)
                 obj.forme = ElementFace(gl, obj.comp);
                 obj.forme.setModelMatrix(MTrans3D(obj.position));
                 obj.forme.setCouleur(obj.couleurLumiere);
                 obj.forme.setModeRendu('U', 'S');
-                obj.forme.glUpdate(gl)
+                obj.forme.glUpdate(gl, "modelUpdate")
                 obj.modelListener = addlistener(obj.forme.Geom,'modelUpdate',@obj.cbk_modelUpdate);
                 obj.comp = GeomComponent.empty;
             end

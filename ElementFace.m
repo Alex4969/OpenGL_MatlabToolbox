@@ -3,7 +3,6 @@ classdef ElementFace < VisibleElement
     
     properties %(GetAccess = public, SetAccess = protected)
         texture
-        textureUpdate = false
         epaisseurArretes = 1                % float
         epaisseurPoints  = 2                % float
         couleur          = [1 0 0 1]        % 1x4
@@ -14,7 +13,11 @@ classdef ElementFace < VisibleElement
     properties (GetAccess = public, SetAccess = protected)
         quoiAfficher int8 = 1               % 001 : face, 010 : ligne, 100, points
                                             % toutes combinaisons acceptés
-    end  
+    end
+
+    events
+        evt_textureUpdate
+    end
    
     methods
         function obj = ElementFace(gl, aGeom)
@@ -34,10 +37,6 @@ classdef ElementFace < VisibleElement
             obj.shader.SetUniform1i(gl, 'uQuoiAfficher', obj.quoiAfficher);
             if bitand(obj.quoiAfficher, 1) > 0
                 if obj.typeColoration == 'T' && ~isempty(obj.texture)
-                    if obj.textureUpdate == true
-                        obj.texture = Texture(gl, obj.texture);
-                        obj.textureUpdate = false;
-                    end
                     obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
                     gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
                 elseif obj.typeColoration == 'U' && bitand(obj.quoiAfficher, 1) > 0
@@ -70,16 +69,18 @@ classdef ElementFace < VisibleElement
                 return 
             end
             obj.setModeRendu('T');
-            obj.textureUpdate = true;
             obj.texture = fileName;
+            notify(obj, 'evt_textureUpdate');
         end % fin de useTexture
 
         function setEpaisseurArretes(obj, newEp)
             obj.epaisseurArretes = newEp;
+            notify(obj,'evt_update');
         end
 
         function setEpaisseurPoints(obj, newEp)
             obj.epaisseurPoints = newEp;
+            notify(obj,'evt_update');
         end
 
         function setCouleur(obj, newCol)
@@ -91,11 +92,13 @@ classdef ElementFace < VisibleElement
         function setCouleurArretes(obj, newCol)
             obj.couleurArretes = obj.testNewCol(newCol);
             obj.quoiAfficher = bitor(obj.quoiAfficher, 2);
+            notify(obj,'evt_update');
         end
 
         function setCouleurPoints(obj, newCol)
             obj.couleurPoints = obj.testNewCol(newCol);
             obj.quoiAfficher = bitor(obj.quoiAfficher, 4);
+            notify(obj,'evt_update');
         end
 
         function setQuoiAfficher(obj, newChoix)
@@ -106,6 +109,7 @@ classdef ElementFace < VisibleElement
                 disp('valeur incorrect');
             else
                 obj.quoiAfficher = newChoix;
+                notify(obj,'evt_update');
             end
         end % fin de setQuoiAfficher
 
@@ -133,6 +137,14 @@ classdef ElementFace < VisibleElement
                 obj.quoiAfficher = bitand(obj.quoiAfficher, 5);
             end
         end % fin de deselect
+
+        function glUpdate(obj, gl, eventName)
+            if eventName == "evt_textureUpdate"
+                obj.texture = Texture(gl, obj.texture);
+            else
+                glUpdate@VisibleElement(obj, gl, eventName);
+            end
+        end % fin de glUpdate
     end % fin de methodes defauts
 
     methods (Access = private)

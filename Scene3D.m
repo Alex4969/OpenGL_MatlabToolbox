@@ -89,16 +89,20 @@ classdef Scene3D < handle
             switch (comp.type)
                 case 'face'
                     elem = ElementFace(gl, comp);
+                    addlistener(elem,'evt_textureUpdate',@obj.cbk_giveGL);
                 case 'ligne'
                     elem = ElementLigne(gl, comp);
                 case 'point'
                     elem = ElementPoint(gl, comp);
                 case 'texte'
                     elem = ElementTexte(gl, comp);
+                    addlistener(elem,'evt_textureUpdate',@obj.cbk_giveGL);
             end
             obj.mapElements(elem.getId()) = elem;
             addlistener(elem,'evt_update',@obj.cbk_update);
+            addlistener(elem.Geom, 'modelUpdate', @obj.cbk_update);
             addlistener(elem,'evt_newRendu',@obj.cbk_giveGL);
+            addlistener(elem.GLGeom,'evt_updateLayout',@obj.cbk_giveGL);
             obj.removeGL();
         end % fin de AddElement
 
@@ -514,8 +518,9 @@ classdef Scene3D < handle
         end
 
         function cbk_giveGL(obj, source, event)
-            source.glUpdate(obj.getGL());
-            obj.removeGL();
+            disp('cbk_giveGL');
+            source.glUpdate(obj.getGL(), event.EventName);
+            obj.DrawScene();
         end
     end % fin des methodes callback
 end % fin de la classe Scene3D
