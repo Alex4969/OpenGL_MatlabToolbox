@@ -15,8 +15,6 @@ classdef Light < handle
                             % a et b sont les cos des angles pour la spotLight
         oldType             % sauvegarde le type de lumière avant de désactiver
 
-        updateNeeded logical = false
-
         modelListener
         onCamera logical = false
     end

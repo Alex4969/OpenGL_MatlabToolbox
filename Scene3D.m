@@ -23,7 +23,7 @@ classdef Scene3D < handle
         selectObject        % struct qui contient les données de l'objets selectionné
         couleurFond
 
-        camLightUBO UBO
+        camLightUBO UBO     % données de la caméra et de la lumière transmises aux shaders
     end %fin de propriete defaut
     
     events
@@ -185,6 +185,7 @@ classdef Scene3D < handle
                 listeElem{i}.delete(gl);
             end
             Texture.DeleteAll(gl);
+            obj.camLightUBO.delete(gl);
             obj.removeGL();
         end % fin de delete
 
@@ -411,15 +412,15 @@ classdef Scene3D < handle
         end % fin de getOrientationMatrices
 
         function fillCamUbo(obj)
+            obj.camLightUBO.putVec3(obj.getGL(), obj.camera.position, 64);
+        end % fin de fillCamUbo
+
+        function fillLightUbo(obj)
             gl = obj.getGL();
             obj.camLightUBO.putVec3(gl, obj.lumiere.position, 0);
             obj.camLightUBO.putVec3(gl, obj.lumiere.couleurLumiere, 16);
             obj.camLightUBO.putVec3(gl, obj.lumiere.directionLumiere, 32);
             obj.camLightUBO.putVec3(gl, obj.lumiere.paramsLumiere, 48);
-        end % fin de fillCamUbo
-
-        function fillLightUbo(obj)
-            obj.camLightUBO.putVec3(obj.getGL(), obj.camera.position, 64);
         end % fin de fillLightUbo
     end % fin des methodes privees
 

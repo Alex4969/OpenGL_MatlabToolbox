@@ -1,12 +1,11 @@
 classdef UBO < handle
-    %UBO Summary of this class goes here
-    %   Detailed explanation goes here
+    %UBO place des données utilisés par les shaders dans le GPU
     
     properties
         UBOId uint32
         UBOBuffer
-        taille uint16
-        binding uint8
+        taille uint16       % taille en octets des données contenues dans le buffer
+        binding uint8       % n° du bind dans le shader
     end
     
     methods
@@ -17,6 +16,8 @@ classdef UBO < handle
         end % fin du constructeur UBO
 
         function putVec3(obj, gl, vec, deb)
+            % met un vecteur a 3 dimensions dans l'UBO a la position deb
+            % dans les UBO les valeurs font 1, 2 ou 4 octets donc on occupe 16 bits pour un vec3
             obj.Bind(gl);
             vecUni = java.nio.FloatBuffer.allocate(4);
             vecUni.put(vec(:));
@@ -27,6 +28,10 @@ classdef UBO < handle
         function Bind(obj, gl)
             gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, obj.UBOId);
         end % fin de bind
+
+        function delete(obj, gl)
+            gl.glDeleteBuffers(1, obj.UBOBuffer);
+        end % fin de delete
     end
 
     methods (Access = private)
