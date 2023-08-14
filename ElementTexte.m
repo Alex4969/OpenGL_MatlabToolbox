@@ -38,8 +38,6 @@ classdef ElementTexte < VisibleElement
 
         function DrawId(obj, gl)
             % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
-            obj.CommonDraw(gl);
-            obj.shader.Bind(gl);
             obj.GLGeom.Bind(gl);
             obj.shader.SetUniform1i(gl, 'id', obj.getId());
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);

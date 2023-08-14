@@ -285,9 +285,7 @@ classdef Scene3D < handle
             shader3D = ShaderProgram(gl, [3 0 0 0], "id");
             shader2D = ShaderProgram(gl, [2 0 0 0], "id");
 
-            %trier les objets
-            %% pas bseoin de les trier !!
-            listeElem = obj.orderElem();
+            
 
             %dessiner les objets uniquement sur le pixel qui nous interresse
             gl.glEnable(gl.GL_SCISSOR_TEST);
@@ -297,17 +295,20 @@ classdef Scene3D < handle
             end
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             % dessiner la lumiere
+            listeElem = obj.mapElements.values;
             for i=1:numel(listeElem)
                 elem = listeElem{i};
                 if elem.GLGeom.is2D() == true
-                    oldShader = elem.setShader(gl, shader2D);
+                    oldShader = elem.setShader(shader2D);
                 else
-                    oldShader = elem.setShader(gl, shader3D);
+                    oldShader = elem.setShader(shader3D);
                 end
-                elem.DrawId(gl);
-                elem.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
+                elem.shader.Bind(gl);
+                [cam, model] = obj.getOrientationMatrices(elem);
                 elem.shader.SetUniformMat4(gl, 'uModelMatrix', model);
-                elem.setShader(gl, oldShader);
+                elem.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
+                elem.DrawId(gl);
+                elem.setShader(oldShader);
             end
             shader2D.delete(gl);
             shader3D.delete(gl);

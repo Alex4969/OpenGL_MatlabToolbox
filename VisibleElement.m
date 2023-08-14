@@ -133,7 +133,7 @@ classdef (Abstract) VisibleElement < handle
             obj.shader.delete(gl);
         end % fin de delete
 
-        function oldShader = setShader(obj, gl, newShader)
+        function oldShader = setShader(obj, newShader)
             oldShader = obj.shader;
             obj.shader = newShader;
         end % fin de setShader
