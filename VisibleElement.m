@@ -8,7 +8,6 @@ classdef (Abstract) VisibleElement < handle
         shader ShaderProgram
         typeShading    = 'S'    % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
         typeColoration = 'U'    % 'U' : Uniforme, 'C' : Color, 'T' : Texture
-        newRendu logical = false
 
         parent
         geomListener
@@ -21,6 +20,7 @@ classdef (Abstract) VisibleElement < handle
 
     events
         evt_update
+        evt_newRendu
     end     
     
     methods
@@ -75,7 +75,7 @@ classdef (Abstract) VisibleElement < handle
                 obj.typeShading = newTypeLumiere;
             end
             obj.typeColoration = newTypeRendu;
-            obj.newRendu = true;
+            notify(obj, 'evt_newRendu');
         end % fin de setModeRendu
 
         function AddColor(obj, matColor)
@@ -86,26 +86,26 @@ classdef (Abstract) VisibleElement < handle
                 obj.GLGeom.addDataToBuffer(matColor, 2);
                 obj.typeColoration = 'C';
             end
-            obj.newRendu = true;
+            notify(obj, 'evt_newRendu');
         end % fin de AddColor
 
         function AddMapping(obj, matMapping)
             obj.GLGeom.addDataToBuffer(matMapping, 3);
             obj.typeColoration = 'T';
-            obj.newRendu = true;
+            notify(obj, 'evt_newRendu');
         end % fin de AddMapping
 
         function AddNormals(obj, matNormales)
             obj.GLGeom.addDataToBuffer(matNormales, 4);
             obj.typeShading = 'L';
-            obj.newRendu = true;
+            notify(obj, 'evt_newRendu');
         end % fin de AddNormals
 
         function GenerateNormals(obj)
             normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
             obj.GLGeom.addDataToBuffer(normales, 4);
             obj.typeShading = 'L';
-            obj.newRendu = true;
+            notify(obj, 'evt_newRendu');
         end % fin de GenerateNormals
 
         function cbk_geomUpdate(obj, source, ~)
@@ -115,7 +115,7 @@ classdef (Abstract) VisibleElement < handle
                 obj.changePolice(source.police.name);
             else
                 obj.typeColoration = 'U';
-                obj.newRendu = true;
+                notify(obj, 'evt_newRendu');
             end
         end % fin de cbk_geomUpdate
 
@@ -133,26 +133,14 @@ classdef (Abstract) VisibleElement < handle
             obj.shader.delete(gl);
         end % fin de delete
 
-        function changerProg(obj, gl)
-            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
-            obj.newRendu = false;
-        end % fin de changerProg
-
         function oldShader = setShader(obj, gl, newShader)
-            if obj.newRendu == true
-                obj.changerProg(gl);
-            end
             oldShader = obj.shader;
             obj.shader = newShader;
         end % fin de setShader
 
-        function CommonDraw(obj, gl)
-            %COMMONDRAW, fonction appele au debut de tous les draw des
-            %objets. Definie le programme et le mode d'orientation
-            if obj.newRendu == true
-                obj.changerProg(gl);
-            end
-        end % fin de commonDraw
+        function glUpdate(obj, gl)
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
+        end % fin de glUpdate
     end % fin des methodes defauts
 
     methods (Abstract = true)

@@ -98,6 +98,7 @@ classdef Scene3D < handle
             end
             obj.mapElements(elem.getId()) = elem;
             addlistener(elem,'evt_update',@obj.cbk_update);
+            addlistener(elem,'evt_newRendu',@obj.cbk_giveGL);
             obj.removeGL();
         end % fin de AddElement
 

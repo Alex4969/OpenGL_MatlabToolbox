@@ -12,7 +12,7 @@ classdef ElementLigne < VisibleElement
             %ELEMENTLIGNE
             obj@VisibleElement(gl, aGeom);
             obj.Type = 'Line';
-            obj.changerProg(gl);
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
         end % fin du constructeur ElementLigne
 
         function Draw(obj, gl)
@@ -20,8 +20,6 @@ classdef ElementLigne < VisibleElement
             if obj.isVisible() == false
                 return
             end
-            obj.CommonDraw(gl);
-            obj.shader.Bind(gl);
             obj.GLGeom.Bind(gl);
 
             gl.glLineWidth(obj.epaisseur);

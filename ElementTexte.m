@@ -17,7 +17,7 @@ classdef ElementTexte < VisibleElement
             obj.typeOrientation = 2; % normal a l'ecran
             obj.typeColoration = 'T';
             obj.texture = Texture(gl, obj.Geom.police.name + ".png");
-            obj.changerProg(gl);
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
         end % fin du constructeur Texte
 
         function Draw(obj, gl)
@@ -29,8 +29,6 @@ classdef ElementTexte < VisibleElement
                 obj.texture = Texture(gl, obj.texture);
                 obj.textureUpdate = false;
             end
-            obj.CommonDraw(gl);
-            obj.shader.Bind(gl);
             obj.GLGeom.Bind(gl);
             obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
             obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);

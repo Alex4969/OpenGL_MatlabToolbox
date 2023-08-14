@@ -12,7 +12,7 @@ classdef ElementPoint < VisibleElement
             %ELEMENTLIGNE
             obj@VisibleElement(gl, aGeom);
             obj.Type = 'Point';
-            obj.changerProg(gl);
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
         end % fin du constructeur ElementLigne
 
         function Draw(obj, gl)
@@ -20,8 +20,6 @@ classdef ElementPoint < VisibleElement
             if obj.isVisible() == false
                 return
             end
-            obj.CommonDraw(gl);
-            obj.shader.Bind(gl);
             obj.GLGeom.Bind(gl);
 
             gl.glPointSize(obj.epaisseur);

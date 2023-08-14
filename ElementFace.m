@@ -22,7 +22,7 @@ classdef ElementFace < VisibleElement
             obj@VisibleElement(gl, aGeom); % appel au constructeur parent
             obj.Type = 'Face';
             obj.typeShading = 'D';
-            obj.changerProg(gl);
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
         end % fin constructeur ElementFace
 
         function Draw(obj, gl)
@@ -30,8 +30,6 @@ classdef ElementFace < VisibleElement
             if ~obj.isVisible()
                 return
             end
-            obj.CommonDraw(gl);
-            obj.shader.Bind(gl);
             obj.GLGeom.Bind(gl);
             obj.shader.SetUniform1i(gl, 'uQuoiAfficher', obj.quoiAfficher);
             if bitand(obj.quoiAfficher, 1) > 0
