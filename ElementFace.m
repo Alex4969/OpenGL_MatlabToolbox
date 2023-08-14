@@ -16,7 +16,7 @@ classdef ElementFace < VisibleElement
     end
 
     events
-        evt_textureUpdate
+        evt_textureUpdate           % la texture doit être créé
     end
    
     methods
@@ -75,30 +75,30 @@ classdef ElementFace < VisibleElement
 
         function setEpaisseurArretes(obj, newEp)
             obj.epaisseurArretes = newEp;
-            notify(obj,'evt_update');
+            notify(obj,'evt_redraw');
         end
 
         function setEpaisseurPoints(obj, newEp)
             obj.epaisseurPoints = newEp;
-            notify(obj,'evt_update');
+            notify(obj,'evt_redraw');
         end
 
         function setCouleur(obj, newCol)
             obj.couleur = obj.testNewCol(newCol);
             obj.quoiAfficher = bitor(obj.quoiAfficher, 1);
-            notify(obj,'evt_update');
+            notify(obj,'evt_redraw');
         end
 
         function setCouleurArretes(obj, newCol)
             obj.couleurArretes = obj.testNewCol(newCol);
             obj.quoiAfficher = bitor(obj.quoiAfficher, 2);
-            notify(obj,'evt_update');
+            notify(obj,'evt_redraw');
         end
 
         function setCouleurPoints(obj, newCol)
             obj.couleurPoints = obj.testNewCol(newCol);
             obj.quoiAfficher = bitor(obj.quoiAfficher, 4);
-            notify(obj,'evt_update');
+            notify(obj,'evt_redraw');
         end
 
         function setQuoiAfficher(obj, newChoix)
@@ -109,7 +109,7 @@ classdef ElementFace < VisibleElement
                 disp('valeur incorrect');
             else
                 obj.quoiAfficher = newChoix;
-                notify(obj,'evt_update');
+                notify(obj,'evt_redraw');
             end
         end % fin de setQuoiAfficher
 
@@ -141,20 +141,20 @@ classdef ElementFace < VisibleElement
         function AddMapping(obj, matMapping)
             obj.GLGeom.addDataToBuffer(matMapping, 3);
             obj.typeColoration = 'T';
-            notify(obj, 'evt_newRendu');
+            notify(obj, 'evt_updateRendu');
         end % fin de AddMapping
 
         function AddNormals(obj, matNormales)
             obj.GLGeom.addDataToBuffer(matNormales, 4);
             obj.typeShading = 'L';
-            notify(obj, 'evt_newRendu');
+            notify(obj, 'evt_updateRendu');
         end % fin de AddNormals
 
         function GenerateNormals(obj)
             normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
             obj.GLGeom.addDataToBuffer(normales, 4);
             obj.typeShading = 'L';
-            notify(obj, 'evt_newRendu');
+            notify(obj, 'evt_updateRendu');
         end % fin de GenerateNormals
 
         function glUpdate(obj, gl, eventName)

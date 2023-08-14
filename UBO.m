@@ -46,4 +46,3 @@ classdef UBO < handle
         end % fin de generateUbo
     end % fin des methodes privées
 end % fin classe UBO
-

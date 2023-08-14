@@ -18,8 +18,8 @@ classdef (Abstract) VisibleElement < handle
     end
 
     events
-        evt_update
-        evt_newRendu
+        evt_redraw          % l'element doit être redessiner
+        evt_updateRendu     % le mode de rendu a été modifié et nécessite un changement de programme
     end     
     
     methods
@@ -28,7 +28,7 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom = aGeom;
             obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
 
-            addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
+            addlistener(obj.Geom,'evt_updateGeom',@obj.cbk_evt_updateGeom);
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
@@ -74,7 +74,7 @@ classdef (Abstract) VisibleElement < handle
                 obj.typeShading = newTypeLumiere;
             end
             obj.typeColoration = newTypeRendu;
-            notify(obj, 'evt_newRendu');
+            notify(obj, 'evt_updateRendu');
         end % fin de setModeRendu
 
         function AddColor(obj, matColor)
@@ -85,19 +85,19 @@ classdef (Abstract) VisibleElement < handle
                 obj.GLGeom.addDataToBuffer(matColor, 2);
                 obj.typeColoration = 'C';
             end
-            notify(obj, 'evt_newRendu');
+            notify(obj, 'evt_updateRendu');
         end % fin de AddColor
 
-        function cbk_geomUpdate(obj, source, ~)
+        function cbk_evt_updateGeom(obj, source, ~)
             obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
             if obj.Type == "Texte"
                 obj.AddMapping(source.mapping);
                 obj.changePolice();
             else
                 obj.typeColoration = 'U';
-                notify(obj, 'evt_newRendu');
+                notify(obj, 'evt_updateRendu');
             end
-        end % fin de cbk_geomUpdate
+        end % fin de cbk_evt_updateGeom
 
         function toString(obj)
             nbPoint = size(obj.Geom.listePoints, 1);
@@ -118,7 +118,7 @@ classdef (Abstract) VisibleElement < handle
             obj.shader = newShader;
         end % fin de setShader
 
-        function glUpdate(obj, gl, evtName)
+        function glUpdate(obj, gl, ~)
             obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
         end % fin de glUpdate
     end % fin des methodes defauts

@@ -8,7 +8,7 @@ classdef ElementTexte < VisibleElement
     end
 
     events
-        evt_textureUpdate
+        evt_textureUpdate       % la texture doit être généré
     end
     
     methods
@@ -51,7 +51,7 @@ classdef ElementTexte < VisibleElement
             end
             if numel(newColor) == 4
                 obj.couleur = newColor;
-                notify(obj,'evt_update');
+                notify(obj,'evt_redraw');
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
@@ -73,7 +73,7 @@ classdef ElementTexte < VisibleElement
         function AddMapping(obj, matMapping)
             obj.GLGeom.addDataToBuffer(matMapping, 3);
             obj.typeColoration = 'T';
-            notify(obj, 'evt_newRendu');
+            notify(obj, 'evt_updateRendu');
         end % fin de AddMapping
 
         function sNew = select(obj, s)

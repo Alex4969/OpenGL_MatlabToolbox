@@ -21,8 +21,8 @@ classdef MyGeom < GeomComponent
                 nbSommet = size(obj.listePoints, 1);
                 obj.listePoints = [obj.listePoints ; plusDePoints];
                 obj.listeConnection = [obj.listeConnection, (plusDeConnectivite + nbSommet)];
-                if event.hasListener(obj, 'geomUpdate')
-                    notify(obj, 'geomUpdate');
+                if event.hasListener(obj, 'evt_updateGeom')
+                    notify(obj, 'evt_updateGeom');
                 end
             else 
                 warning('Impossible de passer de la 2D a la 3D')
@@ -32,8 +32,8 @@ classdef MyGeom < GeomComponent
         function nouvelleGeom(obj, newPoints, newIndices)
             obj.listePoints = newPoints;
             obj.listeConnection = newIndices;
-            if event.hasListener(obj, 'geomUpdate')
-                notify(obj, 'geomUpdate');
+            if event.hasListener(obj, 'evt_updateGeom')
+                notify(obj, 'evt_updateGeom');
             end
         end
     end % fin des methodes defauts

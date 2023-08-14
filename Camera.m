@@ -29,7 +29,7 @@ classdef Camera < handle
     end
 
     events
-        evt_updateUbo
+        evt_updateUbo       % mise a jour du Ubo de scene 3D necessaire
     end
 
     methods

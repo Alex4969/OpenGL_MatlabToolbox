@@ -25,16 +25,16 @@ classdef TextGeom < GeomComponent
         function setPolice(obj, newPolice)
             obj.police = newPolice;
             obj.constructText();
-            if event.hasListener(obj, 'geomUpdate')
-                notify(obj, 'geomUpdate')
+            if event.hasListener(obj, 'evt_updateGeom')
+                notify(obj, 'evt_updateGeom')
             end
         end
 
         function setTexte(obj, newTexte)
             obj.str = newTexte;
             obj.constructText();
-            if event.hasListener(obj, 'geomUpdate')
-                notify(obj, 'geomUpdate')
+            if event.hasListener(obj, 'evt_updateGeom')
+                notify(obj, 'evt_updateGeom')
             end
         end
 
@@ -70,8 +70,8 @@ classdef TextGeom < GeomComponent
 
             % A FAIRE
             
-            if event.hasListener(obj, 'geomUpdate')
-                notify(obj, 'geomUpdate')
+            if event.hasListener(obj, 'evt_updateGeom')
+                notify(obj, 'evt_updateGeom')
             end
         end
 

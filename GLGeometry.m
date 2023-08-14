@@ -18,7 +18,7 @@ classdef GLGeometry < handle
     end
 
     events
-        evt_updateLayout
+        evt_updateLayout        % les données du vertex Buffer doivent être modifié
     end
     
     methods

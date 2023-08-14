@@ -27,7 +27,7 @@ classdef Scene3D < handle
     end %fin de propriete defaut
     
     events
-        evt_update
+        evt_redraw          
     end
 
     methods
@@ -81,7 +81,7 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'KeyPressed');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
 
-            addlistener(obj,'evt_update',@obj.cbk_update);
+            addlistener(obj,'evt_redraw',@obj.cbk_redraw);
         end % fin du constructeur de Scene3D
 
         function elem = AddElement(obj, comp)
@@ -106,9 +106,9 @@ classdef Scene3D < handle
                     addlistener(elem,'evt_textureUpdate',@obj.cbk_giveGL);
             end
             obj.mapElements(elem.getId()) = elem;
-            addlistener(elem,'evt_update',@obj.cbk_update);
-            addlistener(elem.Geom, 'modelUpdate', @obj.cbk_update);
-            addlistener(elem,'evt_newRendu',@obj.cbk_giveGL);
+            addlistener(elem,'evt_redraw',@obj.cbk_redraw);
+            addlistener(elem.Geom, 'evt_updateModel', @obj.cbk_redraw);
+            addlistener(elem,'evt_updateRendu',@obj.cbk_giveGL);
             addlistener(elem.GLGeom,'evt_updateLayout',@obj.cbk_giveGL);
             obj.removeGL();
         end % fin de AddElement
@@ -138,7 +138,7 @@ classdef Scene3D < handle
                 group = obj.mapGroups(groupId);
                 group.delete();
                 obj.mapGroups.remove(groupId);
-                notify(obj, 'evt_update');
+                notify(obj, 'evt_redraw');
             else
                 disp('objet a supprimé n existe pas');
             end
@@ -218,7 +218,7 @@ classdef Scene3D < handle
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
-            notify(obj,'evt_update');
+            notify(obj,'evt_redraw');
         end % fin setCouleurFond
     
         function screenShot(obj)
@@ -550,8 +550,8 @@ classdef Scene3D < handle
             end
         end % fin de cbk_updateUbo
 
-        function cbk_update(obj, ~, ~)
-            disp('cbk_Update');
+        function cbk_redraw(obj, ~, ~)
+            disp('cbk_redraw');
             obj.DrawScene;
         end
 

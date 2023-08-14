@@ -20,8 +20,8 @@ classdef Light < handle
     end
 
     events
-        evt_updateForme
-        evt_updateUbo
+        evt_updateForme     % une forme pour la lumière a été ajouté et doit être générée
+        evt_updateUbo       % mise a jour de l'ubo de scene3D nécéssaire
     end
     
     methods
@@ -55,7 +55,7 @@ classdef Light < handle
                     obj.forme.visible = false;
                 else 
                     obj.forme.visible = true;
-                    obj.cbk_modelUpdate(obj.forme.Geom)
+                    obj.cbk_evt_updateModel(obj.forme.Geom)
                 end
             end
         end
@@ -160,7 +160,7 @@ classdef Light < handle
             notify(obj, 'evt_updateUbo');
         end % fin de spotLight
 
-        function cbk_modelUpdate(obj, source, ~)
+        function cbk_evt_updateModel(obj, source, ~)
             newPos = source.modelMatrix(1:3, 4)';
             obj.position = newPos;
             notify(obj, 'evt_updateUbo');
@@ -172,8 +172,8 @@ classdef Light < handle
                 obj.forme.setModelMatrix(MTrans3D(obj.position));
                 obj.forme.setCouleur(obj.couleurLumiere);
                 obj.forme.setModeRendu('U', 'S');
-                obj.forme.glUpdate(gl, "modelUpdate")
-                obj.modelListener = addlistener(obj.forme.Geom,'modelUpdate',@obj.cbk_modelUpdate);
+                obj.forme.glUpdate(gl, "evt_updateModel")
+                obj.modelListener = addlistener(obj.forme.Geom,'evt_updateModel',@obj.cbk_evt_updateModel);
                 obj.comp = GeomComponent.empty;
             end
         end % fin de glUpdate

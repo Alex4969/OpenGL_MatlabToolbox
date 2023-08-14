@@ -12,8 +12,8 @@ classdef GeomComponent < handle
     end
 
     events
-        geomUpdate          % modification de la geometrie
-        modelUpdate         % modification de la matrice model ( pour redessiner ou modfifier la lumiere)
+        evt_updateGeom          % modification de la geometrie
+        evt_updateModel         % modification de la matrice model ( pour redessiner ou modfifier la lumiere)
     end
     
     methods
@@ -34,8 +34,8 @@ classdef GeomComponent < handle
 
         function setModelMatrix(obj, model)
             obj.modelMatrix = model;
-            if event.hasListener(obj, 'modelUpdate')
-                notify(obj, 'modelUpdate')
+            if event.hasListener(obj, 'evt_updateModel')
+                notify(obj, 'evt_updateModel')
             end
         end % fin de setModelMatrix
     end % fin des methodes defaut
