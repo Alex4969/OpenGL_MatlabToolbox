@@ -199,6 +199,7 @@ classdef Light < handle
                 obj.forme.setModelMatrix(MTrans3D(obj.position));
                 obj.forme.setCouleur(obj.couleurLumiere);
                 obj.forme.setModeRendu('U', 'S');
+                obj.forme.glUpdate(gl)
                 obj.modelListener = addlistener(obj.forme.Geom,'modelUpdate',@obj.cbk_modelUpdate);
                 obj.comp = GeomComponent.empty;
             end
