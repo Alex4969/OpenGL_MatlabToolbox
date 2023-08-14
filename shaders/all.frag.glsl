@@ -15,15 +15,13 @@ uniform float uLineSize;
 uniform float uPointSize;
 uniform int  uQuoiAfficher = 1;
 uniform sampler2D uTexture; //TEX
-layout (std140, binding = 1) uniform camera {
-    vec3 uCamPos;
-};
 
 layout (std140, binding = 0) uniform light {
     vec3 ulightPos  ;
     vec3 uLightColor; 
     vec3 uLightDir  ; 
-    vec3 uLightData ; 
+    vec3 uLightData ;
+    vec3 uCamPos    ;
 };
 
 float pointLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,

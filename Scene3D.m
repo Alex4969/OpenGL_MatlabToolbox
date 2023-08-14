@@ -22,6 +22,8 @@ classdef Scene3D < handle
         mouseButton = -1    % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
         selectObject        % struct qui contient les données de l'objets selectionné
         couleurFond
+
+        camLightUBO UBO
     end %fin de propriete defaut
     
     events
@@ -59,9 +61,14 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_DEPTH_TEST);
             % gl.glEnable(gl.GL_CULL_FACE); % optimisation : supprime l'affichage des faces arrieres
 
-            obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
-            obj.lumiere = Light(gl);
-            addlistener(obj.lumiere, 'newModel', @obj.cbk_giveGL);
+            obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
+            addlistener(obj.camera, 'evt_updateUbo', @obj.cbk_updateUbo);
+            obj.lumiere = Light();
+            addlistener(obj.lumiere, 'evt_updateUbo', @obj.cbk_updateUbo);
+            addlistener(obj.lumiere, 'evt_updateForme', @obj.cbk_giveGL);
+            obj.camLightUBO = UBO(gl, 0, 80);
+            obj.fillCamUbo();
+            obj.fillLightUbo();
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
             %Listeners
@@ -139,9 +146,9 @@ classdef Scene3D < handle
 
         function DrawScene(obj)
             %DRAW dessine la scene avec tous ses objets
+            tic
             gl = obj.getGL();
-            obj.lumiere.remplirUbo(gl);
-            obj.camera.remplirUbo(gl);
+            obj.camLightUBO.Bind(gl);
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             
             %dessiner les objet interne a la scene
@@ -166,6 +173,7 @@ classdef Scene3D < handle
 
             obj.removeGL();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
+            toc
         end % fin de Draw
 
         function delete(obj)
@@ -300,8 +308,6 @@ classdef Scene3D < handle
             shader3D = ShaderProgram(gl, [3 0 0 0], "id");
             shader2D = ShaderProgram(gl, [2 0 0 0], "id");
 
-            
-
             %dessiner les objets uniquement sur le pixel qui nous interresse
             gl.glEnable(gl.GL_SCISSOR_TEST);
             gl.glScissor(x, y, 1, 1);
@@ -403,6 +409,18 @@ classdef Scene3D < handle
                 end
             end
         end % fin de getOrientationMatrices
+
+        function fillCamUbo(obj)
+            gl = obj.getGL();
+            obj.camLightUBO.putVec3(gl, obj.lumiere.position, 0);
+            obj.camLightUBO.putVec3(gl, obj.lumiere.couleurLumiere, 16);
+            obj.camLightUBO.putVec3(gl, obj.lumiere.directionLumiere, 32);
+            obj.camLightUBO.putVec3(gl, obj.lumiere.paramsLumiere, 48);
+        end % fin de fillCamUbo
+
+        function fillLightUbo(obj)
+            obj.camLightUBO.putVec3(obj.getGL(), obj.camera.position, 64);
+        end % fin de fillLightUbo
     end % fin des methodes privees
 
     methods % callback
@@ -522,6 +540,14 @@ classdef Scene3D < handle
             obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
+
+        function cbk_updateUbo(obj, source, ~)
+            if isa(source, 'Light')
+                obj.fillLightUbo()
+            elseif isa(source, 'Camera')
+                obj.fillCamUbo();
+            end
+        end % fin de cbk_updateUbo
 
         function cbk_update(obj, ~, ~)
             disp('cbk_Update');

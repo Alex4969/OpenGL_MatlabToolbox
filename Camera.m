@@ -16,10 +16,6 @@ classdef Camera < handle
         fov             % double angle de vue d'observation (en degré)
         type logical    % 1 pour perspective, 0 pour orthonormé
         projMatrix      % 4x4 matrice de transformation correspondant aux valeurs ci dessus
-
-        UBOId               % uniform block
-        UBOBuffer           % uniform block buffer
-        updateNeeded logical
     end
 
     properties
@@ -32,9 +28,13 @@ classdef Camera < handle
         constraint logical  % 1x3 pour chaque axe
     end
 
+    events
+        evt_updateUbo
+    end
+
     methods
 
-        function obj = Camera(gl, ratio)
+        function obj = Camera(ratio)
         %CAMERA Construct an instance of this class
             obj.position = [0 0 10];
             obj.target = [0 0 0];
@@ -48,9 +48,6 @@ classdef Camera < handle
             obj.type = 1;
             obj.computeProj();
             obj.constraint = [false, false, false];
-
-            obj.generateUbo(gl);
-            obj.updateNeeded = true;
         end % fin du constructeur camera
 
         function setPosition(obj, newPosition)
@@ -239,28 +236,6 @@ classdef Camera < handle
         function resetConstraint(obj)
             obj.constraint = [false false false];
         end
-
-        function generateUbo(obj, gl)
-            obj.UBOBuffer = java.nio.IntBuffer.allocate(1);
-            gl.glGenBuffers(1, obj.UBOBuffer);
-            obj.UBOId = typecast(obj.UBOBuffer.array(), 'uint32');
-            gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, obj.UBOId);
-            gl.glBufferData(gl.GL_UNIFORM_BUFFER, 16, [], gl.GL_DYNAMIC_DRAW);
-            gl.glBindBufferRange(gl.GL_UNIFORM_BUFFER, 1, obj.UBOId, 0, 16);
-            gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, 0);
-        end
-
-        function remplirUbo(obj, gl)
-            if obj.updateNeeded
-                gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, obj.UBOId);
-                vecUni = java.nio.FloatBuffer.allocate(4);
-                vecUni.put(obj.position(:));
-                vecUni.rewind();
-                gl.glBufferSubData(gl.GL_UNIFORM_BUFFER, 0, 16, vecUni);
-                gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, 0);
-            end
-            obj.updateNeeded = false;
-        end
     end % fin des methodes liés au mouvements de souris
 
     methods (Access = private)
@@ -271,7 +246,7 @@ classdef Camera < handle
             Mtrans(1:3,4) = -obj.position';
 
             obj.viewMatrix = Mrot * Mtrans;
-            obj.updateNeeded = true;
+            notify(obj, 'evt_updateUbo');
         end % fin de computeView
 
         function Mrot = computeRotationCamera(obj)
