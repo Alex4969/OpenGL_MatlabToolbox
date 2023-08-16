@@ -1,25 +1,24 @@
-classdef TextGeom < GeomComponent
+classdef GeomTexte < ClosedGeom
     %TEXTGEOM Summary of this class goes here
     %   Detailed explanation goes here
     
     properties (GetAccess = public, SetAccess = protected)
-        str char        % doit reste un char pout etre lu correctement
-        police Police   % information sur la représentation des caracteres
-        ancre int8      % position de l'ancre par rapport au texte
-                        % 0:centre, 1:haut-gauche, 2:haut-droite,
-                        % 3:bas-gauche, 4:bas-droite
-        mapping         % mapping de la texture de police
+        str      char          % doit rester un char pout etre lu correctement
+        police   Police        % information sur la représentation des caracteres
+        ancre    int8          % position de l'ancre par rapport au texte
+                                 % 0:centre, 1:haut-gauche, 2:haut-droite,
+                                 % 3:bas-gauche, 4:bas-droite
+        mapping  (:,2) double  % mapping de la texture de police
     end
     
     methods
-        function obj = TextGeom(id, str, police, ancre)
+        function obj = GeomTexte(id, str, police, ancre)
             %TEXTGEOM
-            obj@GeomComponent(id);
+            obj@ClosedGeom(id, "texte");
             obj.str = str;
             obj.police = police;
             obj.ancre = ancre;
             obj.constructText();
-            obj.type = "texte";
         end % fin du constructeur TextGeom
 
         function setPolice(obj, newPolice)

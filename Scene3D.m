@@ -257,13 +257,13 @@ classdef Scene3D < handle
             obj.axesId = -1;
             tailleAxe = 50;
             [pos, idx, color] = generateAxis(-tailleAxe, tailleAxe);
-            axesGeom = MyGeom(obj.axesId, pos, idx, 'ligne');
+            axesGeom = MyGeom(obj.axesId, "ligne", pos, idx);
             elem = obj.AddElement(axesGeom);
             elem.AddColor(color);
 
             obj.grilleId = -2;
             [pos, idx] = generateGrid(tailleAxe, 2);
-            grilleGeom = MyGeom(obj.grilleId, pos, idx, 'ligne');
+            grilleGeom = MyGeom(obj.grilleId, "ligne", pos, idx);
             elem = obj.AddElement(grilleGeom);
             elem.setEpaisseur(1);
             elem.setCouleur([0.3 0.3 0.3]);
@@ -271,7 +271,7 @@ classdef Scene3D < handle
             obj.gyroscopeId = -3;
             tailleGysmo = 1;
             [pos, idx, color] = generateAxis(0, tailleGysmo);
-            gysmoGeom = MyGeom(obj.gyroscopeId, pos, idx, 'ligne');
+            gysmoGeom = MyGeom(obj.gyroscopeId, "ligne", pos, idx);
             elem = obj.AddElement(gysmoGeom);
             elem.AddColor(color);
             elem.typeOrientation = 4;

@@ -1,13 +1,12 @@
 classdef Light < handle
-    %LIGHT Summary of this class goes here
-    %   Detailed explanation goes here
+    %LIGHT
     
     properties
         position            % 1x3 position de la lumiere dans la scene
         couleurLumiere      % 1x3 couleur de la lumière
 
         forme ElementFace   % donne une forme a la lumiere
-        comp  GeomComponent % component avant de devenir un elementFace
+        comp  %GeomComponent % component avant de devenir un elementFace
 
         directionLumiere    % 1x3 direction souhaité de la lumière (pour la lumière directionel ou spot)
         paramsLumiere       % [t a b] t = type (0 : desactivé, 1 : pointLight, 2 : directionel, 3 : spotLight)
@@ -167,15 +166,12 @@ classdef Light < handle
         end
 
         function glUpdate(obj, gl, ~)
-            if ~isempty(obj.comp)
-                obj.forme = ElementFace(gl, obj.comp);
-                obj.forme.setModelMatrix(MTrans3D(obj.position));
-                obj.forme.setCouleur(obj.couleurLumiere);
-                obj.forme.setModeRendu('U', 'S');
-                obj.forme.glUpdate(gl, "evt_updateModel")
-                obj.modelListener = addlistener(obj.forme.Geom,'evt_updateModel',@obj.cbk_evt_updateModel);
-                obj.comp = GeomComponent.empty;
-            end
+            obj.forme = ElementFace(gl, obj.comp);
+            obj.forme.setModelMatrix(MTrans3D(obj.position));
+            obj.forme.setCouleur(obj.couleurLumiere);
+            obj.forme.setModeRendu('U', 'S');
+            obj.forme.glUpdate(gl, "evt_updateModel")
+            obj.modelListener = addlistener(obj.forme.Geom,'evt_updateModel',@obj.cbk_evt_updateModel);
         end % fin de glUpdate
     end % fin des methodes defauts
 end % fin classe light

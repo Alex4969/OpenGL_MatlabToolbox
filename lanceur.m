@@ -2,6 +2,7 @@ clear all
 
 addpath('outils\');
 addpath('java\');
+addpath('Component\');
 
 viewer = Scene3D();
 viewer.setCouleurFond([0 0 0.4])
@@ -14,7 +15,7 @@ viewer.DrawScene();
 [posPyramide, indicesPyramide, mappingPyramide] = generatePyramide(4, 0.8);
 
 % pyramide avec une couleur par sommet
-pyraColorGeom = MyGeom(1, posPyramide, indicesPyramide, 'face');
+pyraColorGeom = MyGeom(1, "face", posPyramide, indicesPyramide);
 viewer.AddElement(pyraColorGeom);
 
 couleurPyramide = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
@@ -27,7 +28,7 @@ elem.setCouleurArretes([1 0 1]);
 N = 10000;
 m = -1; M = 1;
 posPoints=rand(N,3)*(M-m)+m;
-cloudGeom = MyGeom(25, posPoints, [1:N], 'point');
+cloudGeom = MyGeom(25, "point", posPoints, [1:N]);
 elem = viewer.AddElement(cloudGeom);
 elem.setModelMatrix(MTrans3D([-2 4 -4]) * MRot3D([0 0 45]) * MScale3D(1));
 
@@ -38,7 +39,7 @@ elem.AddColor(couleurPoints);
 [posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
 
 % % sphere wireframe
-bouleGeom = MyGeom(2, posBoule, indBoule, 'face');
+bouleGeom = MyGeom(2, "face", posBoule, indBoule);
 elem = viewer.AddElement(bouleGeom);
 
 elem.setCouleurArretes([1 1 0]);
@@ -47,7 +48,7 @@ elem.setQuoiAfficher(2);
 elem.setModelMatrix(MTrans3D([-4 1 0]));
 
 % % sphere avec texture map monde
-bouleTexGeom = MyGeom(3, posBoule, indBoule, 'face');
+bouleTexGeom = MyGeom(3, "face", posBoule, indBoule);
 elem = viewer.AddElement(bouleTexGeom);
 
 elem.AddMapping(mappingBoule);
@@ -57,7 +58,7 @@ elem.ModifyModelMatrix(MRot3D([180 0 0]) * MScale3D(2), 1);
 elem.AddNormals(posBoule);
 
 % % piece d'echec depuis un fichier
-chessGeom = FileGeom(5, 'objets3D/chess4_ascii.stl', 'face');
+chessGeom = MyGeom(5, "face", "objets3D/chess4_ascii.stl");
 elem = viewer.AddElement(chessGeom);
 
 elem.setCouleur(rand(1, 3));
@@ -68,11 +69,11 @@ elem.setQuoiAfficher(3);
 elem.setModeRendu('U', 'D'); % uniform & dur
 
 ravie = Police("textes/ravie");
-geomTexte = TextGeom(101, 'Hello World !', ravie, 0);
+geomTexte = GeomTexte(101, 'Hello World !', ravie, 0);
 elemtexte = viewer.AddElement(geomTexte);
 elemtexte.setModelMatrix(MTrans3D([2 2.2 2]) * MScale3D(0.4));
 
-geomTexteX = TextGeom(102, 'X', ravie, 0);
+geomTexteX = GeomTexte(102, 'X', ravie, 0);
 elementTexte = viewer.AddElement(geomTexteX);
 elementTexte.setModelMatrix(MTrans3D([1 0 0]));
 elementTexte.setCouleur([1 0 0]);
@@ -80,20 +81,20 @@ elementTexte.typeOrientation = 2 + 4;
 
 %% Creation d'un group
     % sphere avec des normales pour rendu lisse
-    bouleNormalesGeom = MyGeom(31, posBoule, indBoule, 'face');
+    bouleNormalesGeom = MyGeom(31, "face", posBoule, indBoule);
     bouleNormalesGeom.setModelMatrix(MTrans3D([0 0.8 0]) * MScale3D(0.8));
     elem = viewer.AddElement(bouleNormalesGeom);
     elem.AddNormals(posBoule);
     elem.setCouleurArretes([1 0 1 1]);
     
     % autre sphere
-    bouleNormalesGeom2 = MyGeom(32, posBoule, indBoule, 'face');
+    bouleNormalesGeom2 = MyGeom(32, "face", posBoule, indBoule);
     bouleNormalesGeom2.setModelMatrix(MTrans3D([0 3.9 0]) * MScale3D(1.2));
     elem = viewer.AddElement(bouleNormalesGeom2);
     elem.setCouleur([0 1 0.8 1]);
     
     % pyramide avec texture
-    pyraTexGeom = MyGeom(33, posPyramide, indicesPyramide, 'face');
+    pyraTexGeom = MyGeom(33, "face", posPyramide, indicesPyramide);
     pyraTexGeom.setModelMatrix(MTrans3D([0 1.8 0]) * MRot3D([0 -45 0]) * MScale3D(1.3));
     elem = viewer.AddElement(pyraTexGeom);
     
@@ -102,7 +103,7 @@ elementTexte.typeOrientation = 2 + 4;
     
     % plan
     [pos, ind, map] = generatePlan(3, 3);
-    planGeom = MyGeom(34, pos, ind, 'face');
+    planGeom = MyGeom(34, "face", pos, ind);
     planGeom.setModelMatrix(MRot3D([90 0 0]));
     viewer.AddElement(planGeom);
     
@@ -115,7 +116,7 @@ elementTexte.typeOrientation = 2 + 4;
     group.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
 
 [posLight, indLight] = generatePyramide(50, 1);
-bouleLightGeom = MyGeom(1000, posLight, indLight, 'face');
+bouleLightGeom = MyGeom(1000, "face", posLight, indLight);
 elem = viewer.lumiere.setForme(bouleLightGeom);
 
 %%%%  affichage  %%%%

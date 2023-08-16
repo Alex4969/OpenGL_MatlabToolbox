@@ -7,16 +7,19 @@ classdef MyGeom < GeomComponent
     end
     
     methods
-        function obj = MyGeom(id, points, connectivite, type)
+        function obj = MyGeom(id, type, points, connectivite)
             %MYGEOM
-            obj@GeomComponent(id);
-            if size(points, 2) == 2
-                disp('liste en 2D, transformation vers de la 3D');
-                points(size(points, 1), 3) = 0;
+            obj@GeomComponent(id, type);
+            if (isa(points, "string"))
+                obj.createFromFile(points);
+            else
+                if size(points, 2) == 2
+                    disp('liste en 2D, transformation vers de la 3D');
+                    points(size(points, 1), 3) = 0;
+                end
+                obj.listePoints = points;
+                obj.listeConnection = connectivite;
             end
-            obj.listePoints = points;
-            obj.listeConnection = connectivite;
-            obj.type = type;
         end % fin constructeur MyGeom
 
         function ajouterPoints(obj, plusDePoints, plusDeConnectivite)
@@ -46,4 +49,15 @@ classdef MyGeom < GeomComponent
             end
         end
     end % fin des methodes defauts
+
+    methods (Access = private)
+        function createFromFile(obj, fileName)
+            %CREATEFROMFILE créé un objet 3D a partir d'un fichier stl
+            stlObj = IO_CADfile.readSTL(fileName, 1);
+            obj.listePoints = stlObj.vertices;
+            temp = stlObj.faces';
+            temp = temp - 1;
+            obj.listeConnection = temp(:);
+        end % fin de createFromFile
+    end % fin des methodes privées
 end % Fin classe GeomComponent
