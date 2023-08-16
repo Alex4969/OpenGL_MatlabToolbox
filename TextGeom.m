@@ -67,8 +67,6 @@ classdef TextGeom < GeomComponent
             end
             obj.listePoints(:, 1) = obj.listePoints(:, 1) - xDep;
             obj.listePoints(:, 2) = obj.listePoints(:, 2) - yDep;
-
-            % A FAIRE
             
             if event.hasListener(obj, 'evt_updateGeom')
                 notify(obj, 'evt_updateGeom')
@@ -78,7 +76,6 @@ classdef TextGeom < GeomComponent
     end % fin des methodes defauts
 
     methods (Access = private)
-        
         function constructText(obj)
             pos = zeros(strlength(obj.str) * 4, 3);
             map = zeros(strlength(obj.str) * 4, 2);

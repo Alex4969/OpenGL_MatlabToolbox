@@ -2,19 +2,19 @@ classdef (Abstract) VisibleElement < handle
     %VISIBLEELEMENT 
     
     properties (GetAccess = public, SetAccess = protected)
-        Type string
-        Geom GeomComponent
-        GLGeom GLGeometry
-        shader ShaderProgram
-        typeShading    = 'S'    % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
-        typeColoration = 'U'    % 'U' : Uniforme, 'C' : Color, 'T' : Texture
+        Type            string
+        Geom            GeomComponent
+        GLGeom          GLGeometry
+        shader          ShaderProgram
+        typeShading     (1,1) char    = 'S'    % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
+        typeColoration  (1,1) char    = 'U'    % 'U' : Uniforme, 'C' : Color, 'T' : Texture
 
         parent
     end
 
     properties (Access = public)
-        typeOrientation uint8 = 1 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe, '0000' rien (pour framebuffer)
-        visible logical = true
+        typeOrientation uint8   = 1 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe, '0000' rien (pour framebuffer)
+        visible         logical = true
     end
 
     events

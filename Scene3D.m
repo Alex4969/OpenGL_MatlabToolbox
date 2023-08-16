@@ -140,7 +140,7 @@ classdef Scene3D < handle
                 obj.mapGroups.remove(groupId);
                 notify(obj, 'evt_redraw');
             else
-                disp('objet a supprimé n existe pas');
+                disp('Le groupe a supprimé n existe pas');
             end
         end
 
@@ -307,11 +307,11 @@ classdef Scene3D < handle
 
             %create programme d'id
             shader3D = ShaderProgram(gl, [3 0 0 0], "id");
-            shader2D = ShaderProgram(gl, [2 0 0 0], "id");
+            shader3D.Bind(gl);
 
-            %dessiner les objets uniquement sur le pixel qui nous interresse
-            gl.glEnable(gl.GL_SCISSOR_TEST);
-            gl.glScissor(x, y, 1, 1);
+            %dessiner les objets
+            gl.glEnable(gl.GL_SCISSOR_TEST); % limite la zone de dessin au pixel
+            gl.glScissor(x, y, 1, 1);        % qui nous interesse (optimisation)
             if obj.couleurFond(1) > 0
                 gl.glClearColor(0, 0, 0, 0);
             end
@@ -320,19 +320,13 @@ classdef Scene3D < handle
             listeElem = obj.mapElements.values;
             for i=1:numel(listeElem)
                 elem = listeElem{i};
-                if elem.GLGeom.is2D() == true
-                    oldShader = elem.setShader(shader2D);
-                else
-                    oldShader = elem.setShader(shader3D);
-                end
-                elem.shader.Bind(gl);
                 [cam, model] = obj.getOrientationMatrices(elem);
-                elem.shader.SetUniformMat4(gl, 'uModelMatrix', model);
-                elem.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
+                shader3D.SetUniformMat4(gl, 'uModelMatrix', model);
+                shader3D.SetUniformMat4(gl, 'uCamMatrix', cam);
+                shader3D.SetUniform1i(gl, 'id', elem.getId());
                 elem.DrawId(gl);
-                elem.setShader(oldShader);
             end
-            shader2D.delete(gl);
+
             shader3D.delete(gl);
 
             %lire le pixel de couleurs -> obtenir l'id

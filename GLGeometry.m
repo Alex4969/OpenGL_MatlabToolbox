@@ -2,19 +2,17 @@ classdef GLGeometry < handle
     %GLGEOMETRIE Definition de la geometrie selon OpenGL
     
     properties
-        VAOId                   % Vertex Array Id (uint32)
+        VAOId uint32            % Vertex Array Id (uint32)
         VAOBuffer               % Vertex Array buffer (java.nio.IntBuffer)
-        VBOId                   % Vertex Buffer ~ liste des sommets Id (uint32)
+        VBOId uint32            % Vertex Buffer ~ liste des sommets Id (uint32)
         VBOBuffer               % Vertex Buffer buffer (java.nio.IntBuffer)
-        EBOId                   % Element Buffer ~ liste connectivité Id (uint32)
+        EBOId uint32            % Element Buffer ~ liste connectivité Id (uint32)
         EBOBuffer               % Element Buffer buffer (java.nio.IntBuffer)
 
         %%% Definition des Vertex Attribute
-        %%% Contient le nombre de valeurs pour cet attribut ou 0 si il n'y est pas
-        vertexData              % doit etre de la meme hauteur que Geom.listePoints
-                                % contient les composantes de couleurs / mapping / normales
-        indexData
-        nLayout                 % [nPos, nColor, NTextureMapping, nNormales] : compte le nombre de valeurs pour chaque attribut
+        vertexData              % copie du VBO (=Geom.listePoints + couleurs et/ou mapping et/ou normales)
+        indexData               % copie du EBO (=Geom.listeConnection)
+        nLayout (1,4) double    % [nPos, nColor, NTextureMapping, nNormales] : compte le nombre de valeurs pour chaque attribut
     end
 
     events
@@ -25,8 +23,7 @@ classdef GLGeometry < handle
         function obj = GLGeometry(gl, sommets, indices)
             obj.vertexData = sommets;
             obj.indexData = uint32(indices);
-            nPos = size(sommets, 2);
-            obj.nLayout = [nPos, 0, 0, 0];
+            obj.nLayout = [3, 0, 0, 0];
 
             obj.CreateGLObject(gl);
         end % fin du constructeur GLGeometry
@@ -34,7 +31,7 @@ classdef GLGeometry < handle
         function addDataToBuffer(obj, mat, pos)
             % ADDDATATOBUFFER : modifie vertexData pour qu'il continnent les informations ajouter dans l'ordre :
             % pos, couleur, mapping, normales. Si on ajoute une composant qui existe deja, elle est remplacé par la nouvelle
-            if size(obj.vertexData, 1) ~= size(mat, 1)
+            if size(obj.vertexData, 1) ~= size(mat, 1) % verification compatibilité hauteur
                 warning('dimension incompatible')
                 return
             end
@@ -98,14 +95,6 @@ classdef GLGeometry < handle
             gl.glDeleteBuffers(1, obj.VBOBuffer);
             gl.glDeleteBuffers(1, obj.EBOBuffer);
         end % fin de delete
-
-        function b = is2D(obj)
-            if obj.nLayout(1) == 2
-                b = true;
-            else
-                b = false;
-            end
-        end
 
         function nouvelleGeom(obj, newVertexData, newIndices)
             obj.vertexData = newVertexData;

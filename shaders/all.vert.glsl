@@ -1,7 +1,6 @@
 #version 450 core
 
-layout(location = 1) in vec2 position2D; //POS2
-layout(location = 1) in vec3 position3D; //POS3
+layout(location = 1) in vec3 position3D;
 layout(location = 2) in vec3 color3D;    //COL3   
 layout(location = 2) in vec4 color4D;    //COL4
 layout(location = 3) in vec2 textureCoord;  //TEX
@@ -19,7 +18,6 @@ out DATA {
 } data_out;
 
 void main() {
-    vec3 position3D = vec3(position2D, 0.0);            //POS2
     vec4 crntPos = uModelMatrix * vec4(position3D, 1.0);
     gl_Position = crntPos;
 

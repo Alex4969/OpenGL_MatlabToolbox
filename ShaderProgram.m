@@ -12,22 +12,21 @@ classdef ShaderProgram < handle
         function obj = ShaderProgram(gl, nLayout, type, typeCol, typeSha)
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
-            motCle(1) = "POS" + nLayout(1);
             if type == "id"
-                obj.createProgPickId(gl, motCle);
+                obj.createProgPickId(gl);
             else
                 if typeCol == 'C' && nLayout(2) > 0
-                    motCle(2) = "COL" + nLayout(2);
+                    motCle(1) = "COL" + nLayout(2);
                 elseif typeCol == 'T' && nLayout(3) > 0
-                    motCle(2) = "TEX";
+                    motCle(1) = "TEX";
                 else
-                    motCle(2) = "DEF";
+                    motCle(1) = "DEF";
                 end
                 if type == "Face"
                     if typeSha ~= 'S'
-                        motCle(3) = "LIGHT";
+                        motCle(2) = "LIGHT";
                         if typeSha == 'L' && nLayout(4) > 0 
-                            motCle(4) = "NORM";
+                            motCle(3) = "NORM";
                         end
                     end
                     obj.createProgWithLight(gl, motCle)
@@ -92,11 +91,11 @@ classdef ShaderProgram < handle
             end
         end % fin de findLocation
 
-        function createProgPickId(obj, gl, motCle)
-            srcVert = obj.readIfContains("shaders/drawId.vert.glsl", motCle);
+        function createProgPickId(obj, gl)
+            srcVert = fileread("shaders/drawId.vert.glsl");
             obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
 
-            obj.srcFrag = obj.readIfContains("shaders/drawId.frag.glsl", motCle);
+            obj.srcFrag = fileread("shaders/drawId.frag.glsl");
             obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, obj.srcFrag);
         end % fin de create Program
 

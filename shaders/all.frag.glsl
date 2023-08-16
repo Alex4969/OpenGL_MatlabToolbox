@@ -4,17 +4,17 @@ out vec4 fragColor;
 
 in vec3 vNormal;
 in vec3 vCrntPos;
-in vec4 vColor;     //COL3 COL4
-in vec2 vTextureCoord; //TEX
+in vec4 vColor;         //COL3 COL4
+in vec2 vTextureCoord;  //TEX
 in vec2 interpolation;
 
-uniform vec4 uFaceColor = vec4(1.0);        //DEF
+uniform vec4 uFaceColor = vec4(1.0);    //DEF
 uniform vec4 uLineColor;
 uniform vec4 uPointColor;
 uniform float uLineSize;
 uniform float uPointSize;
 uniform int  uQuoiAfficher = 1;
-uniform sampler2D uTexture; //TEX
+uniform sampler2D uTexture;             //TEX
 
 layout (std140, binding = 0) uniform light {
     vec3 ulightPos  ;
@@ -138,7 +138,7 @@ float direcLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
 
 float spotLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
     in vec3 lightPos, in vec3 lightDir, in float coneInterne, in float coneExterne)
-// cone de lumiere (= projecteur)
+// cone de lumiere (= projecteur de la Rotonde !)
 {
     lightDir = normalize(lightDir);
     //ambient lighting

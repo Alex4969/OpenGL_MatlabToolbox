@@ -34,7 +34,6 @@ classdef ElementLigne < VisibleElement
         function DrawId(obj, gl)
             % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
             obj.GLGeom.Bind(gl);
-            obj.shader.SetUniform1i(gl, 'id', obj.getId());
             gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
         end % fin de drawID
 

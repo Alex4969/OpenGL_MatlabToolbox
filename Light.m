@@ -58,7 +58,7 @@ classdef Light < handle
                     obj.cbk_evt_updateModel(obj.forme.Geom)
                 end
             end
-        end
+        end % fin de putOnCamera
 
         function removeForme(obj)
             if ~isempty(obj.forme)
