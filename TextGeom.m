@@ -80,10 +80,11 @@ classdef TextGeom < GeomComponent
     methods (Access = private)
         
         function constructText(obj)
-            pos = zeros(strlength(obj.str) * 4, 2);
+            pos = zeros(strlength(obj.str) * 4, 3);
             map = zeros(strlength(obj.str) * 4, 2);
             cursor = struct('x', 0, 'y', 0);
             ind = [];
+            zValue = 0;
             for i = 1:strlength(obj.str)
                 base = (i-1)*4;
                 infos = obj.police.letterProperties(obj.str(i));
@@ -93,6 +94,7 @@ classdef TextGeom < GeomComponent
                 pos(base + 2, 1:2) = [cursor.x+infos.width  cursor.y             ];
                 pos(base + 3, 1:2) = [cursor.x+infos.width  cursor.y-infos.height];
                 pos(base + 4, 1:2) = [cursor.x              cursor.y-infos.height];
+                pos(base+1:base+4, 3) = zValue;
                 maxY = 512 - infos.y;
                 map(base + 1, 1:2) = [ infos.x                 maxY              ];
                 map(base + 2, 1:2) = [ infos.x+infos.width     maxY              ];
@@ -101,8 +103,9 @@ classdef TextGeom < GeomComponent
                 cursor.x = cursor.x - infos.xoffset + infos.xadvance;
                 cursor.y = cursor.y + infos.yoffset;
                 ind = [ind base base+1 base+2 base+2 base+3 base];
+                zValue = zValue + 5e-4; % on avance légérement la lettre suivante pour l'overlapping
             end
-            pos = pos / double(obj.police.taille);
+            pos(:, 1:2) = pos(:, 1:2) / double(obj.police.taille);
             minX = min(pos(:,1));
             maxX = max(pos(:,1));
             minY = min(pos(:,2));

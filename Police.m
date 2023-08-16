@@ -12,6 +12,7 @@ classdef Police < handle
             obj.name = fileName;
             filePath = fileName + ".fnt";
             obj.letterProperties = obj.readFnt(filePath);
+            obj.verification();
         end
     end
 
@@ -58,5 +59,34 @@ classdef Police < handle
             tmp = extractBetween(ligne, 'xadvance=', ' ');
             infos.xadvance = int16(str2double(tmp{1}));
         end % fin de decodeLine
+
+        function verification(obj)
+            majLetter = true;
+            minLetter = true;
+            for i=65:90 % parcours parmis les majuscules
+                if ~isKey(obj.letterProperties, i)
+                    majLetter = false;
+                end
+            end
+            for i=97:122 % parcours parmis les minuscules
+                if ~isKey(obj.letterProperties, i)
+                    minLetter = false;
+                end
+            end
+            if minLetter == false && majLetter == false
+                disp('La police ne contient pas tous les caractères et ne vas pas fonctionner correctement. Changer de Police');
+            end
+            if minLetter == false && majLetter == true
+                disp('Les caractères minuscules sont indéfinis et remplacer par les majuscules')
+                for i=65:90
+                    obj.letterProperties(i + 32) = obj.letterProperties(i);
+                end
+            elseif majLetter == false && minLetter == true
+                disp('Les caractères majuscules sont indéfinis et remplacer par les minuscules')
+                for i=65:90
+                    obj.letterProperties(i) = obj.letterProperties(i + 32);
+                end
+            end
+        end % fin de set verification
     end % fin des methodes privées
 end % fin classe Police

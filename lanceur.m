@@ -23,8 +23,6 @@ elem.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
 elem.AddColor(couleurPyramide);
 elem.setCouleurArretes([1 0 1]);
 
-viewer.DrawScene
-
 % % nuage de points avec une couleur par sommet
 N = 10000;
 m = -1; M = 1;
@@ -72,7 +70,7 @@ elem.setModeRendu('U', 'D'); % uniform & dur
 ravie = Police("textes/ravie");
 geomTexte = TextGeom(101, 'Hello World !', ravie, 0);
 elemtexte = viewer.AddElement(geomTexte);
-%elemtexte.setModelMatrix(MTrans3D([2 2.2 2]) * MScale3D(0.4));
+elemtexte.setModelMatrix(MTrans3D([2 2.2 2]) * MScale3D(0.4));
 
 geomTexteX = TextGeom(102, 'X', ravie, 0);
 elementTexte = viewer.AddElement(geomTexteX);

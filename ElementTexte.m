@@ -72,8 +72,6 @@ classdef ElementTexte < VisibleElement
 
         function AddMapping(obj, matMapping)
             obj.GLGeom.addDataToBuffer(matMapping, 3);
-            obj.typeColoration = 'T';
-            notify(obj, 'evt_updateRendu');
         end % fin de AddMapping
 
         function sNew = select(obj, s)
