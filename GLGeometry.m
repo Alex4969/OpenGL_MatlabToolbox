@@ -1,18 +1,20 @@
 classdef GLGeometry < handle
     %GLGEOMETRIE Definition de la geometrie selon OpenGL
     
-    properties
-        VAOId uint32            % Vertex Array Id (uint32)
-        VAOBuffer               % Vertex Array buffer (java.nio.IntBuffer)
-        VBOId uint32            % Vertex Buffer ~ liste des sommets Id (uint32)
-        VBOBuffer               % Vertex Buffer buffer (java.nio.IntBuffer)
-        EBOId uint32            % Element Buffer ~ liste connectivité Id (uint32)
-        EBOBuffer               % Element Buffer buffer (java.nio.IntBuffer)
+    properties (GetAccess = public, SetAccess = private)
+        VAOId       uint32      % Vertex Array Id
+        VBOId       uint32      % Vertex Buffer ~ liste des sommets Id
+        EBOId       uint32      % Element Buffer ~ liste connectivité Id
 
         %%% Definition des Vertex Attribute
         vertexData              % copie du VBO (=Geom.listePoints + couleurs et/ou mapping et/ou normales)
         indexData               % copie du EBO (=Geom.listeConnection)
         nLayout (1,4) double    % [nPos, nColor, NTextureMapping, nNormales] : compte le nombre de valeurs pour chaque attribut
+    end
+    properties (Access = private)
+        VAOBuffer               % Vertex Array buffer (java.nio.IntBuffer)
+        VBOBuffer               % Vertex Buffer buffer (java.nio.IntBuffer)
+        EBOBuffer               % Element Buffer buffer (java.nio.IntBuffer)
     end
 
     events

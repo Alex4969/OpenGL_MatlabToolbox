@@ -8,18 +8,21 @@ classdef (Abstract) VisibleElement < handle
         shader          ShaderProgram
         typeShading     (1,1) char    = 'S'    % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
         typeColoration  (1,1) char    = 'U'    % 'U' : Uniforme, 'C' : Color, 'T' : Texture
+        visible         logical       = true
 
         parent
+        typeOrientation uint8 = 1 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe
     end
 
-    properties (Access = public)
-        typeOrientation uint8   = 1 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe, '0000' rien (pour framebuffer)
-        visible         logical = true
+    properties (Constant = true)
+        enumOrientation = dictionary("PERPECTIVE", 1, "NORMAL", 2, "REPERE", 4, "REPERE_NORMAL", 6, "FIXE", 8);
+        enumColoration  = dictionary("UNIFORME", 1, "PAR_SOMMET", 2, "TEXTURE", 4);
+        enumShading     = dictionary("SANS", 16, "DUR", 32, "LISSE", 64);
     end
 
     events
-        evt_redraw          % l'element doit être redessiner
-        evt_updateRendu     % le mode de rendu a été modifié et nécessite un changement de programme
+        evt_redraw          % une modification necessite un redraw
+        evt_updateRendu     % une modification necessite le contexte et un redraw (changement de programme)
     end     
     
     methods
@@ -65,6 +68,10 @@ classdef (Abstract) VisibleElement < handle
             id = obj.Geom.id;
         end % fin de getId
 
+        function setVisibilite(obj, b)
+            obj.visible = b;
+        end % fin de setVisibilite
+
         function setParent(obj, newParent)
             obj.parent = newParent;
         end % fin de setParent
@@ -76,6 +83,16 @@ classdef (Abstract) VisibleElement < handle
             obj.typeColoration = newTypeRendu;
             notify(obj, 'evt_updateRendu');
         end % fin de setModeRendu
+
+        function setOrientation(obj, newOrientation)
+            if obj.enumOrientation.isKey(newOrientation)
+                obj.typeOrientation = obj.enumOrientation(newOrientation);
+                notify(obj, 'evt_redraw');
+            else
+                disp('Nouvelle orientation incorrect');
+                disp(['Valeurs possibles : ' VisibleElement.enumOrientation.keys']);
+            end
+        end
 
         function AddColor(obj, matColor)
             if size(matColor, 1) == 1

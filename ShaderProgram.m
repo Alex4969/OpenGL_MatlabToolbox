@@ -1,11 +1,9 @@
 classdef ShaderProgram < handle
     %SHADERPROGRAM Compile un programme
     
-    properties
+    properties (Access = private)
         shaderProgId        % uint32 : id de la texture
         mapUniformLocation  % char -> int32 : associe un nom d'uniform (variable GLSL) a sa location
-
-        srcFrag
     end
     
     methods
@@ -95,8 +93,8 @@ classdef ShaderProgram < handle
             srcVert = fileread("shaders/drawId.vert.glsl");
             obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
 
-            obj.srcFrag = fileread("shaders/drawId.frag.glsl");
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, obj.srcFrag);
+            srcFrag = fileread("shaders/drawId.frag.glsl");
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
         end % fin de create Program
 
         function createProgWithLight(obj, gl, motCle)
@@ -106,16 +104,16 @@ classdef ShaderProgram < handle
             srcGeom = obj.readIfContains("shaders/all.geom.glsl", motCle);
             obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, srcGeom);
 
-            obj.srcFrag = obj.readIfContains("shaders/all.frag.glsl", motCle);
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, obj.srcFrag);
+            srcFrag = obj.readIfContains("shaders/all.frag.glsl", motCle);
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
         end % fin de create Program
 
         function createProgNoLight(obj, gl, motCle)
             srcVert = obj.readIfContains("shaders/noLight.vert.glsl", motCle);
             obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
 
-            obj.srcFrag = obj.readIfContains("shaders/noLight.frag.glsl", motCle);
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, obj.srcFrag);
+            srcFrag = obj.readIfContains("shaders/noLight.frag.glsl", motCle);
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
         end % fin de create Program
 
         function src = readIfContains(~, filePath, keyWords)

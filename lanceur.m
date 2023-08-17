@@ -77,7 +77,7 @@ geomTexteX = GeomTexte(102, 'X', ravie, 0);
 elementTexte = viewer.AddElement(geomTexteX);
 elementTexte.setModelMatrix(MTrans3D([1 0 0]));
 elementTexte.setCouleur([1 0 0]);
-elementTexte.typeOrientation = 2 + 4;
+elementTexte.setOrientation("REPERE_NORMAL");
 
 %% Creation d'un group
     % sphere avec des normales pour rendu lisse

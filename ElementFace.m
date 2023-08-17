@@ -1,16 +1,14 @@
 classdef ElementFace < VisibleElement
     %ELEMENTFACE Décrit les objets a afficher qui sont pleins
     
-    properties %(GetAccess = public, SetAccess = protected)
+    properties (GetAccess = public, SetAccess = protected)
         texture
         epaisseurArretes = 1                % float
         epaisseurPoints  = 2                % float
         couleur          = [1 0 0 1]        % 1x4
         couleurArretes   = [0 1 0 1]        % 1x4
         couleurPoints    = [0 0 1 1]        % 1x4
-    end
-
-    properties (GetAccess = public, SetAccess = protected)
+        
         quoiAfficher int8 = 1               % 001 : face, 010 : ligne, 100, points
                                             % toutes combinaisons acceptés
     end

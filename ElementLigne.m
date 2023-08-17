@@ -1,7 +1,7 @@
 classdef ElementLigne < VisibleElement
     %ELEMENTLIGNE
     
-    properties
+    properties (GetAccess = public, SetAccess = protected)
         epaisseur = 2             % float
         couleur   = [1 0 0 1]     % 1x4
     end

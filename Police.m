@@ -1,10 +1,10 @@
 classdef Police < handle
     %POLICE enregiste le style de police
     
-    properties
-        letterProperties    % dictionary caractère (int) -> struct
-        name                % le nom de la police
-        taille              % la taille de la police dans le fichier donné
+    properties (GetAccess = public, SetAccess = protected)
+        letterProperties %dictionary    % dictionary caractère (int) -> struct
+        name             string         % le nom de la police
+        taille           int16          % la taille de la police dans le fichier donné
     end
     
     methods

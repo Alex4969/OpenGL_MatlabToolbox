@@ -1,21 +1,21 @@
 classdef Light < handle
     %LIGHT
     
-    properties
-        position            % 1x3 position de la lumiere dans la scene
-        couleurLumiere      % 1x3 couleur de la lumière
+    properties (GetAccess = public, SetAccess = protected)
+        position       (1,3) double     %position de la lumiere dans la scene
+        couleurLumiere (1,3) double     %couleur de la lumière
 
-        forme ElementFace   % donne une forme a la lumiere
-        comp  %GeomComponent % component avant de devenir un elementFace
+        forme           ElementFace     %donne une forme a la lumiere
+        comp            MyGeom          %component avant de devenir un elementFace
 
-        directionLumiere    % 1x3 direction souhaité de la lumière (pour la lumière directionel ou spot)
-        paramsLumiere       % [t a b] t = type (0 : desactivé, 1 : pointLight, 2 : directionel, 3 : spotLight)
-                            % a et b sont les parametre d'intensité pour le pointLight.
-                            % a et b sont les cos des angles pour la spotLight
-        oldType             % sauvegarde le type de lumière avant de désactiver
+        directionLumiere (1,3) double   %direction souhaité de la lumière (pour la lumière directionel ou spot)
+        paramsLumiere   (1,3) double    %[t a b] t = type (0 : desactivé, 1 : pointLight, 2 : directionel, 3 : spotLight)
+                                            %a et b sont les parametre d'intensité pour le pointLight.
+                                            %a et b sont les cos des angles pour la spotLight
+        oldType         (1,1) double    %sauvegarde le type de lumière avant de désactiver
 
         modelListener
-        onCamera logical = false
+        onCamera         logical = false
     end
 
     events
@@ -85,7 +85,7 @@ classdef Light < handle
 
         function setColor(obj, newCol)
             obj.couleurLumiere = newCol(1:3);
-            if ~isempty(obj.forme) && any(obj.forme.couleur(1:3) ~= obj.couleurLumiere)
+            if ~isempty(obj.forme)
                 obj.forme.setCouleur(obj.couleurLumiere);
             end
             notify(obj, 'evt_updateUbo');
@@ -100,22 +100,6 @@ classdef Light < handle
             obj.paramsLumiere = newParam;
             notify(obj, 'evt_updateUbo');
         end % fin de setParam
-
-        function pos = getPosition(obj)
-            pos = obj.position;
-        end % fin de GetPosition
-
-        function col = getColor(obj)
-            col = obj.couleurLumiere;
-        end % fin de GetPosition
-
-        function dir = getDirection(obj)
-            dir = obj.directionLumiere;
-        end
-
-        function param = getParam(obj)
-            param = obj.paramsLumiere;
-        end
 
         function desactivate(obj)
             if obj.paramsLumiere(1) > 0

@@ -252,7 +252,7 @@ classdef Scene3D < handle
             if obj.context.isCurrent()
                 obj.context.release();
             end
-        end
+        end % fin de removeGL
 
         function generateInternalObject(obj)
             tailleAxes = 50;
@@ -268,7 +268,7 @@ classdef Scene3D < handle
             gysmoGeom = GeomAxes(obj.gyroscopeId, 0, 1);
             elem = obj.AddElement(gysmoGeom);
             elem.AddColor(gysmoGeom.color);
-            elem.typeOrientation = 4;
+            elem.setOrientation("REPERE");
             elem.setEpaisseur(4);
 
             obj.pickingTexture = Framebuffer(obj.getGL(), obj.canvas.getWidth(), obj.canvas.getHeight());
@@ -282,7 +282,7 @@ classdef Scene3D < handle
                 if listeTrie{i}.typeOrientation >= 4 %ortho ou fixe
                     distance(i) = 0;
                 else
-                    distance(i) = norm(listeTrie{i}.getPosition() - obj.camera.getPosition());
+                    distance(i) = norm(listeTrie{i}.getPosition() - obj.camera.position);
                 end
             end
             [~, newOrder] = sort(distance, 'descend');
@@ -338,7 +338,7 @@ classdef Scene3D < handle
             else
                 NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
 
-                worldCoord = obj.camera.getProjMatrix * obj.camera.getViewMatrix \ NDC;
+                worldCoord = obj.camera.projMatrix * obj.camera.viewMatrix \ NDC;
                 worldCoord = worldCoord(1:3)./worldCoord(4);
                 worldCoord = worldCoord';
             end

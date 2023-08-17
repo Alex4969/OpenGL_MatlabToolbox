@@ -53,7 +53,7 @@ elem.setModelMatrix(MTrans3D([0.5 0.25 0]));
 trackBall = MyGeom(-5, sommetsValeurs, indices, 'ligne');
 elem = viewer.AddElement(trackBall);
 elem.AddColor(sommetsCouleur);
-elem.typeOrientation = 4;
+elem.setOrientation("REPERE");
 
 % % 
 % % % % sphere avec texture map monde
@@ -127,7 +127,7 @@ elem.typeOrientation = 4;
             % elem.setEpaisseur(14);   
             % elem.AddColor(color);
             % elem.setModelMatrix(MTrans3D([1, 1, 1]));
-            % elem.typeOrientation = 4;
+            % elem.setOrientation("REPERE");
 
             gyroscopeId = 333;
             tailleGysmo = 1;
@@ -137,7 +137,7 @@ elem.typeOrientation = 4;
             elem.AddColor(color);
             elem.setModelMatrix(MTrans3D([0 0 0]));           
             elem.setEpaisseur(14);   
-            elem.typeOrientation = 1;
+            elem.setOrientation("PERSPECTIVE");
 
             ExtId = 334;
             [pos, idx, color] = generateExtremities(0, tailleGysmo,0.2);
@@ -146,7 +146,7 @@ elem.typeOrientation = 4;
             elem.AddColor(color);
             elem.setModelMatrix(MTrans3D([0 0 0]));
             elem.setEpaisseur(14);
-            elem.typeOrientation = 1;
+            elem.setOrientation("PERSPECTIVE");
 
             % creation du groupe
             group = viewer.CreateGroup(1);
@@ -162,7 +162,7 @@ geomTexteX = TextGeom(102, 'X', ravie, 0);
 elementTexte = viewer.AddElement(geomTexteX);
 elementTexte.setModelMatrix( MTrans3D([1.3 0 0])*MScale3D(0.4));
 elementTexte.setCouleur([1 0 0]);
-elementTexte.typeOrientation = 2 + 4;
+elementTexte.setOrientation("REPERE_NORMAL");
 
 % [posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.2);
 % bouleLightGeom = Geometry(100, posBoule, indBoule);

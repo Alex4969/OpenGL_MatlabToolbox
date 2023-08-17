@@ -2,13 +2,10 @@ classdef Ensemble < handle
     %ENSEMBLE permet de regrouper plusieurs element pour les déplacer ensemble
 
     properties (GetAccess = public, SetAccess = protected)
-        id int32
-        sousElements containers.Map
-        groupMatrix = eye(4);
-    end
-
-    properties (Access = public)
-        visible logical
+        id              int32
+        sousElements    containers.Map
+        groupMatrix     (4,4) double     = eye(4);
+        visible         logical
     end    
 
     methods
@@ -32,6 +29,10 @@ classdef Ensemble < handle
             b = obj.visible;
         end % fin de isVisible
 
+        function setVisibilite(obj, b)
+            obj.visible = b;
+        end % fin de setVisibilite
+
         function elem = removeElem(obj, elemId)
             if obj.sousElements.isKey(elemId)
                 elem = obj.sousElements(elemId);
@@ -50,7 +51,7 @@ classdef Ensemble < handle
             else
                 obj.groupMatrix = model * obj.groupMatrix;
             end
-        end % fin de addToModelMatrix
+        end % fin de modifyModelMatrix
 
         function setModelMatrix(obj, model)
             obj.groupMatrix = model;

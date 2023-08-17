@@ -8,7 +8,6 @@ classdef Camera < handle
         up              % 1x3 position du vecteur pointant vers le haut (NORMALISE!)
         viewMatrix      % 4x4 matrice de transformation correspondant aux valeurs ci dessus
 
-
         %%% Attributs de la projection
         near            % double distance du plan rapproché
         far             % double distance du plan éloigné
@@ -16,16 +15,14 @@ classdef Camera < handle
         fov             % double angle de vue d'observation (en degré)
         type logical    % 1 pour perspective, 0 pour orthonormé
         projMatrix      % 4x4 matrice de transformation correspondant aux valeurs ci dessus
-    end
 
-    properties
         %%% Attributes pour le mouvement
         speed = 5;
         sensibility =1;
 
         posCentreMvt = 0;   % 1x3 si pour donner un centre de rotation sinon le centre = target
 
-        constraint logical  % 1x3 pour chaque axe
+        constraint (1,3) logical  % pour chaque axe
     end
 
     events
@@ -33,7 +30,6 @@ classdef Camera < handle
     end
 
     methods
-
         function obj = Camera(ratio)
         %CAMERA Construct an instance of this class
             obj.position = [0 0 10];
@@ -111,22 +107,6 @@ classdef Camera < handle
             obj.fov = newFov;
             obj.computeProj();
         end % fin de setFov
-        
-        function ratio = getRatio(obj)
-            ratio = obj.ratio;
-        end
-
-        function pos = getPosition(obj)
-            pos = obj.position;
-        end % fin de getPosition
-
-        function Mrot = getViewMatrix(obj)
-            Mrot = obj.viewMatrix;
-        end
-
-        function MProj = getProjMatrix(obj)
-            MProj = obj.projMatrix;
-        end
 
         function att = getAttributes(obj) % contient near, maxY, maxX, coef, view, proj, ratio
             att.near = obj.near;
@@ -144,7 +124,6 @@ classdef Camera < handle
             att.proj = obj.projMatrix;
             att.ratio = obj.ratio;
         end % fin de getAttribute
-
     end %fin des methodes defauts
 
     methods % special transformations / gestion de la souris
@@ -240,16 +219,6 @@ classdef Camera < handle
 
     methods (Access = private)
         function computeView(obj)
-            Mrot = obj.computeRotationCamera();
-
-            Mtrans = eye(4);
-            Mtrans(1:3,4) = -obj.position';
-
-            obj.viewMatrix = Mrot * Mtrans;
-            notify(obj, 'evt_updateUbo');
-        end % fin de computeView
-
-        function Mrot = computeRotationCamera(obj)
             forward = obj.position - obj.target;            
             forward = forward / norm(forward);
 
@@ -261,7 +230,13 @@ classdef Camera < handle
             Mrot(1,1:3) = left;
             Mrot(2,1:3) = newUp;
             Mrot(3,1:3) = forward;
-        end % fin de computeRotationMatrix
+
+            Mtrans = eye(4);
+            Mtrans(1:3,4) = -obj.position';
+
+            obj.viewMatrix = Mrot * Mtrans;
+            notify(obj, 'evt_updateUbo');
+        end % fin de computeView
 
         function computeProj(obj)
             if obj.type == 0 % vue ortho

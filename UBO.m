@@ -1,11 +1,13 @@
 classdef UBO < handle
     %UBO place des données utilisés par les shaders dans le GPU
     
-    properties
-        UBOId uint32
-        UBOBuffer
+    properties (GetAccess = public, SetAccess = protected)
+        UBOId uint32        % id du uniform buffer object
         taille uint16       % taille en octets des données contenues dans le buffer
         binding uint8       % n° du bind dans le shader
+    end
+    properties (Access = private)
+        UBOBuffer
     end
     
     methods

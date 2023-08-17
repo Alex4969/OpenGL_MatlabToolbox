@@ -2,12 +2,14 @@ classdef Framebuffer < handle
     %FRAMEBUFFER Un frame buffer permet de généré une image dans une texture avant d'afficher la-dite texture
     %Cette methode permet de récupéré la projection de la souris dans la scène 3D
 
-    properties
-        FBOBuffer           %Frame Buffer Object
-        FBOId               %Frame Buffer Id
-        RBOBuffer           %Render Buffer Object
-        RBOId               %Render Buffer Id
-        texture Texture     %Texture dans laquelle on ecrit l'image d'id
+    properties (GetAccess = public, SetAccess = protected)
+        FBOId       uint32      %Frame Buffer Id
+        RBOId       uint32      %Render Buffer Id
+        texture     Texture     %Texture dans laquelle on ecrit l'image d'id
+    end
+    properties (Access = private)
+        FBOBuffer               %Frame Buffer Object
+        RBOBuffer               %Render Buffer Object
     end
 
     methods
