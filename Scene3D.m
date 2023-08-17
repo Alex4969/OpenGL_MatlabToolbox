@@ -227,6 +227,8 @@ classdef Scene3D < handle
             h = obj.canvas.getHeight();
             disp('capture en cours...')
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
+
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT, 1);
             buffer = java.nio.ByteBuffer.allocate(3 * w * h);
             gl.glReadPixels(0, 0, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer);
             img = typecast(buffer.array, 'uint8');
@@ -235,8 +237,7 @@ classdef Scene3D < handle
             img = rot90(img);
             imshow(img);
             obj.removeGL();
-        end % fin de screenShot        
-    
+        end % fin de screenShot
     end % fin des methodes defauts
 
     methods (Access = private)
@@ -517,10 +518,10 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
         end
     
-        function cbk_ComponentResized(obj, source, ~)
+        function cbk_ComponentResized(obj, ~, ~)
             obj.cbk_manager.rmCallback('ComponentResized');
-            w=source.getSize.getWidth;
-            h=source.getSize.getHeight;
+            w = obj.canvas.getWidth();
+            h = obj.canvas.getHeight();
             %disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
             gl = obj.getGL();
             gl.glViewport(0, 0, w, h);
