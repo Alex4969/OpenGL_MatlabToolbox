@@ -369,9 +369,7 @@ classdef Scene3D < handle
             model = elem.getModelMatrix();
             cam = eye(4);
             camAttrib = obj.camera.getAttributes();
-            if elem.typeColoration == 0 % seule modelMatrix (dans le repere ecran normalise) active
-                cam = eye(4);
-            elseif elem.typeOrientation == 1 %'0001' PERSPECTIVE
+            if elem.typeOrientation == 1 %'0001' PERSPECTIVE
                 cam = camAttrib.proj * camAttrib.view;
             elseif elem.typeOrientation == 8 %'1000' fixe (pour texte)
                 % on utilise la matrice modele pour positionner le texte

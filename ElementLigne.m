@@ -12,7 +12,7 @@ classdef ElementLigne < VisibleElement
             %ELEMENTLIGNE
             obj@VisibleElement(gl, aGeom);
             obj.Type = 'Line';
-            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeRendu);
         end % fin du constructeur ElementLigne
 
         function Draw(obj, gl)
@@ -23,7 +23,7 @@ classdef ElementLigne < VisibleElement
             obj.GLGeom.Bind(gl);
 
             gl.glLineWidth(obj.epaisseur);
-            if obj.typeColoration == 'U'
+            if bitand(obj.typeRendu, 1) == 1
                 obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
             end
             gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
@@ -58,10 +58,12 @@ classdef ElementLigne < VisibleElement
             sNew.id = obj.getId();
             sNew.couleur = obj.couleur;
             sNew.epaisseur = obj.epaisseur;
-            sNew.oldType = obj.typeColoration;
+            sNew.oldType = obj.typeRendu;
             obj.couleur = s.couleur;
             obj.epaisseur = s.epaisseur;
-            obj.setModeRendu('U');
+            if bitand(obj.typeRendu, 1) == 0
+                obj.setModeRendu("UNIFORME");
+            end
         end % fin de select
 
         function sNew = deselect(obj, s)
@@ -70,8 +72,8 @@ classdef ElementLigne < VisibleElement
             sNew.epaisseur = obj.epaisseur;
             obj.couleur = s.couleur;
             obj.epaisseur = s.epaisseur;
-            if obj.typeColoration ~= s.oldType
-                obj.setModeRendu(s.oldType);
+            if obj.typeRendu ~= s.oldType
+                obj.setModeRendu("PAR_SOMMET");
             end
         end % fin de deselect
     end % fin des methodes defauts

@@ -7,23 +7,27 @@ classdef ShaderProgram < handle
     end
     
     methods
-        function obj = ShaderProgram(gl, nLayout, type, typeCol, typeSha)
+        function obj = ShaderProgram(gl, nLayout, type, typeRendu)
+            % construit le programme qui correspond au choix de rendu choisi par l'utilisateur
+            % on commence par verifier que les choix soient applicables
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
             if type == "id"
                 obj.createProgPickId(gl);
             else
-                if typeCol == 'C' && nLayout(2) > 0
+                typeCol = bitand(typeRendu, 0x0F); %1:uniform, 2:parSommet, 4:Texture
+                typeSha = bitshift(bitand(typeRendu, 0xF0), -4); %1:Sans, 2:Dur, 4:Lisse
+                if typeCol == 2 && nLayout(2) > 0
                     motCle(1) = "COL" + nLayout(2);
-                elseif typeCol == 'T' && nLayout(3) > 0
+                elseif typeCol == 4 && nLayout(3) > 0
                     motCle(1) = "TEX";
                 else
                     motCle(1) = "DEF";
                 end
                 if type == "Face"
-                    if typeSha ~= 'S'
+                    if typeSha ~= 1
                         motCle(2) = "LIGHT";
-                        if typeSha == 'L' && nLayout(4) > 0 
+                        if typeSha == 4 && nLayout(4) > 0 
                             motCle(3) = "NORM";
                         end
                     end

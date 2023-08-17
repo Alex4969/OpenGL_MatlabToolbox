@@ -6,8 +6,7 @@ classdef (Abstract) VisibleElement < handle
         Geom            % GeomComponent
         GLGeom          GLGeometry
         shader          ShaderProgram
-        typeShading     (1,1) char    = 'S'    % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
-        typeColoration  (1,1) char    = 'U'    % 'U' : Uniforme, 'C' : Color, 'T' : Texture
+        typeRendu       uint8   = 17         %type de coloration & type de shading chacun sur 4 bit
         visible         logical       = true
 
         parent
@@ -76,12 +75,19 @@ classdef (Abstract) VisibleElement < handle
             obj.parent = newParent;
         end % fin de setParent
 
-        function setModeRendu(obj, newTypeRendu, newTypeLumiere)
-            if nargin == 3
-                obj.typeShading = newTypeLumiere;
+        function setModeRendu(obj, newTypeColoration, newTypeLumiere)
+            if nargin == 2 && obj.enumColoration.isKey(newTypeColoration)
+                obj.typeRendu = bitand(obj.typeRendu, 0xF0); % on grade la composante de lumiere
+                obj.typeRendu = obj.typeRendu + obj.enumColoration(newTypeColoration);
+                notify(obj, 'evt_updateRendu');
+            elseif obj.enumColoration.isKey(newTypeColoration) && obj.enumShading.isKey(newTypeLumiere)
+                obj.typeRendu = obj.enumColoration(newTypeColoration) + obj.enumShading(newTypeLumiere);
+                notify(obj, 'evt_updateRendu');
+            else
+                disp('valeurs incompatibles')
+                disp(['valeurs pour la coloration : ' obj.enumColoration.keys'])
+                disp(['valeurs pour le shading : ' obj.enumShading.keys'])
             end
-            obj.typeColoration = newTypeRendu;
-            notify(obj, 'evt_updateRendu');
         end % fin de setModeRendu
 
         function setOrientation(obj, newOrientation)
@@ -97,10 +103,10 @@ classdef (Abstract) VisibleElement < handle
         function AddColor(obj, matColor)
             if size(matColor, 1) == 1
                 obj.setCouleur(matColor);
-                obj.typeColoration = 'U';
+                obj.typeRendu = bitand(obj.typeRendu, 0xF0) + 1;
             else
                 obj.GLGeom.addDataToBuffer(matColor, 2);
-                obj.typeColoration = 'C';
+                obj.typeRendu = bitand(obj.typeRendu, 0xF0) + 2;
             end
             notify(obj, 'evt_updateRendu');
         end % fin de AddColor
@@ -118,7 +124,7 @@ classdef (Abstract) VisibleElement < handle
                     obj.AddColor(source.color);
                 end
             else
-                obj.typeColoration = 'U';
+                obj.typeRendu = bitand(obj.typeRendu, 0xF0) + 1;
                 notify(obj, 'evt_updateRendu');
             end
         end % fin de cbk_evt_updateGeom
@@ -143,7 +149,7 @@ classdef (Abstract) VisibleElement < handle
         end % fin de setShader
 
         function glUpdate(obj, gl, ~)
-            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeRendu);
         end % fin de glUpdate
     end % fin des methodes defauts
 

@@ -66,7 +66,7 @@ elem.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02)); % pour la piece d'echec
 % chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2)); % pour le loup
 elem.GenerateNormals();
 elem.setQuoiAfficher(3);
-elem.setModeRendu('U', 'D'); % uniform & dur
+elem.setModeRendu("UNIFORME", "DUR"); % uniform & dur
 
 ravie = Police("textes/ravie");
 geomTexte = GeomTexte(101, 'Hello World !', ravie, 0);

@@ -22,8 +22,8 @@ classdef ElementFace < VisibleElement
             %FACEELEMENT 
             obj@VisibleElement(gl, aGeom); % appel au constructeur parent
             obj.Type = 'Face';
-            obj.typeShading = 'D';
-            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
+            obj.typeRendu = 32 + 1; % shading sur + uniform
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeRendu);
         end % fin constructeur ElementFace
 
         function Draw(obj, gl)
@@ -33,18 +33,21 @@ classdef ElementFace < VisibleElement
             end
             obj.GLGeom.Bind(gl);
             obj.shader.SetUniform1i(gl, 'uQuoiAfficher', obj.quoiAfficher);
+            %On affiche les faces
             if bitand(obj.quoiAfficher, 1) > 0
-                if obj.typeColoration == 'T' && ~isempty(obj.texture)
+                if bitand(obj.typeRendu, 4) == 4 && ~isempty(obj.texture)
                     obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
                     gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-                elseif obj.typeColoration == 'U' && bitand(obj.quoiAfficher, 1) > 0
+                elseif bitand(obj.typeRendu, 1) == 1
                     obj.shader.SetUniform4f(gl, 'uFaceColor', obj.couleur);
                 end
             end
+            % On affiche les lignes
             if bitand(obj.quoiAfficher, 2) > 0
                 obj.shader.SetUniform4f(gl, 'uLineColor', obj.couleurArretes);
                 obj.shader.SetUniform1f(gl, 'uLineSize', obj.epaisseurArretes);
             end
+            % On affiche les points
             if bitand(obj.quoiAfficher, 4) > 0
                 obj.shader.SetUniform4f(gl, 'uPointColor', obj.couleurPoints);
                 obj.shader.SetUniform1f(gl, 'uPointSize', obj.epaisseurPoints);
@@ -65,7 +68,9 @@ classdef ElementFace < VisibleElement
                 warning('l objet ne contient pas le mapping pour appliquer la texture. Annulation')
                 return 
             end
-            obj.setModeRendu('T');
+            if bitand(obj.typeRendu, 4) == 0
+                obj.setModeRendu("TEXTURE");
+            end
             obj.texture = fileName;
             notify(obj, 'evt_textureUpdate');
         end % fin de useTexture
@@ -137,20 +142,20 @@ classdef ElementFace < VisibleElement
 
         function AddMapping(obj, matMapping)
             obj.GLGeom.addDataToBuffer(matMapping, 3);
-            obj.typeColoration = 'T';
+            obj.typeRendu = bitand(obj.typeRendu, 0xF0) + 4;
             notify(obj, 'evt_updateRendu');
         end % fin de AddMapping
 
         function AddNormals(obj, matNormales)
             obj.GLGeom.addDataToBuffer(matNormales, 4);
-            obj.typeShading = 'L';
+            obj.typeRendu = bitand(obj.typeRendu, 0x0F) + 64;
             notify(obj, 'evt_updateRendu');
         end % fin de AddNormals
 
         function GenerateNormals(obj)
             normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
             obj.GLGeom.addDataToBuffer(normales, 4);
-            obj.typeShading = 'L';
+            obj.typeRendu = bitand(obj.typeRendu, 0x0F) + 64;
             notify(obj, 'evt_updateRendu');
         end % fin de GenerateNormals
 

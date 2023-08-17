@@ -14,8 +14,8 @@ classdef Light < handle
                                             %a et b sont les cos des angles pour la spotLight
         oldType         (1,1) double    %sauvegarde le type de lumière avant de désactiver
 
-        modelListener
-        onCamera         logical = false
+        modelListener                   % listener de GeomComponent, permet de le supprimer quand si on retire la forme
+        onCamera         logical = false% vrai pour fixer la lumiere a la camera
     end
 
     events
@@ -153,7 +153,7 @@ classdef Light < handle
             obj.forme = ElementFace(gl, obj.comp);
             obj.forme.setModelMatrix(MTrans3D(obj.position));
             obj.forme.setCouleur(obj.couleurLumiere);
-            obj.forme.setModeRendu('U', 'S');
+            obj.forme.setModeRendu("UNIFORME", "SANS");
             obj.forme.glUpdate(gl, "evt_updateModel")
             obj.modelListener = addlistener(obj.forme.Geom,'evt_updateModel',@obj.cbk_evt_updateModel);
         end % fin de glUpdate

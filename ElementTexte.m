@@ -19,9 +19,9 @@ classdef ElementTexte < VisibleElement
             obj.AddMapping(obj.Geom.mapping);
             obj.GLGeom.glUpdate(gl)
             obj.typeOrientation = 2; % normal a l'ecran
-            obj.typeColoration = 'T';
+            obj.typeRendu = 16 + 4; % sans shading + texture
             obj.texture = Texture(gl, obj.Geom.police.name + ".png");
-            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeRendu);
         end % fin du constructeur Texte
 
         function Draw(obj, gl)
