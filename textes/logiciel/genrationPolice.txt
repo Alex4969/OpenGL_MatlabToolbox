@@ -7,8 +7,9 @@ tuto pour utiliser le logiciel : https://www.youtube.com/watch?v=mnIQEQoHHCU 1:2
  - Dans Padding : Mettre a 3 les valeurs haut, gauche, bas, droite
  - Dans Rendering : Selectionner Glyph cahce.
 	Faire un reset Cache
+	Laisser width & Height a 512
 	Si le chiffre a coté de page est supérieur a 1. C'est qu'il faut plus d'une image pour mettre tous les caractères.
-		Augmenter la page width & height pour que le chiffre retombe a 1.
+	
 
 La police est prete a être généré.
 Pour que les caractères rendent mieux, augmenter la size dans Font tant que tous les caractères rentrent dans une page
