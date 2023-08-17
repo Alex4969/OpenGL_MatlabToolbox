@@ -8,14 +8,18 @@ classdef MyGeom < GeomComponent
     
     methods
         function obj = MyGeom(id, type, points, connectivite)
-            %MYGEOM
+            %MYGEOM construit une geometrie (liste de points et connectivité) a partir des valeurs en paramètre
+            % ou d'un fichier STL si points est de type string
             obj@GeomComponent(id, type);
-            if (isa(points, "string"))
+            if (isa(points, "string") || isa(points, "char"))
                 obj.createFromFile(points);
             else
                 if size(points, 2) == 2
                     disp('liste en 2D, transformation vers de la 3D');
                     points(size(points, 1), 3) = 0;
+                end
+                if nargin == 3 && type == "point"
+                    connectivite = 1:size(points, 1);
                 end
                 obj.listePoints = points;
                 obj.listeConnection = connectivite;

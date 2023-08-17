@@ -28,7 +28,7 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom = aGeom;
             obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
 
-            addlistener(obj.Geom,'evt_updateGeom',@obj.cbk_evt_updateGeom);
+            addlistener(obj.Geom,'evt_updateGeom',@obj.cbk_updateGeom);
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
@@ -88,11 +88,18 @@ classdef (Abstract) VisibleElement < handle
             notify(obj, 'evt_updateRendu');
         end % fin de AddColor
 
-        function cbk_evt_updateGeom(obj, source, ~)
+        function cbk_updateGeom(obj, source, ~) % source = geomComponent
             obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
-            if obj.Type == "Texte"
-                obj.AddMapping(source.mapping);
-                obj.changePolice();
+            if isa(source, 'ClosedGeom')
+                if any(source.attributes == "police")
+                    obj.changePolice();
+                end
+                if any(source.attributes == "mapping")
+                    obj.AddMapping(source.mapping);
+                end
+                if any(source.attributes == "color")
+                    obj.AddColor(source.color);
+                end
             else
                 obj.typeColoration = 'U';
                 notify(obj, 'evt_updateRendu');

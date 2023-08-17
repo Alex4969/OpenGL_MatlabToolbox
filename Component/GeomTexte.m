@@ -10,6 +10,14 @@ classdef GeomTexte < ClosedGeom
                                  % 3:bas-gauche, 4:bas-droite
         mapping  (:,2) double  % mapping de la texture de police
     end
+
+    properties (Constant = true)  % choix d'ancrage disponible
+        enumAncrage = dictionary("CENTRE"     , 0, ...
+                                 "HAUT_GAUCHE", 1, ...
+                                 "HAUT_DROITE", 2, ...
+                                 "BAS_GAUCHE" , 3, ...
+                                 "BAS_DROITE" , 4);
+    end
     
     methods
         function obj = GeomTexte(id, str, police, ancre)
@@ -17,32 +25,43 @@ classdef GeomTexte < ClosedGeom
             obj@ClosedGeom(id, "texte");
             obj.str = str;
             obj.police = police;
-            obj.ancre = ancre;
-            obj.constructText();
+            if obj.enumAncrage.isKey(ancre)
+                obj.ancre = obj.enumAncrage(ancre);
+            elseif ancre > 4 || ancre < 0
+                obj.ancre = 0;
+            else
+                obj.ancre = ancre;
+            end
+            obj.attributes = ["police", "mapping"];
+            obj.generateText();
         end % fin du constructeur TextGeom
 
         function setPolice(obj, newPolice)
             obj.police = newPolice;
-            obj.constructText();
+            obj.generateText();
             if event.hasListener(obj, 'evt_updateGeom')
+                obj.attributes = ["police", "mapping"];
                 notify(obj, 'evt_updateGeom')
             end
-        end
+        end % fin de setPolice
 
         function setTexte(obj, newTexte)
             obj.str = newTexte;
-            obj.constructText();
+            obj.generateText();
             if event.hasListener(obj, 'evt_updateGeom')
+                obj.attributes = "mapping";
                 notify(obj, 'evt_updateGeom')
             end
-        end
+        end % fin de setTexte
 
         function setAncrage(obj, newAncre)
-            if newAncre == obj.ancre
-                disp('ancre similaire');
-                return;
+            if obj.enumAncrage.isKey(newAncre)
+                obj.ancre = obj.enumAncrage(newAncre);
+            elseif newAncre > 4 || newAncre < 0
+                obj.ancre = 0;
+            else
+                obj.ancre = newAncre;
             end
-            obj.ancre = newAncre;
             minX = min(obj.listePoints(:,1));
             maxX = max(obj.listePoints(:,1));
             minY = min(obj.listePoints(:,2));
@@ -68,14 +87,14 @@ classdef GeomTexte < ClosedGeom
             obj.listePoints(:, 2) = obj.listePoints(:, 2) - yDep;
             
             if event.hasListener(obj, 'evt_updateGeom')
+                obj.attributes = "mapping";
                 notify(obj, 'evt_updateGeom')
             end
-        end
-
+        end % fin de setAncrage
     end % fin des methodes defauts
 
     methods (Access = private)
-        function constructText(obj)
+        function generateText(obj)
             pos = zeros(strlength(obj.str) * 4, 3);
             map = zeros(strlength(obj.str) * 4, 2);
             cursor = struct('x', 0, 'y', 0);
@@ -129,6 +148,6 @@ classdef GeomTexte < ClosedGeom
             obj.mapping = map;
             obj.listeConnection = ind;
             obj.listePoints = pos;
-        end % fin de constructText
+        end % fin de generateText
     end % fin des methodes privées
 end % fin classe TextGeom

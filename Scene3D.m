@@ -10,11 +10,11 @@ classdef Scene3D < handle
         mapElements containers.Map  % map contenant les objets 3D de la scenes
         mapGroups   containers.Map  % map contenant les ensembles
 
-        camera Camera       % instance de la camera
-        lumiere Light       % instance de la lumiere
-        axesId int32        % instance des axes lié au repere
-        gyroscopeId int32   % indication d'angle dans le repere
-        grilleId int32      % instance de la grille lié au repere
+        camera Camera           % instance de la camera
+        lumiere Light           % instance de la lumiere
+        axesId int32 = -1       % instance des axes lié au repere
+        grilleId int32 = -2     % instance de la grille lié au repere
+        gyroscopeId int32 = -3  % indication d'angle dans le repere
 
         cbk_manager javacallbackmanager
         startX              % position x de la souris lorsque je clique
@@ -254,26 +254,19 @@ classdef Scene3D < handle
         end
 
         function generateInternalObject(obj)
-            obj.axesId = -1;
-            tailleAxe = 50;
-            [pos, idx, color] = generateAxis(-tailleAxe, tailleAxe);
-            axesGeom = MyGeom(obj.axesId, "ligne", pos, idx);
+            tailleAxes = 50;
+            axesGeom = GeomAxes(obj.axesId, -tailleAxes, tailleAxes);
             elem = obj.AddElement(axesGeom);
-            elem.AddColor(color);
+            elem.AddColor(axesGeom.color);
 
-            obj.grilleId = -2;
-            [pos, idx] = generateGrid(tailleAxe, 2);
-            grilleGeom = MyGeom(obj.grilleId, "ligne", pos, idx);
+            grilleGeom = GeomGrille(obj.grilleId, tailleAxes, 2);
             elem = obj.AddElement(grilleGeom);
             elem.setEpaisseur(1);
             elem.setCouleur([0.3 0.3 0.3]);
 
-            obj.gyroscopeId = -3;
-            tailleGysmo = 1;
-            [pos, idx, color] = generateAxis(0, tailleGysmo);
-            gysmoGeom = MyGeom(obj.gyroscopeId, "ligne", pos, idx);
+            gysmoGeom = GeomAxes(obj.gyroscopeId, 0, 1);
             elem = obj.AddElement(gysmoGeom);
-            elem.AddColor(color);
+            elem.AddColor(gysmoGeom.color);
             elem.typeOrientation = 4;
             elem.setEpaisseur(4);
 

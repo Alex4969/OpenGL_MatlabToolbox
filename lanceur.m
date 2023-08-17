@@ -15,7 +15,7 @@ viewer.DrawScene();
 [posPyramide, indicesPyramide, mappingPyramide] = generatePyramide(4, 0.8);
 
 % pyramide avec une couleur par sommet
-pyraColorGeom = MyGeom(1, "face", posPyramide, indicesPyramide);
+pyraColorGeom = GeomFace(1, posPyramide, indicesPyramide);
 viewer.AddElement(pyraColorGeom);
 
 couleurPyramide = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
@@ -28,7 +28,7 @@ elem.setCouleurArretes([1 0 1]);
 N = 10000;
 m = -1; M = 1;
 posPoints=rand(N,3)*(M-m)+m;
-cloudGeom = MyGeom(25, "point", posPoints, [1:N]);
+cloudGeom = GeomPoint(25, posPoints);
 elem = viewer.AddElement(cloudGeom);
 elem.setModelMatrix(MTrans3D([-2 4 -4]) * MRot3D([0 0 45]) * MScale3D(1));
 

@@ -4,7 +4,7 @@ classdef (Abstract) GeomComponent < handle
     
     properties (GetAccess = public, SetAccess = protected)
         id              int32                 % id unique pour chaque géometrie, defini par le programmeur
-        type            string      
+        type            string {mustBeMember(type, ["face", "ligne", "point", "texte"])}
         listePoints     (:,3) double          % matrice nx3 ou nx2 contenant les points dans l'espace
         listeConnection (1,:) uint32          % matrice ligne donne la connectivité en triangle des points de la liste de points
         modelMatrix     (4,4) double = eye(4) % transformation du modèle dans la scène 3D (translation, rotation, homothétie)
