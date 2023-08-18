@@ -15,16 +15,14 @@ classdef Framebuffer < handle
     methods
         function obj = Framebuffer(gl, width, height)
             obj.generateFramebuffer(gl);
-            CheckError(gl, 'Erreur lors de la création du frameBuffer');
             
             obj.texture = Texture(gl, '', width, height);
             gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_TEXTURE_2D, obj.texture.textureId, 0);
 
-            CheckError(gl, 'Erreur de la texture frameBuffer');
             obj.addRenderBuffer(gl, width, height);
-            CheckError(gl, 'Erreur du renderbuffer du frameBuffer');
             obj.checkFrameBuffer(gl);
 
+            CheckError(gl, 'OPENGL:: Erreur de création du frameBuffer');
             obj.UnBind(gl);
         end % fin du constructeur Framebuffer
 

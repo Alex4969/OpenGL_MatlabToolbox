@@ -52,27 +52,21 @@ classdef GLGeometry < handle
         function CreateGLObject(obj, gl)
             %CREATEGLOBJECT
             obj.generateVAO(gl);
-            CheckError(gl, 'Erreur pour la creation du vao');
             obj.generateVBO(gl);
-            CheckError(gl, 'Erreur pour la creation du arrayBuffer');
             obj.fillVBO(gl);
-            CheckError(gl, 'Erreur pour le remplissage du arrayBuffer');
             obj.generateEBO(gl);
-            CheckError(gl, 'Erreur pour la creation de l indexBuffer');
             fillEBO(obj, gl)
-            CheckError(gl, 'Erreur pour le remplissage du EBO')
             obj.declareVertexAttrib(gl);
-            CheckError(gl, 'Erreur pour la declaration des vertex attributes');
+
+            CheckError(gl, 'OPENGL::Erreur lors de la creation de la GLGeometrie');
 
             obj.Unbind(gl);
         end % fin de createGLObject
 
         function Bind(obj, gl)
             %BIND Met en contexte le vertexBuffer. S'il a été modifié, applique la modification
-            CheckError(gl, 'Erreur avant  le Bind');
             gl.glBindVertexArray(obj.VAOId);
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
-            CheckError(gl, 'Erreur du Bind');
         end % fin de bind
 
         function glUpdate(obj, gl, ~)
@@ -80,7 +74,7 @@ classdef GLGeometry < handle
             obj.fillVBO(gl);
             obj.fillEBO(gl);
             obj.declareVertexAttrib(gl);
-            CheckError(gl, 'Erreur de la mise a jour');
+            %CheckError(gl, 'Erreur de la mise a jour');
             obj.Unbind(gl);
         end
 

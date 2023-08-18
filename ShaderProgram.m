@@ -38,7 +38,7 @@ classdef ShaderProgram < handle
             end
             gl.glLinkProgram(obj.shaderProgId);
             gl.glValidateProgram(obj.shaderProgId);
-            CheckError(gl, 'erreur de compilation des shaders');
+            CheckError(gl, 'OPENGL:: Erreur de compilation des shaders');
         end % fin du constructeur ShaderProgram
 
         function Bind(obj, gl)

@@ -29,7 +29,7 @@ classdef ElementPoint < VisibleElement
             % gl.glDrawArrays(gl.GL_POINTS, 0, size(obj.Geom.listePoints, 1));
             gl.glDrawElements(gl.GL_POINTS, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
 
-            CheckError(gl, 'apres le dessin');
+            %CheckError(gl, 'apres le dessin');
         end % fin de Draw
 
         function DrawId(obj, gl)

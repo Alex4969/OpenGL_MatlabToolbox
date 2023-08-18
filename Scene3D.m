@@ -146,7 +146,6 @@ classdef Scene3D < handle
             %DRAW dessine la scene avec tous ses objets
             tic
             gl = obj.getGL();
-            obj.camLightUBO.Bind(gl);
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             
             %dessiner les objet interne a la scene

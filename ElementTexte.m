@@ -33,7 +33,7 @@ classdef ElementTexte < VisibleElement
             obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
             obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-            CheckError(gl, 'apres le dessin d un texte');
+            %CheckError(gl, 'apres le dessin d un texte');
         end % fin de Draw
 
         function DrawId(obj, gl)

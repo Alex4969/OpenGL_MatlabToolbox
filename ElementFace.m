@@ -54,7 +54,7 @@ classdef ElementFace < VisibleElement
             end
             gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
 
-            CheckError(gl, 'apres le dessin');
+            %CheckError(gl, 'apres le dessin');
         end % fin de Draw
 
         function DrawId(obj, gl)
