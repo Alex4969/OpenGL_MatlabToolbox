@@ -12,9 +12,7 @@ classdef Scene3D < handle
 
         camera Camera           % instance de la camera
         lumiere Light           % instance de la lumiere
-        axesId int32 = -1       % instance des axes lié au repere
-        grilleId int32 = -2     % instance de la grille lié au repere
-        gyroscopeId int32 = -3  % indication d'angle dans le repere
+        idLastInternal int32 = 0; %id du dernier objet interne
 
         cbk_manager javacallbackmanager
         startX              % position x de la souris lorsque je clique
@@ -153,28 +151,31 @@ classdef Scene3D < handle
             
             %dessiner les objet interne a la scene
             if ~isempty(obj.lumiere.forme)
-                elem = obj.lumiere.forme;
-                elem.shader.Bind(gl);
-                [cam, model] = obj.getOrientationMatrices(elem);
-                elem.shader.SetUniformMat4(gl, 'uModelMatrix', model);
-                elem.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
-                elem.Draw(gl);
+                obj.drawElem(gl, obj.lumiere.forme);
+            end
+            for i=obj.idLastInternal:-1
+                obj.drawElem(gl, obj.mapElements(i));
             end
             %dessiner les objets de l'experience
             listeElem = obj.orderElem();
             for i=1:numel(listeElem)
-                elem = listeElem{i};
-                elem.shader.Bind(gl);
-                [cam, model] = obj.getOrientationMatrices(elem);
-                elem.shader.SetUniformMat4(gl, 'uModelMatrix', model);
-                elem.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
-                elem.Draw(gl);
+                if (listeElem{i}.getId() > 0)
+                    obj.drawElem(gl, listeElem{i});
+                end
             end
 
             obj.removeGL();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
             toc
         end % fin de Draw
+
+        function drawElem(obj, gl, elem)
+            elem.shader.Bind(gl);
+            [cam, model] = obj.getOrientationMatrices(elem);
+            elem.shader.SetUniformMat4(gl, 'uModelMatrix', model);
+            elem.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
+            elem.Draw(gl);
+        end
 
         function delete(obj)
             %DELETE Supprime les objets de la scene
@@ -256,16 +257,19 @@ classdef Scene3D < handle
 
         function generateInternalObject(obj)
             tailleAxes = 50;
-            axesGeom = GeomAxes(obj.axesId, -tailleAxes, tailleAxes);
+            obj.idLastInternal = obj.idLastInternal - 1;
+            axesGeom = GeomAxes(obj.idLastInternal, -tailleAxes, tailleAxes);
             elem = obj.AddElement(axesGeom);
             elem.AddColor(axesGeom.color);
 
-            grilleGeom = GeomGrille(obj.grilleId, tailleAxes, 2);
+            obj.idLastInternal = obj.idLastInternal - 1;
+            grilleGeom = GeomGrille(obj.idLastInternal, tailleAxes, 2);
             elem = obj.AddElement(grilleGeom);
             elem.setEpaisseur(1);
             elem.setCouleur([0.3 0.3 0.3]);
 
-            gysmoGeom = GeomAxes(obj.gyroscopeId, 0, 1);
+            obj.idLastInternal = obj.idLastInternal - 1;
+            gysmoGeom = GeomAxes(obj.idLastInternal, 0, 1);
             elem = obj.AddElement(gysmoGeom);
             elem.AddColor(gysmoGeom.color);
             elem.setOrientation("REPERE");
@@ -310,7 +314,6 @@ classdef Scene3D < handle
                 gl.glClearColor(0, 0, 0, 0);
             end
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
-            % dessiner la lumiere
             listeElem = obj.mapElements.values;
             for i=1:numel(listeElem)
                 elem = listeElem{i};
@@ -415,6 +418,7 @@ classdef Scene3D < handle
 
     methods % callback
         function cbk_MousePressed(obj, ~, event)
+            obj.cbk_manager.rmCallback('MouseDragged');
             disp('MousePressed')
             obj.startX = event.getPoint.getX();
             obj.startY = event.getPoint.getY();
@@ -435,6 +439,7 @@ classdef Scene3D < handle
                 end
                 obj.DrawScene();
             end
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 
         function cbk_MouseReleased(~,~,~)
@@ -459,15 +464,10 @@ classdef Scene3D < handle
                 if ctrlPressed
                     obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
                 else
-                    %obj.camera.rotateAround(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-                    disp('la');
                     obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-                    disp('fin la')
                 end
             elseif (obj.mouseButton == 2)
-                    disp('ici');
                     obj.camera.rotateAround(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-                    disp('fin ici')
                     redraw = true;
             end
             if (obj.lumiere.onCamera == true)
