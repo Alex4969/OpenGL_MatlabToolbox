@@ -15,7 +15,7 @@ classdef Light < handle
         oldType         (1,1) double    %sauvegarde le type de lumière avant de désactiver
 
         modelListener                   % listener de GeomComponent, permet de le supprimer quand si on retire la forme
-        onCamera         logical = false% vrai pour fixer la lumiere a la camera
+        onCamera        logical = false % vrai pour fixer la lumiere a la camera
     end
 
     events
@@ -51,9 +51,9 @@ classdef Light < handle
             obj.onCamera = b;
             if (~isempty(obj.forme))
                 if (b == true)
-                    obj.forme.visible = false;
+                    obj.forme.setVisibilite(false);
                 else 
-                    obj.forme.visible = true;
+                    obj.forme.setVisibilite(true);
                     obj.cbk_evt_updateModel(obj.forme.Geom)
                 end
             end
@@ -77,11 +77,12 @@ classdef Light < handle
             obj.onCamera = false;
         end % fin de SetPosition
 
-        function setPositionCamera(obj, newPos, target)
+        function setPositionCamera(obj, newPos, direction)
+            % positionne la lumiere & la direction comme la camera
             obj.position = newPos;
-            obj.directionLumiere = target - newPos;
+            obj.directionLumiere = direction;
             notify(obj, 'evt_updateUbo');
-        end
+        end % fin de setPositionCamera
 
         function setColor(obj, newCol)
             obj.couleurLumiere = newCol(1:3);

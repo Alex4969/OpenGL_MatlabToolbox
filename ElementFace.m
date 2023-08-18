@@ -3,11 +3,11 @@ classdef ElementFace < VisibleElement
     
     properties (GetAccess = public, SetAccess = protected)
         texture
-        epaisseurArretes = 1                % float
-        epaisseurPoints  = 2                % float
-        couleur          = [1 0 0 1]        % 1x4
-        couleurArretes   = [0 1 0 1]        % 1x4
-        couleurPoints    = [0 0 1 1]        % 1x4
+        epaisseurArretes (1,1) double = 1
+        epaisseurPoints  (1,1) double = 2
+        couleur          (1,4) double = [1 0 0 1]
+        couleurArretes   (1,4) double = [0 1 0 1]
+        couleurPoints    (1,4) double = [0 0 1 1]
         
         quoiAfficher int8 = 1               % 001 : face, 010 : ligne, 100, points
                                             % toutes combinaisons acceptés
@@ -25,37 +25,6 @@ classdef ElementFace < VisibleElement
             obj.typeRendu = 32 + 1; % shading sur + uniform
             obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeRendu);
         end % fin constructeur ElementFace
-
-        function Draw(obj, gl)
-            %DRAW dessine cet objet
-            if ~obj.isVisible()
-                return
-            end
-            obj.GLGeom.Bind(gl);
-            obj.shader.SetUniform1i(gl, 'uQuoiAfficher', obj.quoiAfficher);
-            %On affiche les faces
-            if bitand(obj.quoiAfficher, 1) > 0
-                if bitand(obj.typeRendu, 4) == 4 && ~isempty(obj.texture)
-                    obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
-                    gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-                elseif bitand(obj.typeRendu, 1) == 1
-                    obj.shader.SetUniform4f(gl, 'uFaceColor', obj.couleur);
-                end
-            end
-            % On affiche les lignes
-            if bitand(obj.quoiAfficher, 2) > 0
-                obj.shader.SetUniform4f(gl, 'uLineColor', obj.couleurArretes);
-                obj.shader.SetUniform1f(gl, 'uLineSize', obj.epaisseurArretes);
-            end
-            % On affiche les points
-            if bitand(obj.quoiAfficher, 4) > 0
-                obj.shader.SetUniform4f(gl, 'uPointColor', obj.couleurPoints);
-                obj.shader.SetUniform1f(gl, 'uPointSize', obj.epaisseurPoints);
-            end
-            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-
-            %CheckError(gl, 'apres le dessin');
-        end % fin de Draw
 
         function DrawId(obj, gl)
             % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
@@ -115,6 +84,56 @@ classdef ElementFace < VisibleElement
             end
         end % fin de setQuoiAfficher
 
+        function AddMapping(obj, matMapping)
+            obj.GLGeom.addDataToBuffer(matMapping, 3);
+            obj.typeRendu = bitand(obj.typeRendu, 0xF0) + 4;
+            notify(obj, 'evt_updateRendu');
+        end % fin de AddMapping
+
+        function AddNormals(obj, matNormales)
+            obj.GLGeom.addDataToBuffer(matNormales, 4);
+            obj.typeRendu = bitand(obj.typeRendu, 0x0F) + 64;
+            notify(obj, 'evt_updateRendu');
+        end % fin de AddNormals
+
+        function GenerateNormals(obj)
+            normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
+            obj.GLGeom.addDataToBuffer(normales, 4);
+            obj.typeRendu = bitand(obj.typeRendu, 0x0F) + 64;
+            notify(obj, 'evt_updateRendu');
+        end % fin de GenerateNormals
+    end % fin des methodes defauts
+
+    methods (Hidden = true)
+        function Draw(obj, gl)
+            %DRAW dessine cet objet
+            if ~obj.isVisible()
+                return
+            end
+            obj.GLGeom.Bind(gl);
+            obj.shader.SetUniform1i(gl, 'uQuoiAfficher', obj.quoiAfficher);
+            %On affiche les faces
+            if bitand(obj.quoiAfficher, 1) > 0
+                if bitand(obj.typeRendu, 4) == 4 && ~isempty(obj.texture)
+                    obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
+                    gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+                elseif bitand(obj.typeRendu, 1) == 1
+                    obj.shader.SetUniform4f(gl, 'uFaceColor', obj.couleur);
+                end
+            end
+            % On affiche les lignes
+            if bitand(obj.quoiAfficher, 2) > 0
+                obj.shader.SetUniform4f(gl, 'uLineColor', obj.couleurArretes);
+                obj.shader.SetUniform1f(gl, 'uLineSize', obj.epaisseurArretes);
+            end
+            % On affiche les points
+            if bitand(obj.quoiAfficher, 4) > 0
+                obj.shader.SetUniform4f(gl, 'uPointColor', obj.couleurPoints);
+                obj.shader.SetUniform1f(gl, 'uPointSize', obj.epaisseurPoints);
+            end
+            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+        end % fin de Draw
+
         function sNew = select(obj, s)
             sNew.id = obj.getId();
             sNew.couleur = obj.couleurArretes;
@@ -140,25 +159,6 @@ classdef ElementFace < VisibleElement
             end
         end % fin de deselect
 
-        function AddMapping(obj, matMapping)
-            obj.GLGeom.addDataToBuffer(matMapping, 3);
-            obj.typeRendu = bitand(obj.typeRendu, 0xF0) + 4;
-            notify(obj, 'evt_updateRendu');
-        end % fin de AddMapping
-
-        function AddNormals(obj, matNormales)
-            obj.GLGeom.addDataToBuffer(matNormales, 4);
-            obj.typeRendu = bitand(obj.typeRendu, 0x0F) + 64;
-            notify(obj, 'evt_updateRendu');
-        end % fin de AddNormals
-
-        function GenerateNormals(obj)
-            normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
-            obj.GLGeom.addDataToBuffer(normales, 4);
-            obj.typeRendu = bitand(obj.typeRendu, 0x0F) + 64;
-            notify(obj, 'evt_updateRendu');
-        end % fin de GenerateNormals
-
         function glUpdate(obj, gl, eventName)
             if eventName == "evt_textureUpdate"
                 obj.texture = Texture(gl, obj.texture);
@@ -166,7 +166,7 @@ classdef ElementFace < VisibleElement
                 glUpdate@VisibleElement(obj, gl, eventName);
             end
         end % fin de glUpdate
-    end % fin de methodes defauts
+    end % fin de methodes cachés
 
     methods (Access = private)
         function col = testNewCol(~, newCol)

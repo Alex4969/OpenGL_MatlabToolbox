@@ -93,10 +93,10 @@ classdef Camera < handle
             att.near = obj.near;
             if obj.type % perpective
                 maxY = obj.near * tan(deg2rad(obj.fov/2));
-                att.coef = 0.01;
+                att.coef = 0.1 * obj.near;
             else
                 maxY = norm(obj.targetDir)/2;
-                att.coef = 0.173 * maxY; % 0.173 trouvé par essaies
+                att.coef = 1.73 * obj.near * maxY; % 1.73 trouvé par essaies
             end
             maxX = maxY * obj.ratio;
             att.maxX  = maxX;
@@ -109,7 +109,7 @@ classdef Camera < handle
 
     methods % special transformations / gestion de la souris
         function translatePlanAct(obj,dx,dy)
-            if any(obj.constraint)
+            if any(obj.constraint) % si une contrainte axial est présente : 
                 dz = 0;
                 if obj.constraint(3)
                     if obj.constraint(2)
@@ -119,7 +119,7 @@ classdef Camera < handle
                     end
                 end
                 translation =  [dx, dy, dz] .* obj.constraint;
-            else
+            else % si aucune constrainte on se met dans le plan de la caméra parallele au plan Oxy
                 translation = dy * obj.up;
                 left = cross(obj.targetDir, obj.up);
                 left = left/norm(left);
@@ -131,9 +131,10 @@ classdef Camera < handle
         end % fin de translatePlanAct
 
         function zoom(obj,signe)
+            %ZOOM se deplace dans la direction de la target
             dist = vecnorm(obj.position);
-            dist = sqrt(dist);
-            dist = ceil(dist);
+            dist = sqrt(dist); % plus on est pres, plus on est precis,
+            dist = ceil(dist); % fonctionne par palier grace au ceil
             facteur = signe * dist * 0.3;
             vect = obj.targetDir/norm(obj.targetDir);
             if norm(obj.position) - facteur *  norm(vect) > obj.near
@@ -165,51 +166,6 @@ classdef Camera < handle
             obj.targetDir = centre - obj.position;
             obj.computeView();
         end % fin de rotate
-
-        % function rotateAround(obj, dx, dy)
-        %     centre = obj.centreMvt;
-        %     pos = obj.position;
-        %     pos = pos - centre;
-        %     % conversion en coordonné sphérique et application du changement
-        %     % en coordonnée spherique les axes ne sont pas dans le meme ordre : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
-        %     rayon = norm(pos);
-        %     theta = acos(pos(2) / rayon)   - dy * obj.sensibility;
-        %     phi   = atan2(pos(1), pos(3))  - dx * obj.sensibility;
-        %     if (theta < 0)
-        %         theta = 0.01;
-        %     elseif (theta > pi)
-        %         theta = pi - 0.01;
-        %     end
-        %     % reconversion en coordonnée cartesien
-        %     pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi) ] * rayon;
-        %     obj.position = pos + centre;
-        %     obj.targetDir = centre - obj.position;
-        %     obj.computeView();
-        %     obj.viewMatrix(1:3,4) = -obj.position';
-        % end % fin de rotate
-
-        function rotateAround(obj, dx, dy)
-            centre = obj.centreMvt;
-            pos = obj.position;
-            pos = pos - centre;
-            % conversion en coordonné sphérique et application du changement
-            % en coordonnée spherique les axes ne sont pas dans le meme ordre : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
-            rayon = norm(pos);
-            theta = acos(pos(2) / rayon)   - dy * obj.sensibility;
-            phi   = atan2(pos(1), pos(3))  - dx * obj.sensibility;
-            if (theta < 0)
-                theta = 0.01;
-            elseif (theta > pi)
-                theta = pi - 0.01;
-            end
-            % reconversion en coordonnée cartesien
-            pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi) ] * rayon;
-            obj.position = pos + centre;
-            obj.targetDir = centre - obj.position;
-            obj.computeView();
-            obj.viewMatrix(1:3,4) = -obj.position';
-        end % fin de rotate
-
 
         function defaultView(obj)
             obj.position = [10 10 10];

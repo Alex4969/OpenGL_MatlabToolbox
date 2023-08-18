@@ -12,7 +12,7 @@ classdef Framebuffer < handle
         RBOBuffer               %Render Buffer Object (contient le champs de profondeur)
     end
 
-    methods
+    methods (Hidden = true)
         function obj = Framebuffer(gl, width, height)
             obj.generateFramebuffer(gl);
             

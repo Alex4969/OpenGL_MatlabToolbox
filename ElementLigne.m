@@ -2,8 +2,8 @@ classdef ElementLigne < VisibleElement
     %ELEMENTLIGNE
     
     properties (GetAccess = public, SetAccess = protected)
-        epaisseur = 2             % float
-        couleur   = [1 0 0 1]     % 1x4
+        epaisseur (1,1) double = 2        
+        couleur   (1,4) double = [1 0 0 1]
     end
     
     methods
@@ -31,12 +31,6 @@ classdef ElementLigne < VisibleElement
             %CheckError(gl, 'apres le dessin');
         end % fin de Draw
 
-        function DrawId(obj, gl)
-            % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
-            obj.GLGeom.Bind(gl);
-            gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-        end % fin de drawID
-
         function setEpaisseur(obj, newEp)
             obj.epaisseur = newEp;
             notify(obj,'evt_redraw');
@@ -53,6 +47,13 @@ classdef ElementLigne < VisibleElement
                 warning('mauvaise matrice de couleur, annulation');
             end
         end % fin de setCouleur
+    end % fin des methodes defauts
+    methods (Hidden = true)
+        function DrawId(obj, gl)
+            % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
+            obj.GLGeom.Bind(gl);
+            gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+        end % fin de drawID
 
         function sNew = select(obj, s)
             sNew.id = obj.getId();
@@ -76,5 +77,5 @@ classdef ElementLigne < VisibleElement
                 obj.setModeRendu("PAR_SOMMET");
             end
         end % fin de deselect
-    end % fin des methodes defauts
+    end % fin des methodes cachés
 end  % fin classe ElementLigne

@@ -15,17 +15,17 @@ classdef Scene3D < handle
         idLastInternal int32 = 0; %id du dernier objet interne
 
         cbk_manager javacallbackmanager
-        startX              % position x de la souris lorsque je clique
-        startY              % position y de la souris lorsque je clique
-        mouseButton = -1    % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
-        selectObject        % struct qui contient les données de l'objets selectionné
-        couleurFond
+        startX      double        % position x de la souris lorsque je clique
+        startY      double        % position y de la souris lorsque je clique
+        mouseButton int8 = -1    % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
+        selectObject struct        % struct qui contient les données de l'objets selectionné
+        couleurFond (1,4) double % couleur du fond de la scene
 
         camLightUBO UBO     % données de la caméra et de la lumière transmises aux shaders
     end %fin de propriete defaut
     
     events
-        evt_redraw          
+        evt_redraw
     end
 
     methods
@@ -108,7 +108,6 @@ classdef Scene3D < handle
             addlistener(elem.Geom, 'evt_updateModel', @obj.cbk_redraw);
             addlistener(elem,'evt_updateRendu',@obj.cbk_giveGL);
             addlistener(elem.GLGeom,'evt_updateLayout',@obj.cbk_giveGL);
-            obj.removeGL();
         end % fin de AddElement
 
         function group = CreateGroup(obj, groupId)
@@ -142,9 +141,38 @@ classdef Scene3D < handle
             end
         end
 
+        function setCouleurSelection(obj, newColor)
+            if (numel(newColor) == 3)
+                newColor(4) = 1;
+            end
+            if numel(newColor) == 4
+                if obj.selectObject.id ~= 0
+                    elem = obj.mapElements(obj.selectObject.id);
+                    obj.selectObject = elem.deselect(obj.selectObject);
+                    obj.selectObject.couleur = newColor;
+                    obj.selectObject = elem.select(obj.selectObject);
+                else
+                    obj.selectObject.couleur = newColor;
+                end
+            end
+        end % fin de setCouleurSelection
+
+        function setCouleurFond(obj, newColor) % matrice 1x3 ou 1x4
+            if (numel(newColor) == 3)
+                newColor(4) = 1;
+            end
+            if numel(newColor) == 4
+                gl = obj.getGL();
+                obj.couleurFond = newColor;
+                gl.glClearColor(newColor(1), newColor(2), newColor(3), newColor(4));
+            else
+                warning('Le format de la nouvelle couleur n est pas bon, annulation');
+            end
+            notify(obj,'evt_redraw');
+        end % fin setCouleurFond
+
         function DrawScene(obj)
             %DRAW dessine la scene avec tous ses objets
-            tic
             gl = obj.getGL();
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             
@@ -163,63 +191,9 @@ classdef Scene3D < handle
                 end
             end
 
-            obj.removeGL();
+            obj.context.release();
             obj.canvas.swapBuffers(); % rafraichi la fenetre
-            toc
         end % fin de Draw
-
-        function drawElem(obj, gl, elem)
-            elem.shader.Bind(gl);
-            [cam, model] = obj.getOrientationMatrices(elem);
-            elem.shader.SetUniformMat4(gl, 'uModelMatrix', model);
-            elem.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
-            elem.Draw(gl);
-        end
-
-        function delete(obj)
-            %DELETE Supprime les objets de la scene
-            disp('deleting Scene3D...')
-            gl = obj.getGL();
-            listeElem = values(obj.mapElements);
-            for i=1:numel(listeElem)
-                listeElem{i}.delete(gl);
-            end
-            Texture.DeleteAll(gl);
-            obj.camLightUBO.delete(gl);
-            obj.removeGL();
-        end % fin de delete
-
-        function setCouleurSelection(obj, newColor)
-            if (numel(newColor) == 3)
-                newColor(4) = 1;
-            end
-            if numel(newColor) == 4
-                if obj.selectObject.id ~= 0
-                    elem = obj.mapElements(obj.selectObject.id);
-                    obj.selectObject = elem.deselect(obj.selectObject);
-                    obj.selectObject.couleur = newColor;
-                    obj.selectObject = elem.select(obj.selectObject);
-                else
-                    obj.selectObject.couleur = newColor;
-                end
-            end
-        end % fin de setCouleurSelection
-
-        function setCouleurFond(obj, newColor)
-            %SETCOULEURFOND change la couleur du fond de l'écran.
-            %Peut prendre en entrée une matrice 1x3 (rgb) ou 1x4 (rgba)
-            if (numel(newColor) == 3)
-                newColor(4) = 1;
-            end
-            if numel(newColor) == 4
-                gl = obj.getGL();
-                obj.couleurFond = newColor;
-                gl.glClearColor(newColor(1), newColor(2), newColor(3), newColor(4));
-            else
-                warning('Le format de la nouvelle couleur n est pas bon, annulation');
-            end
-            notify(obj,'evt_redraw');
-        end % fin setCouleurFond
     
         function screenShot(obj)
             gl = obj.getGL();
@@ -236,8 +210,20 @@ classdef Scene3D < handle
             img = permute(img,[2 3 1]);
             img = rot90(img);
             imshow(img);
-            obj.removeGL();
         end % fin de screenShot
+
+        function delete(obj)
+            %DELETE Supprime les objets de la scene
+            disp('deleting Scene3D...')
+            gl = obj.getGL();
+            listeElem = values(obj.mapElements);
+            for i=1:numel(listeElem)
+                listeElem{i}.delete(gl);
+            end
+            Texture.DeleteAll(gl);
+            obj.camLightUBO.delete(gl);
+            obj.context.release();
+        end % fin de delete
     end % fin des methodes defauts
 
     methods (Access = private)
@@ -248,11 +234,13 @@ classdef Scene3D < handle
             gl = obj.context.getCurrentGL();
         end % fin de getGL
 
-        function removeGL(obj)
-            if obj.context.isCurrent()
-                obj.context.release();
-            end
-        end % fin de removeGL
+        function drawElem(obj, gl, elem)
+            elem.shader.Bind(gl);
+            [cam, model] = obj.getOrientationMatrices(elem);
+            elem.shader.SetUniformMat4(gl, 'uModelMatrix', model);
+            elem.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
+            elem.Draw(gl);
+        end % fin de drawElem
 
         function generateInternalObject(obj)
             tailleAxes = 50;
@@ -353,7 +341,6 @@ classdef Scene3D < handle
             if obj.couleurFond(1) > 0
                 obj.setCouleurFond(obj.couleurFond);
             end
-            obj.removeGL();
         end % fin de pickingObject
 
         function colorSelection(obj, elemId)
@@ -419,8 +406,8 @@ classdef Scene3D < handle
         function cbk_MousePressed(obj, ~, event)
             obj.cbk_manager.rmCallback('MouseDragged');
             disp('MousePressed')
-            obj.startX = event.getPoint.getX();
-            obj.startY = event.getPoint.getY();
+            obj.startX = event.getX();
+            obj.startY = event.getY();
             obj.mouseButton = event.getButton();
 
             if obj.mouseButton == 1
@@ -428,13 +415,11 @@ classdef Scene3D < handle
                 obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
                 disp(worldCoord);
             
-                if elemId ~= 0
-                    mod = event.getModifiers();
-                    if mod==18 %CTRL LEFT CLICK
+                mod = event.getModifiers();
+                if elemId ~= 0 && mod == 18 %CTRL LEFT CLICK
                         obj.colorSelection(elemId);
-                    elseif mod==24 %ALT LEFT CLICK
-                        obj.camera.setTarget(worldCoord);
-                    end
+                elseif mod==24 %ALT LEFT CLICK
+                    obj.camera.setTarget(worldCoord);
                 end
                 obj.DrawScene();
             end
@@ -448,7 +433,6 @@ classdef Scene3D < handle
         function cbk_MouseDragged(obj, ~, event)
             obj.cbk_manager.rmCallback('MouseDragged');
             redraw = false;
-            %disp('MouseDragged')
             posX = event.getX();
             dx = posX - obj.startX;
             obj.startX = posX;
@@ -465,12 +449,9 @@ classdef Scene3D < handle
                 else
                     obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
                 end
-            elseif (obj.mouseButton == 2)
-                    obj.camera.rotateAround(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-                    redraw = true;
             end
             if (obj.lumiere.onCamera == true)
-                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
+                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.targetDir);
                 redraw = true;
             end
             if (redraw == true)
@@ -513,6 +494,7 @@ classdef Scene3D < handle
                     end
                case 'i'
                      obj.screenShot();
+                     redraw = false;
                 otherwise
                     redraw = false;
             end
@@ -525,7 +507,7 @@ classdef Scene3D < handle
             obj.cbk_manager.rmCallback('MouseWheelMoved');
             obj.camera.zoom(-event.getWheelRotation());
             if obj.lumiere.onCamera == true
-                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
+                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.targetDir);
             end
             obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');

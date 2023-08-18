@@ -10,7 +10,7 @@ classdef UBO < handle
         UBOBuffer
     end
     
-    methods
+    methods (Hidden = true)
         function obj = UBO(gl, binding, taille)
             obj.binding = binding;
             obj.taille = taille;

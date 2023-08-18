@@ -12,6 +12,8 @@ classdef Texture < handle
     end
     properties (Constant = true)
         mapTextures = containers.Map('KeyType','char', 'ValueType', 'any');
+        % map qui contient les textures deja créé pour pouvoir les redonner 
+        % cela permet de gérer les numéro de slot et d'optimiser
     end
     
     methods

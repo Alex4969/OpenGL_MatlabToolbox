@@ -21,7 +21,7 @@ classdef GLGeometry < handle
         evt_updateLayout        % les données du vertex Buffer doivent être modifié
     end
     
-    methods
+    methods (Hidden = true)
         function obj = GLGeometry(gl, sommets, indices)
             obj.vertexData = sommets;
             obj.indexData = uint32(indices);
@@ -41,7 +41,7 @@ classdef GLGeometry < handle
             for i=1:(pos-1)
                 nAvant = nAvant + obj.nLayout(i);
             end
-            if obj.nLayout(pos) ~= 0
+            if obj.nLayout(pos) ~= 0 % si cette composant existe deja on la supprime et on recole le tableau
                 obj.vertexData = [obj.vertexData(:,1:nAvant) obj.vertexData(:,(nAvant+obj.nLayout(pos)+1):size(obj.vertexData, 2))];
             end
             obj.vertexData = [obj.vertexData(:,1:nAvant) mat obj.vertexData(:,(nAvant+1):size(obj.vertexData, 2))];
@@ -63,11 +63,26 @@ classdef GLGeometry < handle
             obj.Unbind(gl);
         end % fin de createGLObject
 
+        function nouvelleGeom(obj, newVertexData, newIndices)
+            obj.vertexData = newVertexData;
+            obj.indexData = uint32(newIndices);
+            nPos = size(newVertexData, 2);
+            obj.nLayout = [nPos, 0, 0, 0];
+            notify(obj, 'evt_updateLayout');
+        end % fin de nouvelleGeom
+
         function Bind(obj, gl)
             %BIND Met en contexte le vertexBuffer. S'il a été modifié, applique la modification
             gl.glBindVertexArray(obj.VAOId);
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
         end % fin de bind
+
+        function Unbind(~, gl)
+            %UNBIND retire les objets du contexte OpenGL
+            gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0);
+            gl.glBindVertexArray(0);
+            gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0);
+        end % fin de unbind
 
         function glUpdate(obj, gl, ~)
             obj.Bind(gl);
@@ -78,27 +93,12 @@ classdef GLGeometry < handle
             obj.Unbind(gl);
         end
 
-        function Unbind(~, gl)
-            %UNBIND retire les objets du contexte OpenGL
-            gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0);
-            gl.glBindVertexArray(0);
-            gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0);
-        end % fin de unbind
-
         function delete(obj, gl)
             %DELETE Supprime l'objet de la mémoire
             gl.glDeleteBuffers(1, obj.VAOBuffer);
             gl.glDeleteBuffers(1, obj.VBOBuffer);
             gl.glDeleteBuffers(1, obj.EBOBuffer);
         end % fin de delete
-
-        function nouvelleGeom(obj, newVertexData, newIndices)
-            obj.vertexData = newVertexData;
-            obj.indexData = uint32(newIndices);
-            nPos = size(newVertexData, 2);
-            obj.nLayout = [nPos, 0, 0, 0];
-            notify(obj, 'evt_updateLayout');
-        end % fin de nouvelleGeom
     end % fin des methodes defauts
 
     methods (Access = private)

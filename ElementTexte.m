@@ -3,7 +3,7 @@ classdef ElementTexte < VisibleElement
     %   Detailed explanation goes here
     
     properties (GetAccess = public, SetAccess = protected)
-        couleur = [1 1 1 1]    % 1x4 double entre 0 et 1
+        couleur (1,4) double = [1 1 1 1]    % entre 0 et 1
         texture
     end
 
@@ -55,6 +55,12 @@ classdef ElementTexte < VisibleElement
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
         end % fin setCouleurFond
+    end % fin des methodes defauts
+
+    methods (Hidden = true)
+        function AddMapping(obj, matMapping)
+            obj.GLGeom.addDataToBuffer(matMapping, 3);
+        end % fin de AddMapping
 
         function glUpdate(obj, gl, eventName)
             if eventName == "evt_textureUpdate"
@@ -67,11 +73,7 @@ classdef ElementTexte < VisibleElement
         function changePolice(obj)
             obj.texture = obj.Geom.police.name + ".png";
             notify(obj, 'evt_textureUpdate');
-        end
-
-        function AddMapping(obj, matMapping)
-            obj.GLGeom.addDataToBuffer(matMapping, 3);
-        end % fin de AddMapping
+        end % fin de changerPolice
 
         function sNew = select(obj, s)
             sNew.id = obj.getId();
@@ -86,5 +88,5 @@ classdef ElementTexte < VisibleElement
             sNew.epaisseur = s.epaisseur;
             obj.couleur = s.couleur;
         end % fin de deselect
-    end % fin des methodes defauts
+    end % fin des methodes cachés
 end % fin classe Texte

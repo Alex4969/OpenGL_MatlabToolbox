@@ -41,15 +41,6 @@ classdef (Abstract) VisibleElement < handle
             end
         end % fin de getModelMatrix
 
-        function setModelMatrix(obj, newModel)
-            obj.Geom.setModelMatrix(newModel);
-        end % fin de setModelMatrix
-
-        function ModifyModelMatrix(obj, matrix, after)
-            if nargin < 3, after = 0; end
-            obj.Geom.modifyModelMatrix(matrix, after);
-        end % fin de ModifymodelMatrix
-
         function pos = getPosition(obj)
             mod = obj.getModelMatrix();
             pos = mod(1:3, 4)';
@@ -70,10 +61,6 @@ classdef (Abstract) VisibleElement < handle
         function setVisibilite(obj, b)
             obj.visible = b;
         end % fin de setVisibilite
-
-        function setParent(obj, newParent)
-            obj.parent = newParent;
-        end % fin de setParent
 
         function setModeRendu(obj, newTypeColoration, newTypeLumiere)
             if nargin == 2 && obj.enumColoration.isKey(newTypeColoration)
@@ -98,7 +85,16 @@ classdef (Abstract) VisibleElement < handle
                 disp('Nouvelle orientation incorrect');
                 disp(['Valeurs possibles : ' VisibleElement.enumOrientation.keys']);
             end
-        end
+        end % fin de setOrientation
+
+        function setModelMatrix(obj, newModel)
+            obj.Geom.setModelMatrix(newModel);
+        end % fin de setModelMatrix
+
+        function ModifyModelMatrix(obj, matrix, after)
+            if nargin < 3, after = 0; end
+            obj.Geom.modifyModelMatrix(matrix, after);
+        end % fin de ModifymodelMatrix
 
         function AddColor(obj, matColor)
             if size(matColor, 1) == 1
@@ -110,6 +106,26 @@ classdef (Abstract) VisibleElement < handle
             end
             notify(obj, 'evt_updateRendu');
         end % fin de AddColor
+
+        function toString(obj)
+            nbPoint = size(obj.Geom.listePoints, 1);
+            nbTriangle = numel(obj.Geom.listeConnection)/3;
+            disp(['L objet contient ' num2str(nbPoint) ' points et ' num2str(nbTriangle) ' triangles']);
+            disp(['Le vertex Buffer contient : ' num2str(obj.GLGeom.nLayout(1)) ' valeurs pour la position, ' ...
+                num2str(obj.GLGeom.nLayout(2)) ' valeurs pour la couleur, ' num2str(obj.GLGeom.nLayout(3)) ...
+                ' valeurs pour le texture mapping, ' num2str(obj.GLGeom.nLayout(4)) ' valeurs pour les normales'])
+        end % fin de toString
+
+        function delete(obj, gl)
+            obj.GLGeom.delete(gl);
+            obj.shader.delete(gl);
+        end % fin de delete
+    end % fin des methodes defauts
+
+    methods (Hidden = true)
+        function setParent(obj, newParent)
+            obj.parent = newParent;
+        end % fin de setParent
 
         function cbk_updateGeom(obj, source, ~) % source = geomComponent
             obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
@@ -128,20 +144,6 @@ classdef (Abstract) VisibleElement < handle
                 notify(obj, 'evt_updateRendu');
             end
         end % fin de cbk_evt_updateGeom
-
-        function toString(obj)
-            nbPoint = size(obj.Geom.listePoints, 1);
-            nbTriangle = numel(obj.Geom.listeConnection)/3;
-            disp(['L objet contient ' num2str(nbPoint) ' points et ' num2str(nbTriangle) ' triangles']);
-            disp(['Le vertex Buffer contient : ' num2str(obj.GLGeom.nLayout(1)) ' valeurs pour la position, ' ...
-                num2str(obj.GLGeom.nLayout(2)) ' valeurs pour la couleur, ' num2str(obj.GLGeom.nLayout(3)) ...
-                ' valeurs pour le texture mapping, ' num2str(obj.GLGeom.nLayout(4)) ' valeurs pour les normales'])
-        end % fin de toString
-
-        function delete(obj, gl)
-            obj.GLGeom.delete(gl);
-            obj.shader.delete(gl);
-        end % fin de delete
 
         function oldShader = setShader(obj, newShader)
             oldShader = obj.shader;
