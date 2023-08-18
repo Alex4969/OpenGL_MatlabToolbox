@@ -3,26 +3,24 @@ classdef Camera < handle
 
     properties (GetAccess = public, SetAccess = protected)
         %%% Attributs de la caméra
-        position        % 1x3 position de la caméra
-        target          % 1x3 position de la cible/objet regardé par la caméra
-        up              % 1x3 position du vecteur pointant vers le haut (NORMALISE!)
-        viewMatrix      % 4x4 matrice de transformation correspondant aux valeurs ci dessus
+        position    (1,3) double   % position de la caméra
+        target      (1,3) double   % position de la cible/objet regardé par la caméra
+        up          (1,3) double   % position du vecteur pointant vers le haut (NORMALISE!)
+        viewMatrix  (4,4) double   % matrice de vue correspondant aux valeurs ci dessus
 
         %%% Attributs de la projection
-        near            % double distance du plan rapproché
-        far             % double distance du plan éloigné
-        ratio           % double ration d'observation (width/height)
-        fov             % double angle de vue d'observation (en degré)
-        type logical    % 1 pour perspective, 0 pour orthonormé
-        projMatrix      % 4x4 matrice de transformation correspondant aux valeurs ci dessus
+        near        (1,1) double   % distance du plan rapproché
+        far         (1,1) double   % distance du plan éloigné
+        ratio       (1,1) double   % ration d'observation (width/height)
+        fov         (1,1) double   % angle de vue d'observation (en degré)
+        type        (1,1) logical  % 1 pour perspective, 0 pour orthonormé
+        projMatrix  (4,4) double   % matrice de projection correspondant aux valeurs ci dessus
 
         %%% Attributes pour le mouvement
-        speed = 5;
-        sensibility =1;
-
-        posCentreMvt = 0;   % 1x3 si pour donner un centre de rotation sinon le centre = target
-
-        constraint (1,3) logical  % pour chaque axe
+        speed       (1,1) double = 5;
+        sensibility (1,1) double = 1;
+        centreMvt   (1,3) double   % Centre de la rotation
+        constraint  (1,3) logical  % pour chaque axe
     end
 
     events
@@ -55,10 +53,6 @@ classdef Camera < handle
             obj.target = newTarget;
             obj.computeView();
         end % fin de setTarget
-
-        function setCentreMvt(obj, newPos)
-            obj.posCentreMvt = newPos;
-        end % fin de setCentreMvt
 
         function setUp(obj, newUp)
             obj.up = newUp;
@@ -161,11 +155,7 @@ classdef Camera < handle
         end % fin de zoom
 
         function rotate(obj, dx, dy)
-            if numel(obj.posCentreMvt) == 3
-                centre = obj.posCentreMvt;
-            else
-                centre = obj.target;
-            end
+            centre = obj.target;
             pos = obj.position;
             pos = pos - centre;
             % conversion en coordonné sphérique et application du changement
