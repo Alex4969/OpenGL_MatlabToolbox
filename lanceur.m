@@ -69,11 +69,16 @@ elem.setQuoiAfficher(3);
 elem.setModeRendu("UNIFORME", "DUR"); % uniform & dur
 
 ravie = Police("textes/ravie");
-geomTexte = GeomTexte(101, 'Hello World !', ravie, 0);
+geomTexte = GeomTexte(101, 'Hello World !', ravie, "CENTRE");
 elemtexte = viewer.AddElement(geomTexte);
 elemtexte.setModelMatrix(MTrans3D([2 2.2 2]) * MScale3D(0.4));
 
-geomTexteX = GeomTexte(102, 'X', ravie, 0);
+geomTexteFixe = GeomTexte(102, 'Bienvenue', ravie, "HAUT_GAUCHE");
+elemtexte = viewer.AddElement(geomTexteFixe);
+elemtexte.setModelMatrix(MTrans3D([-1 1 0]));
+elemtexte.setOrientation("FIXE");
+
+geomTexteX = GeomTexte(111, 'X', ravie, "CENTRE");
 elementTexte = viewer.AddElement(geomTexteX);
 elementTexte.setModelMatrix(MTrans3D([1 0 0]));
 elementTexte.setCouleur([1 0 0]);

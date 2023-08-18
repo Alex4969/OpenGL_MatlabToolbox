@@ -381,7 +381,7 @@ classdef Scene3D < handle
                 % matrice model
                 model(1, 4) = model(1, 4) * camAttrib.maxX;
                 model(2, 4) = model(2, 4) * camAttrib.maxY;
-                model(3, 4) = -camAttrib.near;
+                model(3, 4) = -camAttrib.near - 5e-4;
                 model = model * MScale3D(camAttrib.coef);%coef pour dimension identique en ortho ou perspective
                 cam =  camAttrib.proj;
             else
@@ -415,7 +415,7 @@ classdef Scene3D < handle
 
     methods % callback
         function cbk_MousePressed(obj, ~, event)
-            %disp('MousePressed')
+            disp('MousePressed')
             obj.startX = event.getPoint.getX();
             obj.startY = event.getPoint.getY();
             obj.mouseButton = event.getButton();
@@ -443,6 +443,7 @@ classdef Scene3D < handle
 
         function cbk_MouseDragged(obj, ~, event)
             obj.cbk_manager.rmCallback('MouseDragged');
+            redraw = false;
             %disp('MouseDragged')
             posX = event.getX();
             dx = posX - obj.startX;
@@ -453,17 +454,29 @@ classdef Scene3D < handle
 
             mod = event.getModifiers();
             ctrlPressed = bitand(mod,event.CTRL_MASK);
-            if ctrlPressed
-                obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-            else
-                if (obj.mouseButton == 3)
+            if (obj.mouseButton == 3)
+                redraw = true;
+                if ctrlPressed
+                    obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+                else
+                    %obj.camera.rotateAround(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+                    disp('la');
                     obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+                    disp('fin la')
                 end
+            elseif (obj.mouseButton == 2)
+                    disp('ici');
+                    obj.camera.rotateAround(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+                    disp('fin ici')
+                    redraw = true;
             end
             if (obj.lumiere.onCamera == true)
                 obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
+                redraw = true;
             end
-            obj.DrawScene();
+            if (redraw == true)
+                obj.DrawScene();
+            end
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 
@@ -511,7 +524,7 @@ classdef Scene3D < handle
 
         function cbk_MouseWheelMoved(obj, ~,event)
             obj.cbk_manager.rmCallback('MouseWheelMoved');
-            obj.camera.zoom(event.getWheelRotation());
+            obj.camera.zoom(-event.getWheelRotation());
             if obj.lumiere.onCamera == true
                 obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
             end

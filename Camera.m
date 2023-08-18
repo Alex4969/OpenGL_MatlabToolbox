@@ -1,10 +1,9 @@
 classdef Camera < handle
-    %CAMERA Summary of this class goes here
-
+    %CAMERA Gestion d'une caméra pour la scène 3D
     properties (GetAccess = public, SetAccess = protected)
         %%% Attributs de la caméra
         position    (1,3) double   % position de la caméra
-        target      (1,3) double   % position de la cible/objet regardé par la caméra
+        targetDir   (1,3) double   % position de la cible/objet regardé par la caméra
         up          (1,3) double   % position du vecteur pointant vers le haut (NORMALISE!)
         viewMatrix  (4,4) double   % matrice de vue correspondant aux valeurs ci dessus
 
@@ -16,9 +15,9 @@ classdef Camera < handle
         type        (1,1) logical  % 1 pour perspective, 0 pour orthonormé
         projMatrix  (4,4) double   % matrice de projection correspondant aux valeurs ci dessus
 
-        %%% Attributes pour le mouvement
+        %%% Attributs pour le mouvement
         speed       (1,1) double = 5;
-        sensibility (1,1) double = 1;
+        sensibility (1,1) double = 2;
         centreMvt   (1,3) double   % Centre de la rotation
         constraint  (1,3) logical  % pour chaque axe
     end
@@ -31,7 +30,8 @@ classdef Camera < handle
         function obj = Camera(ratio)
         %CAMERA Construct an instance of this class
             obj.position = [0 0 10];
-            obj.target = [0 0 0];
+            obj.targetDir = [0 0 -10];
+            obj.centreMvt = [0 0 0];
             obj.up = [0 1 0];
             obj.computeView();
 
@@ -49,33 +49,20 @@ classdef Camera < handle
             obj.computeView();
         end % fin de setPosition
 
-        function setTarget(obj, newTarget)
-            obj.target = newTarget;
+        function setTarget(obj, newTarget, changeDirection)
+            %SETTARGET : modifie le centre du mouvement, si changeDirection
+            %== true, on oriente la camera vers ce point
+            obj.centreMvt = newTarget;
+            if nargin == 3 && changeDirection == true
+                obj.targetDir = newTarget - obj.position;
+            end
             obj.computeView();
         end % fin de setTarget
 
         function setUp(obj, newUp)
             obj.up = newUp;
             obj.computeView();
-        end % fin de setView
-
-        function setView(obj, newPos, newTarget, newUp)
-            obj.position = newPos;
-            obj.position = newTarget;
-            if nargin == 4
-                obj.up = newUp;
-            end
-            obj.computeView();
-        end % fin de setView
-
-        function setProj(obj, newType, newRatio, newFov, newNear, newFar)
-            obj.type  = newType;
-            obj.ratio = newRatio;
-            obj.fov   = newFov;
-            obj.near  = newNear;
-            obj.far   = newFar;
-            obj.computeProj();
-        end % fin de setProj
+        end % fin de setUp
 
         function switchProjType(obj)
             if obj.type == 1
@@ -88,7 +75,7 @@ classdef Camera < handle
 
         function setNearFar(obj, newNear, newFar)
             obj.near = newNear;
-            obj.far = newFar;
+            obj.far  = newFar;
             obj.computeProj();
         end % fin de setNearFar
 
@@ -108,7 +95,7 @@ classdef Camera < handle
                 maxY = obj.near * tan(deg2rad(obj.fov/2));
                 att.coef = 0.01;
             else
-                maxY = norm(obj.position - obj.target)/2;
+                maxY = norm(obj.targetDir)/2;
                 att.coef = 0.173 * maxY; % 0.173 trouvé par essaies
             end
             maxX = maxY * obj.ratio;
@@ -131,23 +118,27 @@ classdef Camera < handle
                         dz = -dy;
                     end
                 end
-                translation =  [-dx, dy, dz] .* obj.constraint;
+                translation =  [dx, dy, dz] .* obj.constraint;
             else
                 translation = dy * obj.up;
-                left = cross(obj.position - obj.target, obj.up);
+                left = cross(obj.targetDir, obj.up);
                 left = left/norm(left);
-                translation = translation + dx * left;
+                translation = translation - dx * left;
             end
             obj.position = obj.position + translation * obj.speed;
-            obj.target   = obj.target   + translation * obj.speed;
+            obj.centreMvt = obj.centreMvt + translation * obj.speed;
             obj.computeView();
         end % fin de translatePlanAct
 
         function zoom(obj,signe)
-            facteur = 1 + signe * 0.05 * obj.sensibility;
-            vect = obj.position - obj.target;
-            vect = vect * facteur;
-            obj.position = obj.target + vect;
+            dist = vecnorm(obj.position);
+            dist = sqrt(dist);
+            dist = ceil(dist);
+            facteur = signe * dist * 0.3;
+            vect = obj.targetDir/norm(obj.targetDir);
+            if norm(obj.position) - facteur *  norm(vect) > obj.near
+                obj.position = obj.position + vect * facteur;
+            end
             obj.computeView();
             if obj.type == 0 % recompute la matrice orthonorme car depend de la distance
                 obj.computeProj();
@@ -155,7 +146,7 @@ classdef Camera < handle
         end % fin de zoom
 
         function rotate(obj, dx, dy)
-            centre = obj.target;
+            centre = obj.centreMvt;
             pos = obj.position;
             pos = pos - centre;
             % conversion en coordonné sphérique et application du changement
@@ -171,27 +162,76 @@ classdef Camera < handle
             % reconversion en coordonnée cartesien
             pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi) ] * rayon;
             obj.position = pos + centre;
+            obj.targetDir = centre - obj.position;
             obj.computeView();
         end % fin de rotate
 
+        % function rotateAround(obj, dx, dy)
+        %     centre = obj.centreMvt;
+        %     pos = obj.position;
+        %     pos = pos - centre;
+        %     % conversion en coordonné sphérique et application du changement
+        %     % en coordonnée spherique les axes ne sont pas dans le meme ordre : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
+        %     rayon = norm(pos);
+        %     theta = acos(pos(2) / rayon)   - dy * obj.sensibility;
+        %     phi   = atan2(pos(1), pos(3))  - dx * obj.sensibility;
+        %     if (theta < 0)
+        %         theta = 0.01;
+        %     elseif (theta > pi)
+        %         theta = pi - 0.01;
+        %     end
+        %     % reconversion en coordonnée cartesien
+        %     pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi) ] * rayon;
+        %     obj.position = pos + centre;
+        %     obj.targetDir = centre - obj.position;
+        %     obj.computeView();
+        %     obj.viewMatrix(1:3,4) = -obj.position';
+        % end % fin de rotate
+
+        function rotateAround(obj, dx, dy)
+            centre = obj.centreMvt;
+            pos = obj.position;
+            pos = pos - centre;
+            % conversion en coordonné sphérique et application du changement
+            % en coordonnée spherique les axes ne sont pas dans le meme ordre : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
+            rayon = norm(pos);
+            theta = acos(pos(2) / rayon)   - dy * obj.sensibility;
+            phi   = atan2(pos(1), pos(3))  - dx * obj.sensibility;
+            if (theta < 0)
+                theta = 0.01;
+            elseif (theta > pi)
+                theta = pi - 0.01;
+            end
+            % reconversion en coordonnée cartesien
+            pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi) ] * rayon;
+            obj.position = pos + centre;
+            obj.targetDir = centre - obj.position;
+            obj.computeView();
+            obj.viewMatrix(1:3,4) = -obj.position';
+        end % fin de rotate
+
+
         function defaultView(obj)
-            obj.position=[10 10 10];
-            obj.up=[0 1 0];
-            obj.target=[0 0 0];
+            obj.position = [10 10 10];
+            obj.up = [0 1 0];
+            obj.targetDir = [-10 -10 -10];
+            obj.centreMvt = [0 0 0];
             obj.computeView();
         end  
 
         function upView(obj)
             obj.position=[0 10 0];
             obj.up=[1 0 0];
-            obj.target=[0 0 0];
+            obj.targetDir=[0 -10 0];
+            obj.centreMvt = [0 0 0];
             obj.computeView();
         end
 
         function faceView(obj)
             obj.position=[0 0 10];
             obj.up=[0 1 0];
-            obj.target=[0 0 0];
+            obj.targetDir=[0 0 -10];
+            obj.centreMvt = [0 0 0];
             obj.computeView();
         end        
 
@@ -209,7 +249,7 @@ classdef Camera < handle
 
     methods (Access = private)
         function computeView(obj)
-            forward = obj.position - obj.target;            
+            forward = -obj.targetDir;            
             forward = forward / norm(forward);
 
             left = cross(obj.up, forward);
@@ -230,7 +270,7 @@ classdef Camera < handle
 
         function computeProj(obj)
             if obj.type == 0 % vue ortho
-                distance = norm(obj.position - obj.target);
+                distance = norm(obj.targetDir);
                 obj.projMatrix = MProj3D('O', [distance * obj.ratio, distance, -obj.far, obj.far]);
             else % vue en perspective
                 obj.projMatrix = MProj3D('P', [obj.ratio, obj.fov, obj.near, obj.far]);
