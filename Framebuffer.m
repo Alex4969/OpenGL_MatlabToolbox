@@ -9,7 +9,7 @@ classdef Framebuffer < handle
     end
     properties (Access = private)
         FBOBuffer               %Frame Buffer Object
-        RBOBuffer               %Render Buffer Object
+        RBOBuffer               %Render Buffer Object (contient le champs de profondeur)
     end
 
     methods

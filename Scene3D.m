@@ -332,15 +332,18 @@ classdef Scene3D < handle
             gl.glReadPixels(x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
             profondeur = typecast(buffer.array(), 'single');
 
-            if profondeur == 1
-                worldCoord = 0;
-                disp('le lancer n a pas touché de cible');
-            else
-                NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
+            
+            NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
 
-                worldCoord = obj.camera.projMatrix * obj.camera.viewMatrix \ NDC;
-                worldCoord = worldCoord(1:3)./worldCoord(4);
-                worldCoord = worldCoord';
+            worldCoord = obj.camera.projMatrix * obj.camera.viewMatrix \ NDC;
+            worldCoord = worldCoord(1:3)./worldCoord(4);
+            worldCoord = worldCoord';
+            if profondeur == 1
+                %si on touche le fond alors on trouve l'intersection entre le
+                %vecteur camera->worldCoord & le plan de normale z
+                vect =  double(worldCoord) - obj.camera.position;
+                t = obj.camera.position(3) / vect(3);
+                worldCoord = obj.camera.position - t * vect;
             end
             %unbind le frameBuffer, remise des parametre de la scene
             obj.pickingTexture.UnBind(gl);
