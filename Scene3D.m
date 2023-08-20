@@ -316,6 +316,16 @@ classdef Scene3D < handle
             if profondeur == 1
                 worldCoord = 0;
                 disp('le lancer n a pas touché de cible');
+
+                %tentative pour recuperer un point hors cible : fonctionne
+                % mais dans erreur cas particulier
+                % Zt=0;
+                % P=obj.camera.position;
+                % T=worldCoord;T(3)=-obj.camera.far;
+                % k=(Zt-P(3))/(T(3)-P(3));
+                % worldCoord=(T-P)*k+P;
+                % worldCoord(3) = Zt;
+                % disp('le lancer n a pas touché de cible');
             else
                 NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
 
@@ -323,6 +333,7 @@ classdef Scene3D < handle
                 worldCoord = worldCoord(1:3)./worldCoord(4);
                 worldCoord = worldCoord';
             end
+
             %unbind le frameBuffer, remise des parametre de la scene
             obj.pickingTexture.UnBind(gl);
             gl.glDisable(gl.GL_SCISSOR_TEST);
@@ -357,19 +368,19 @@ classdef Scene3D < handle
             if obj.mouseButton == 1
                 [elemId, worldCoord] = obj.pickObject();
                 obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
-                disp(worldCoord);
+                disp(['ID = ' num2str(elemId) ' Coord = ' num2str(worldCoord)]);
             
-                if elemId ~= 0
-                    mod = event.getModifiers();
-                    if mod==18 %CTRL LEFT CLICK
-                        obj.colorSelection(elemId);
-                    elseif mod==24 %ALT LEFT CLICK
-                        obj.camera.setTarget(worldCoord);
-                    end
+                mod = event.getModifiers();
+                if elemId ~= 0 && mod==18 %CTRL LEFT CLICK              
+                    obj.colorSelection(elemId);
                 end
-                obj.DrawScene();
+                if mod==24 %ALT LEFT CLICK
+                    obj.camera.setTarget(worldCoord);
+                end
             end
+            obj.DrawScene();
         end
+        
 
         function cbk_MouseReleased(~,~,~)
             disp('MouseReleased')
@@ -475,4 +486,5 @@ classdef Scene3D < handle
             obj.removeGL();
         end
     end % fin des methodes callback
+
 end % fin de la classe Scene3D
