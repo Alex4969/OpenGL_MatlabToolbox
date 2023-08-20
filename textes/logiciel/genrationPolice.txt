@@ -1,0 +1,23 @@
+logiciel pour créer le fichier de police : https://libgdx.com/wiki/tools/hiero
+tuto pour utiliser le logiciel : https://www.youtube.com/watch?v=mnIQEQoHHCU 1:20 -> 3:20
+ - Dans Font : Choisir une police
+ - Dans SampleText : affiche tous les caractère qui seront dans l'image. 
+	Choisir au minimum NEHE et ajouter les caractère qui pourrait manquer (exemple : caractères acentués)
+ - Dans Effect : Ne rien faire.
+ - Dans Padding : Mettre a 3 les valeurs haut, gauche, bas, droite
+ - Dans Rendering : Selectionner Glyph cahce.
+	Faire un reset Cache
+	Laisser width & Height a 512
+	Si le chiffre a coté de page est supérieur a 1. C'est qu'il faut plus d'une image pour mettre tous les caractères.
+	
+
+La police est prete a être généré.
+Pour que les caractères rendent mieux, augmenter la size dans Font tant que tous les caractères rentrent dans une page
+
+Pour générer la police faire File -> Save BMFont Files (text)
+
+Terminer !
+
+Attention le logiciel est capricieux et ne fonctionne pas en arrière plan (changer de fenêtre le fait cracher)
+
+

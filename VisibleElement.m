@@ -2,25 +2,26 @@ classdef (Abstract) VisibleElement < handle
     %VISIBLEELEMENT 
     
     properties (GetAccess = public, SetAccess = protected)
-        Type string
-        Geom GeomComponent
-        GLGeom GLGeometry
-        shader ShaderProgram
-        typeShading    = 'S'    % 'S' : Sans    , 'L' : Lisse, 'D' : Dur
-        typeColoration = 'U'    % 'U' : Uniforme, 'C' : Color, 'T' : Texture
-        newRendu logical = false
+        Type            string
+        Geom            % GeomComponent
+        GLGeom          GLGeometry
+        shader          ShaderProgram
+        typeRendu       uint8   = 17         %type de coloration & type de shading chacun sur 4 bit
+        visible         logical       = true
 
         parent
-        geomListener
+        typeOrientation uint8 = 1 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe
     end
 
-    properties (Access = public)
-        typeOrientation uint8 = 1 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe, '0000' rien (pour framebuffer)
-        visible logical = true
+    properties (Constant = true)
+        enumOrientation = dictionary("PERPECTIVE", 1, "NORMAL", 2, "REPERE", 4, "REPERE_NORMAL", 6, "FIXE", 8);
+        enumColoration  = dictionary("UNIFORME", 1, "PAR_SOMMET", 2, "TEXTURE", 4);
+        enumShading     = dictionary("SANS", 16, "DUR", 32, "LISSE", 64);
     end
 
     events
-        evt_update
+        evt_redraw          % une modification necessite un redraw
+        evt_updateRendu     % une modification necessite le contexte et un redraw (changement de programme)
     end     
     
     methods
@@ -29,7 +30,7 @@ classdef (Abstract) VisibleElement < handle
             obj.Geom = aGeom;
             obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
 
-            obj.geomListener = addlistener(obj.Geom,'geomUpdate',@obj.cbk_geomUpdate);
+            addlistener(obj.Geom,'evt_updateGeom',@obj.cbk_updateGeom);
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
@@ -39,15 +40,6 @@ classdef (Abstract) VisibleElement < handle
                 model = obj.Geom.modelMatrix;
             end
         end % fin de getModelMatrix
-
-        function setModelMatrix(obj, newModel)
-            obj.Geom.setModelMatrix(newModel);
-        end % fin de setModelMatrix
-
-        function ModifyModelMatrix(obj, matrix, after)
-            if nargin < 3, after = 0; end
-            obj.Geom.modifyModelMatrix(matrix, after);
-        end % fin de ModifymodelMatrix
 
         function pos = getPosition(obj)
             mod = obj.getModelMatrix();
@@ -66,58 +58,54 @@ classdef (Abstract) VisibleElement < handle
             id = obj.Geom.id;
         end % fin de getId
 
-        function setParent(obj, newParent)
-            obj.parent = newParent;
-        end % fin de setParent
+        function setVisibilite(obj, b)
+            obj.visible = b;
+        end % fin de setVisibilite
 
-        function setModeRendu(obj, newTypeRendu, newTypeLumiere)
-            if nargin == 3
-                obj.typeShading = newTypeLumiere;
+        function setModeRendu(obj, newTypeColoration, newTypeLumiere)
+            if nargin == 2 && obj.enumColoration.isKey(newTypeColoration)
+                obj.typeRendu = bitand(obj.typeRendu, 0xF0); % on grade la composante de lumiere
+                obj.typeRendu = obj.typeRendu + obj.enumColoration(newTypeColoration);
+                notify(obj, 'evt_updateRendu');
+            elseif obj.enumColoration.isKey(newTypeColoration) && obj.enumShading.isKey(newTypeLumiere)
+                obj.typeRendu = obj.enumColoration(newTypeColoration) + obj.enumShading(newTypeLumiere);
+                notify(obj, 'evt_updateRendu');
+            else
+                disp('valeurs incompatibles')
+                disp(['valeurs pour la coloration : ' obj.enumColoration.keys'])
+                disp(['valeurs pour le shading : ' obj.enumShading.keys'])
             end
-            obj.typeColoration = newTypeRendu;
-            obj.newRendu = true;
         end % fin de setModeRendu
+
+        function setOrientation(obj, newOrientation)
+            if obj.enumOrientation.isKey(newOrientation)
+                obj.typeOrientation = obj.enumOrientation(newOrientation);
+                notify(obj, 'evt_redraw');
+            else
+                disp('Nouvelle orientation incorrect');
+                disp(['Valeurs possibles : ' VisibleElement.enumOrientation.keys']);
+            end
+        end % fin de setOrientation
+
+        function setModelMatrix(obj, newModel)
+            obj.Geom.setModelMatrix(newModel);
+        end % fin de setModelMatrix
+
+        function ModifyModelMatrix(obj, matrix, after)
+            if nargin < 3, after = 0; end
+            obj.Geom.modifyModelMatrix(matrix, after);
+        end % fin de ModifymodelMatrix
 
         function AddColor(obj, matColor)
             if size(matColor, 1) == 1
                 obj.setCouleur(matColor);
-                obj.typeColoration = 'U';
+                obj.typeRendu = bitand(obj.typeRendu, 0xF0) + 1;
             else
                 obj.GLGeom.addDataToBuffer(matColor, 2);
-                obj.typeColoration = 'C';
+                obj.typeRendu = bitand(obj.typeRendu, 0xF0) + 2;
             end
-            obj.newRendu = true;
+            notify(obj, 'evt_updateRendu');
         end % fin de AddColor
-
-        function AddMapping(obj, matMapping)
-            obj.GLGeom.addDataToBuffer(matMapping, 3);
-            obj.typeColoration = 'T';
-            obj.newRendu = true;
-        end % fin de AddMapping
-
-        function AddNormals(obj, matNormales)
-            obj.GLGeom.addDataToBuffer(matNormales, 4);
-            obj.typeShading = 'L';
-            obj.newRendu = true;
-        end % fin de AddNormals
-
-        function GenerateNormals(obj)
-            normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
-            obj.GLGeom.addDataToBuffer(normales, 4);
-            obj.typeShading = 'L';
-            obj.newRendu = true;
-        end % fin de GenerateNormals
-
-        function cbk_geomUpdate(obj, source, ~)
-            obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
-            if source.type == "texte"
-                obj.AddMapping(source.mapping);
-                obj.changePolice(source.police.name);
-            else
-                obj.typeColoration = 'U';
-                obj.newRendu = true;
-            end
-        end % fin de cbk_geomUpdate
 
         function toString(obj)
             nbPoint = size(obj.Geom.listePoints, 1);
@@ -132,65 +120,43 @@ classdef (Abstract) VisibleElement < handle
             obj.GLGeom.delete(gl);
             obj.shader.delete(gl);
         end % fin de delete
+    end % fin des methodes defauts
 
-        function changerProg(obj, gl)
-            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeColoration, obj.typeShading);
-            obj.newRendu = false;
-        end % fin de changerProg
+    methods (Hidden = true)
+        function setParent(obj, newParent)
+            obj.parent = newParent;
+        end % fin de setParent
 
-        function oldShader = setShader(obj, gl, newShader)
-            if obj.newRendu == true
-                obj.changerProg(gl);
+        function cbk_updateGeom(obj, source, ~) % source = geomComponent
+            obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
+            if isa(source, 'ClosedGeom')
+                if any(source.attributes == "police")
+                    obj.changePolice();
+                end
+                if any(source.attributes == "mapping")
+                    obj.AddMapping(source.mapping);
+                end
+                if any(source.attributes == "color")
+                    obj.AddColor(source.color);
+                end
+            else
+                obj.typeRendu = bitand(obj.typeRendu, 0xF0) + 1;
+                notify(obj, 'evt_updateRendu');
             end
+        end % fin de cbk_evt_updateGeom
+
+        function oldShader = setShader(obj, newShader)
             oldShader = obj.shader;
             obj.shader = newShader;
         end % fin de setShader
 
-        function CommonDraw(obj, gl, camAttrib)
-            %COMMONDRAW, fonction appele au debut de tous les draw des
-            %objets. Definie le programme et le mode d'orientation
-            if obj.newRendu == true
-                obj.changerProg(gl);
-            end
-            obj.shader.Bind(gl);
-            obj.GLGeom.Bind(gl);
-            %typeOrientation '1000' fixe, '0100' Normale a l'ecran, '0010' orthonorme, '0001' perspective, '0' rien
-            model = obj.getModelMatrix();
-            if obj.typeColoration == 0 % seule modelMatrix (dans le repere ecran normalise) active
-                cam = eye(4);
-            elseif obj.typeOrientation == 1 %'0001' PERSPECTIVE
-                cam = camAttrib.proj * camAttrib.view;
-            elseif obj.typeOrientation == 8 %'1000' fixe (pour texte)
-                % on utilise la matrice modele pour positionner le texte
-                % dans le repere ecran (-1;+1)
-                % pour changer la taille, on change le scaling de la
-                % matrice model
-                model(1, 4) = model(1, 4) * camAttrib.maxX;
-                model(2, 4) = model(2, 4) * camAttrib.maxY;
-                model(3, 4) = -camAttrib.near;
-                model = model * MScale3D(camAttrib.coef);%coef pour dimension identique en ortho ou perspective
-                cam =  camAttrib.proj;
-            else
-                if bitand(obj.typeOrientation, 2) > 0 % 0010 'face a l'ecran
-                    model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3);
-                    cam =  camAttrib.proj * camAttrib.view;
-                    % cam*model = proj*view*inv(view)*model
-                end
-                if bitand(obj.typeOrientation, 4) > 0 %'0100' coin inferieur gauche 
-                    % rotation seulement activée sur un point de l'ecran
-                    cam = MProj3D('O', [camAttrib.ratio*16 16 1 20]) * camAttrib.view;
-                    cam(1,4) = -0.97 + 0.1/camAttrib.ratio;
-                    cam(2,4) = -0.87;
-                    cam(3,4) =  0;
-                end
-            end
-            obj.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
-            obj.shader.SetUniformMat4(gl, 'uModelMatrix', model);
-        end % fin de commonDraw
+        function glUpdate(obj, gl, ~)
+            obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeRendu);
+        end % fin de glUpdate
     end % fin des methodes defauts
 
     methods (Abstract = true)
-        Draw(obj, gl, camAttrib)
+        Draw(obj, gl)
         setCouleur(obj, matColor)
         sNew = select(obj, s)
         sNew = deselect(obj, s)

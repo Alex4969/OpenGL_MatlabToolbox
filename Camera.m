@@ -1,43 +1,37 @@
 classdef Camera < handle
-    %CAMERA Summary of this class goes here
-
+    %CAMERA Gestion d'une caméra pour la scène 3D
     properties (GetAccess = public, SetAccess = protected)
         %%% Attributs de la caméra
-        position        % 1x3 position de la caméra
-        target          % 1x3 position de la cible/objet regardé par la caméra
-        up              % 1x3 position du vecteur pointant vers le haut (NORMALISE!)
-        viewMatrix      % 4x4 matrice de transformation correspondant aux valeurs ci dessus
-
+        position    (1,3) double   % position de la caméra
+        targetDir   (1,3) double   % position de la cible/objet regardé par la caméra
+        up          (1,3) double   % position du vecteur pointant vers le haut (NORMALISE!)
+        viewMatrix  (4,4) double   % matrice de vue correspondant aux valeurs ci dessus
 
         %%% Attributs de la projection
-        near            % double distance du plan rapproché
-        far             % double distance du plan éloigné
-        ratio           % double ration d'observation (width/height)
-        fov             % double angle de vue d'observation (en degré)
-        type logical    % 1 pour perspective, 0 pour orthonormé
-        projMatrix      % 4x4 matrice de transformation correspondant aux valeurs ci dessus
+        near        (1,1) double   % distance du plan rapproché
+        far         (1,1) double   % distance du plan éloigné
+        ratio       (1,1) double   % ration d'observation (width/height)
+        fov         (1,1) double   % angle de vue d'observation (en degré)
+        type        (1,1) logical  % 1 pour perspective, 0 pour orthonormé
+        projMatrix  (4,4) double   % matrice de projection correspondant aux valeurs ci dessus
 
-        UBOId               % uniform block
-        UBOBuffer           % uniform block buffer
-        updateNeeded logical
+        %%% Attributs pour le mouvement
+        speed       (1,1) double = 5;
+        sensibility (1,1) double = 2;
+        centreMvt   (1,3) double   % Centre de la rotation
+        constraint  (1,3) logical  % pour chaque axe
     end
 
-    properties
-        %%% Attributes pour le mouvement
-        speed = 5;
-        sensibility =1;
-
-        posCentreMvt = 0;   % 1x3 si pour donner un centre de rotation sinon le centre = target
-
-        constraint logical  % 1x3 pour chaque axe
+    events
+        evt_updateUbo       % mise a jour du Ubo de scene 3D necessaire
     end
 
     methods
-
-        function obj = Camera(gl, ratio)
+        function obj = Camera(ratio)
         %CAMERA Construct an instance of this class
             obj.position = [0 0 10];
-            obj.target = [0 0 0];
+            obj.targetDir = [0 0 -10];
+            obj.centreMvt = [0 0 0];
             obj.up = [0 1 0];
             obj.computeView();
 
@@ -48,9 +42,6 @@ classdef Camera < handle
             obj.type = 1;
             obj.computeProj();
             obj.constraint = [false, false, false];
-
-            obj.generateUbo(gl);
-            obj.updateNeeded = true;
         end % fin du constructeur camera
 
         function setPosition(obj, newPosition)
@@ -58,37 +49,20 @@ classdef Camera < handle
             obj.computeView();
         end % fin de setPosition
 
-        function setTarget(obj, newTarget)
-            obj.target = newTarget;
+        function setTarget(obj, newTarget, changeDirection)
+            %SETTARGET : modifie le centre du mouvement, si changeDirection
+            %== true, on oriente la camera vers ce point
+            obj.centreMvt = newTarget;
+            if nargin == 3 && changeDirection == true
+                obj.targetDir = newTarget - obj.position;
+            end
             obj.computeView();
         end % fin de setTarget
-
-        function setCentreMvt(obj, newPos)
-            obj.posCentreMvt = newPos;
-        end % fin de setCentreMvt
 
         function setUp(obj, newUp)
             obj.up = newUp;
             obj.computeView();
-        end % fin de setView
-
-        function setView(obj, newPos, newTarget, newUp)
-            obj.position = newPos;
-            obj.position = newTarget;
-            if nargin == 4
-                obj.up = newUp;
-            end
-            obj.computeView();
-        end % fin de setView
-
-        function setProj(obj, newType, newRatio, newFov, newNear, newFar)
-            obj.type  = newType;
-            obj.ratio = newRatio;
-            obj.fov   = newFov;
-            obj.near  = newNear;
-            obj.far   = newFar;
-            obj.computeProj();
-        end % fin de setProj
+        end % fin de setUp
 
         function switchProjType(obj)
             if obj.type == 1
@@ -101,7 +75,7 @@ classdef Camera < handle
 
         function setNearFar(obj, newNear, newFar)
             obj.near = newNear;
-            obj.far = newFar;
+            obj.far  = newFar;
             obj.computeProj();
         end % fin de setNearFar
 
@@ -114,31 +88,15 @@ classdef Camera < handle
             obj.fov = newFov;
             obj.computeProj();
         end % fin de setFov
-        
-        function ratio = getRatio(obj)
-            ratio = obj.ratio;
-        end
-
-        function pos = getPosition(obj)
-            pos = obj.position;
-        end % fin de getPosition
-
-        function Mrot = getViewMatrix(obj)
-            Mrot = obj.viewMatrix;
-        end
-
-        function MProj = getProjMatrix(obj)
-            MProj = obj.projMatrix;
-        end
 
         function att = getAttributes(obj) % contient near, maxY, maxX, coef, view, proj, ratio
             att.near = obj.near;
             if obj.type % perpective
                 maxY = obj.near * tan(deg2rad(obj.fov/2));
-                att.coef = 0.01;
+                att.coef = 0.1 * obj.near;
             else
-                maxY = norm(obj.position - obj.target)/2;
-                att.coef = 0.173 * maxY; % 0.173 trouvé par essaies
+                maxY = norm(obj.targetDir)/2;
+                att.coef = 1.73 * obj.near * maxY; % 1.73 trouvé par essaies
             end
             maxX = maxY * obj.ratio;
             att.maxX  = maxX;
@@ -147,12 +105,11 @@ classdef Camera < handle
             att.proj = obj.projMatrix;
             att.ratio = obj.ratio;
         end % fin de getAttribute
-
     end %fin des methodes defauts
 
     methods % special transformations / gestion de la souris
         function translatePlanAct(obj,dx,dy)
-            if any(obj.constraint)
+            if any(obj.constraint) % si une contrainte axial est présente : 
                 dz = 0;
                 if obj.constraint(3)
                     if obj.constraint(2)
@@ -161,23 +118,28 @@ classdef Camera < handle
                         dz = -dy;
                     end
                 end
-                translation =  [-dx, dy, dz] .* obj.constraint;
-            else
+                translation =  [dx, dy, dz] .* obj.constraint;
+            else % si aucune constrainte on se met dans le plan de la caméra parallele au plan Oxy
                 translation = dy * obj.up;
-                left = cross(obj.position - obj.target, obj.up);
+                left = cross(obj.targetDir, obj.up);
                 left = left/norm(left);
-                translation = translation + dx * left;
+                translation = translation - dx * left;
             end
             obj.position = obj.position + translation * obj.speed;
-            obj.target   = obj.target   + translation * obj.speed;
+            obj.centreMvt = obj.centreMvt + translation * obj.speed;
             obj.computeView();
         end % fin de translatePlanAct
 
         function zoom(obj,signe)
-            facteur = 1 + signe * 0.05 * obj.sensibility;
-            vect = obj.position - obj.target;
-            vect = vect * facteur;
-            obj.position = obj.target + vect;
+            %ZOOM se deplace dans la direction de la target
+            dist = vecnorm(obj.position);
+            dist = sqrt(dist); % plus on est pres, plus on est precis,
+            dist = ceil(dist); % fonctionne par palier grace au ceil
+            facteur = signe * dist * 0.3;
+            vect = obj.targetDir/norm(obj.targetDir);
+            if norm(obj.position) - facteur *  norm(vect) > obj.near
+                obj.position = obj.position + vect * facteur;
+            end
             obj.computeView();
             if obj.type == 0 % recompute la matrice orthonorme car depend de la distance
                 obj.computeProj();
@@ -185,11 +147,7 @@ classdef Camera < handle
         end % fin de zoom
 
         function rotate(obj, dx, dy)
-            if numel(obj.posCentreMvt) == 3
-                centre = obj.posCentreMvt;
-            else
-                centre = obj.target;
-            end
+            centre = obj.centreMvt;
             pos = obj.position;
             pos = pos - centre;
             % conversion en coordonné sphérique et application du changement
@@ -205,27 +163,31 @@ classdef Camera < handle
             % reconversion en coordonnée cartesien
             pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi) ] * rayon;
             obj.position = pos + centre;
+            obj.targetDir = centre - obj.position;
             obj.computeView();
         end % fin de rotate
 
         function defaultView(obj)
-            obj.position=[10 10 10];
-            obj.up=[0 1 0];
-            obj.target=[0 0 0];
+            obj.position = [10 10 10];
+            obj.up = [0 1 0];
+            obj.targetDir = [-10 -10 -10];
+            obj.centreMvt = [0 0 0];
             obj.computeView();
         end  
 
         function upView(obj)
             obj.position=[0 10 0];
             obj.up=[1 0 0];
-            obj.target=[0 0 0];
+            obj.targetDir=[0 -10 0];
+            obj.centreMvt = [0 0 0];
             obj.computeView();
         end
 
         function faceView(obj)
             obj.position=[0 0 10];
             obj.up=[0 1 0];
-            obj.target=[0 0 0];
+            obj.targetDir=[0 0 -10];
+            obj.centreMvt = [0 0 0];
             obj.computeView();
         end        
 
@@ -239,43 +201,11 @@ classdef Camera < handle
         function resetConstraint(obj)
             obj.constraint = [false false false];
         end
-
-        function generateUbo(obj, gl)
-            obj.UBOBuffer = java.nio.IntBuffer.allocate(1);
-            gl.glGenBuffers(1, obj.UBOBuffer);
-            obj.UBOId = typecast(obj.UBOBuffer.array(), 'uint32');
-            gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, obj.UBOId);
-            gl.glBufferData(gl.GL_UNIFORM_BUFFER, 16, [], gl.GL_DYNAMIC_DRAW);
-            gl.glBindBufferRange(gl.GL_UNIFORM_BUFFER, 1, obj.UBOId, 0, 16);
-            gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, 0);
-        end
-
-        function remplirUbo(obj, gl)
-            if obj.updateNeeded
-                gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, obj.UBOId);
-                vecUni = java.nio.FloatBuffer.allocate(4);
-                vecUni.put(obj.position(:));
-                vecUni.rewind();
-                gl.glBufferSubData(gl.GL_UNIFORM_BUFFER, 0, 16, vecUni);
-                gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, 0);
-            end
-            obj.updateNeeded = false;
-        end
     end % fin des methodes liés au mouvements de souris
 
     methods (Access = private)
         function computeView(obj)
-            Mrot = obj.computeRotationCamera();
-
-            Mtrans = eye(4);
-            Mtrans(1:3,4) = -obj.position';
-
-            obj.viewMatrix = Mrot * Mtrans;
-            obj.updateNeeded = true;
-        end % fin de computeView
-
-        function Mrot = computeRotationCamera(obj)
-            forward = obj.position - obj.target;            
+            forward = -obj.targetDir;            
             forward = forward / norm(forward);
 
             left = cross(obj.up, forward);
@@ -286,11 +216,17 @@ classdef Camera < handle
             Mrot(1,1:3) = left;
             Mrot(2,1:3) = newUp;
             Mrot(3,1:3) = forward;
-        end % fin de computeRotationMatrix
+
+            Mtrans = eye(4);
+            Mtrans(1:3,4) = -obj.position';
+
+            obj.viewMatrix = Mrot * Mtrans;
+            notify(obj, 'evt_updateUbo');
+        end % fin de computeView
 
         function computeProj(obj)
             if obj.type == 0 % vue ortho
-                distance = norm(obj.position - obj.target);
+                distance = norm(obj.targetDir);
                 obj.projMatrix = MProj3D('O', [distance * obj.ratio, distance, -obj.far, obj.far]);
             else % vue en perspective
                 obj.projMatrix = MProj3D('P', [obj.ratio, obj.fov, obj.near, obj.far]);

@@ -4,7 +4,9 @@ addpath('outils\');
 addpath('java\');
 
 viewer = Scene3D;
-viewer.setCouleurFond([0.2 0.2 0.4])
+viewer.setCouleurFond([0.4 0.4 0.4])
+viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
+viewer.lumiere.setColor([1 1 1]);
 
 %%%%  definition des objets  %%%%
 
@@ -37,13 +39,22 @@ viewer.setCouleurFond([0.2 0.2 0.4])
 [posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2,0.5);
 
 % sphere wireframe
-bouleGeom = Geometry(4, posBoule, indBoule);
-elem = viewer.AjouterGeom(bouleGeom, 'face');
+bouleGeom = MyGeom(4, posBoule, indBoule, 'face');
+elem = viewer.AddElement(bouleGeom);
 
 elem.setCouleurArretes([1 1 0]);
 elem.setEpaisseurArretes(3);
 elem.setQuoiAfficher(2);
 elem.setModelMatrix(MTrans3D([0.5 0.25 0]));
+
+
+
+[sommetsValeurs, indices, sommetsCouleur] = generateTrackBall(1);
+trackBall = MyGeom(-5, sommetsValeurs, indices, 'ligne');
+elem = viewer.AddElement(trackBall);
+elem.AddColor(sommetsCouleur);
+elem.setOrientation("REPERE");
+
 % % 
 % % % % sphere avec texture map monde
 % % bouleTexGeom = Geometry(6, posBoule, indBoule);
@@ -109,30 +120,49 @@ elem.setModelMatrix(MTrans3D([0.5 0.25 0]));
 % % ens = viewer.makeGroup(30, listeId, [0 2 0]);
 % % ens.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
 
-            tailleGysmo = 1;
-            [pos, idx, color] = Axes.generateAxes(0, tailleGysmo);
-            gysmoGeom = Geometry(333, pos, idx);
-            elem=viewer.AjouterGeom(gysmoGeom,'ligne');
-            elem.setEpaisseur(14);   
-            elem.AddColor(color);
-            elem.setModelMatrix(MTrans3D([1, 1, 1]));
-            elem.typeOrientation = 4;
+            % tailleGysmo = 1;
+            % [pos, idx, color] = Axes.generateAxes(0, tailleGysmo);
+            % gysmoGeom = MyGeom(333, pos, idx);
+            % elem=viewer.AddElement(gysmoGeom,'ligne');
+            % elem.setEpaisseur(14);   
+            % elem.AddColor(color);
+            % elem.setModelMatrix(MTrans3D([1, 1, 1]));
+            % elem.setOrientation("REPERE");
 
-            [pos, idx, color] = Axes.generateExtremities(0.4,0, tailleGysmo);
-            gysmoGeom = Geometry(334, pos, idx);
-            elem=viewer.AjouterGeom(gysmoGeom,'ligne');
+            gyroscopeId = 333;
+            tailleGysmo = 1;
+            [pos, idx, color] = generateAxis(0, tailleGysmo);
+            gysmoGeom = MyGeom(gyroscopeId, pos, idx, 'ligne');
+            elem = viewer.AddElement(gysmoGeom);
             elem.AddColor(color);
-            elem.setModelMatrix(MTrans3D([1, 1, 1]));
-            elem.typeOrientation = 4;
+            elem.setModelMatrix(MTrans3D([0 0 0]));           
+            elem.setEpaisseur(14);   
+            elem.setOrientation("PERSPECTIVE");
+
+            ExtId = 334;
+            [pos, idx, color] = generateExtremities(0, tailleGysmo,0.2);
+            gysmoGeom = MyGeom(ExtId, pos, idx,'ligne');
+            elem=viewer.AddElement(gysmoGeom);
+            elem.AddColor(color);
+            elem.setModelMatrix(MTrans3D([0 0 0]));
+            elem.setEpaisseur(14);
+            elem.setOrientation("PERSPECTIVE");
+
+            % creation du groupe
+            group = viewer.CreateGroup(1);
+            group.AddElem(viewer.mapElements(333));
+            group.AddElem(viewer.mapElements(334));
+            group.setModelMatrix(MTrans3D([1 1 1]));
 
 
 
 % Ajout texte
 ravie = Police("textes/ravie");
-elementTexte = viewer.AjouterTexte(102, 'X', ravie, 0);
-elementTexte.setModelMatrix(MTrans3D([2 0 0]));
-elementTexte.setCouleurTexte([1 0 0]);
-elementTexte.typeOrientation = 2 + 4;
+geomTexteX = TextGeom(102, 'X', ravie, 0);
+elementTexte = viewer.AddElement(geomTexteX);
+elementTexte.setModelMatrix( MTrans3D([1.3 0 0])*MScale3D(0.4));
+elementTexte.setCouleur([1 0 0]);
+elementTexte.setOrientation("REPERE_NORMAL");
 
 % [posBoule, indBoule] = generateSphere(8, 10, 2*pi, 0.2);
 % bouleLightGeom = Geometry(100, posBoule, indBoule);

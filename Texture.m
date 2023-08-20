@@ -2,15 +2,18 @@ classdef Texture < handle
     %TEXTURE Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties
-        filePath        % char : nom du fichier avec extension
-        textureId       % uint32 : id de la texture
-        texBuffer       % java.nio.IntBuffer : necessaire pour supprimer l'objet
-        slot            % le slot OpenGL dans lequel se situe la texture
+    properties (GetAccess = public, SetAccess = private)
+        filePath  char      % nom du fichier avec extension
+        textureId uint32    % id de la texture
+        slot      uint32    % le slot OpenGL dans lequel se situe la texture (nombre limité par le GPU, minimum 16)
     end
-
+    properties (Access = private)
+        texBuffer           % java.nio.IntBuffer : necessaire pour supprimer l'objet
+    end
     properties (Constant = true)
         mapTextures = containers.Map('KeyType','char', 'ValueType', 'any');
+        % map qui contient les textures deja créé pour pouvoir les redonner 
+        % cela permet de gérer les numéro de slot et d'optimiser
     end
     
     methods
@@ -58,9 +61,9 @@ classdef Texture < handle
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE);
             [im, ~, alpha] = imread(obj.filePath);
             if isempty(alpha)
-                format = 3;
+                type = gl.GL_RGB;
             else
-                format = 4;
+                type = gl.GL_RGBA;
                 im(:,:,4) = alpha;
             end
             im = rot90(im, -1);
@@ -68,12 +71,7 @@ classdef Texture < handle
             imBuffer = java.nio.ByteBuffer.allocate(numel(im));
             imBuffer.put(im(:));
             imBuffer.rewind();
-            if (format == 3)
-                type = gl.GL_RGB;
-            else
-                type = gl.GL_RGBA;
-            end
-            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1); %dans la toolbox mais visiblement pas necessaire
+            gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1);
             gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, type, size(im, 2), size(im, 3), 0, type, gl.GL_UNSIGNED_BYTE, imBuffer);
             gl.glGenerateMipmap(gl.GL_TEXTURE_2D);
         end % fin de generateTexture

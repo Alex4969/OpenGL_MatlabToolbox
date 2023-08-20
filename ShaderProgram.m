@@ -1,33 +1,34 @@
 classdef ShaderProgram < handle
     %SHADERPROGRAM Compile un programme
     
-    properties
+    properties (Access = private)
         shaderProgId        % uint32 : id de la texture
         mapUniformLocation  % char -> int32 : associe un nom d'uniform (variable GLSL) a sa location
-
-        srcFrag
     end
     
     methods
-        function obj = ShaderProgram(gl, nLayout, type, typeCol, typeSha)
+        function obj = ShaderProgram(gl, nLayout, type, typeRendu)
+            % construit le programme qui correspond au choix de rendu choisi par l'utilisateur
+            % on commence par verifier que les choix soient applicables
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
-            motCle(1) = "POS" + nLayout(1);
             if type == "id"
-                obj.createProgPickId(gl, motCle);
+                obj.createProgPickId(gl);
             else
-                if typeCol == 'C' && nLayout(2) > 0
-                    motCle(2) = "COL" + nLayout(2);
-                elseif typeCol == 'T' && nLayout(3) > 0
-                    motCle(2) = "TEX";
+                typeCol = bitand(typeRendu, 0x0F); %1:uniform, 2:parSommet, 4:Texture
+                typeSha = bitshift(bitand(typeRendu, 0xF0), -4); %1:Sans, 2:Dur, 4:Lisse
+                if typeCol == 2 && nLayout(2) > 0
+                    motCle(1) = "COL" + nLayout(2);
+                elseif typeCol == 4 && nLayout(3) > 0
+                    motCle(1) = "TEX";
                 else
-                    motCle(2) = "DEF";
+                    motCle(1) = "DEF";
                 end
                 if type == "Face"
-                    if typeSha ~= 'S'
-                        motCle(3) = "LIGHT";
-                        if typeSha == 'L' && nLayout(4) > 0 
-                            motCle(4) = "NORM";
+                    if typeSha ~= 1
+                        motCle(2) = "LIGHT";
+                        if typeSha == 4 && nLayout(4) > 0 
+                            motCle(3) = "NORM";
                         end
                     end
                     obj.createProgWithLight(gl, motCle)
@@ -37,7 +38,7 @@ classdef ShaderProgram < handle
             end
             gl.glLinkProgram(obj.shaderProgId);
             gl.glValidateProgram(obj.shaderProgId);
-            CheckError(gl, 'erreur de compilation des shaders');
+            CheckError(gl, 'OPENGL:: Erreur de compilation des shaders');
         end % fin du constructeur ShaderProgram
 
         function Bind(obj, gl)
@@ -92,12 +93,12 @@ classdef ShaderProgram < handle
             end
         end % fin de findLocation
 
-        function createProgPickId(obj, gl, motCle)
-            srcVert = obj.readIfContains("shaders/drawId.vert.glsl", motCle);
+        function createProgPickId(obj, gl)
+            srcVert = fileread("shaders/drawId.vert.glsl");
             obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
 
-            obj.srcFrag = obj.readIfContains("shaders/drawId.frag.glsl", motCle);
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, obj.srcFrag);
+            srcFrag = fileread("shaders/drawId.frag.glsl");
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
         end % fin de create Program
 
         function createProgWithLight(obj, gl, motCle)
@@ -107,16 +108,16 @@ classdef ShaderProgram < handle
             srcGeom = obj.readIfContains("shaders/all.geom.glsl", motCle);
             obj.compileFile(gl, gl.GL_GEOMETRY_SHADER, srcGeom);
 
-            obj.srcFrag = obj.readIfContains("shaders/all.frag.glsl", motCle);
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, obj.srcFrag);
+            srcFrag = obj.readIfContains("shaders/all.frag.glsl", motCle);
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
         end % fin de create Program
 
         function createProgNoLight(obj, gl, motCle)
             srcVert = obj.readIfContains("shaders/noLight.vert.glsl", motCle);
             obj.compileFile(gl, gl.GL_VERTEX_SHADER, srcVert);
 
-            obj.srcFrag = obj.readIfContains("shaders/noLight.frag.glsl", motCle);
-            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, obj.srcFrag);
+            srcFrag = obj.readIfContains("shaders/noLight.frag.glsl", motCle);
+            obj.compileFile(gl, gl.GL_FRAGMENT_SHADER, srcFrag);
         end % fin de create Program
 
         function src = readIfContains(~, filePath, keyWords)

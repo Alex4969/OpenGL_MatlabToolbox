@@ -10,22 +10,22 @@ classdef Scene3D < handle
         mapElements containers.Map  % map contenant les objets 3D de la scenes
         mapGroups   containers.Map  % map contenant les ensembles
 
-        camera Camera       % instance de la camera
-        lumiere Light       % instance de la lumiere
-        axesId int32        % instance des axes lié au repere
-        gyroscopeId int32   % indication d'angle dans le repere
-        grilleId int32      % instance de la grille lié au repere
+        camera Camera           % instance de la camera
+        lumiere Light           % instance de la lumiere
+        idLastInternal int32 = 0; %id du dernier objet interne
 
         cbk_manager javacallbackmanager
-        startX              % position x de la souris lorsque je clique
-        startY              % position y de la souris lorsque je clique
-        mouseButton = -1    % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
-        selectObject        % struct qui contient les données de l'objets selectionné
-        couleurFond
+        startX      double        % position x de la souris lorsque je clique
+        startY      double        % position y de la souris lorsque je clique
+        mouseButton int8 = -1    % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
+        selectObject struct        % struct qui contient les données de l'objets selectionné
+        couleurFond (1,4) double % couleur du fond de la scene
+
+        camLightUBO UBO     % données de la caméra et de la lumière transmises aux shaders
     end %fin de propriete defaut
     
     events
-        evt_update
+        evt_redraw
     end
 
     methods
@@ -59,9 +59,14 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_DEPTH_TEST);
             % gl.glEnable(gl.GL_CULL_FACE); % optimisation : supprime l'affichage des faces arrieres
 
-            obj.camera = Camera(gl, obj.canvas.getWidth() / obj.canvas.getHeight());
-            obj.lumiere = Light(gl);
-            addlistener(obj.lumiere, 'newModel', @obj.cbk_giveGL);
+            obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
+            addlistener(obj.camera, 'evt_updateUbo', @obj.cbk_updateUbo);
+            obj.lumiere = Light();
+            addlistener(obj.lumiere, 'evt_updateUbo', @obj.cbk_updateUbo);
+            addlistener(obj.lumiere, 'evt_updateForme', @obj.cbk_giveGL);
+            obj.camLightUBO = UBO(gl, 0, 80);
+            obj.fillCamUbo();
+            obj.fillLightUbo();
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
 
             %Listeners
@@ -74,7 +79,7 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'KeyPressed');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
 
-            addlistener(obj,'evt_update',@obj.cbk_update);
+            addlistener(obj,'evt_redraw',@obj.cbk_redraw);
         end % fin du constructeur de Scene3D
 
         function elem = AddElement(obj, comp)
@@ -89,16 +94,20 @@ classdef Scene3D < handle
             switch (comp.type)
                 case 'face'
                     elem = ElementFace(gl, comp);
+                    addlistener(elem,'evt_textureUpdate',@obj.cbk_giveGL);
                 case 'ligne'
                     elem = ElementLigne(gl, comp);
                 case 'point'
                     elem = ElementPoint(gl, comp);
                 case 'texte'
                     elem = ElementTexte(gl, comp);
+                    addlistener(elem,'evt_textureUpdate',@obj.cbk_giveGL);
             end
             obj.mapElements(elem.getId()) = elem;
-            addlistener(elem,'evt_update',@obj.cbk_update);
-            obj.removeGL();
+            addlistener(elem,'evt_redraw',@obj.cbk_redraw);
+            addlistener(elem.Geom, 'evt_updateModel', @obj.cbk_redraw);
+            addlistener(elem,'evt_updateRendu',@obj.cbk_giveGL);
+            addlistener(elem.GLGeom,'evt_updateLayout',@obj.cbk_giveGL);
         end % fin de AddElement
 
         function group = CreateGroup(obj, groupId)
@@ -121,42 +130,16 @@ classdef Scene3D < handle
             end
         end % fin de RemoveElement
 
-        function DrawScene(obj)
-            %DRAW dessine la scene avec tous ses objets
-            gl = obj.getGL();
-            obj.lumiere.remplirUbo(gl);
-            obj.camera.remplirUbo(gl);
-            gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
-
-            camAttrib = obj.camera.getAttributes();
-            %dessin des objets ajouter a la scene
-            
-            %dessiner les objet interne a la scene
-            if ~isempty(obj.lumiere.forme)
-                obj.lumiere.forme.Draw(gl, camAttrib);
+        function RemoveGroup(obj, groupId)
+            if isKey(obj.mapGroups, groupId)
+                group = obj.mapGroups(groupId);
+                group.delete();
+                obj.mapGroups.remove(groupId);
+                notify(obj, 'evt_redraw');
+            else
+                disp('Le groupe a supprimé n existe pas');
             end
-            %dessiner les objets de l'experience
-            listeElem = obj.orderElem();
-            for i=1:numel(listeElem)
-                elem = listeElem{i};
-                elem.Draw(gl, camAttrib);
-            end
-
-            obj.removeGL();
-            obj.canvas.swapBuffers(); % rafraichi la fenetre
-        end % fin de Draw
-
-        function delete(obj)
-            %DELETE Supprime les objets de la scene
-            disp('deleting Scene3D...')
-            gl = obj.getGL();
-            listeElem = values(obj.mapElements);
-            for i=1:numel(listeElem)
-                listeElem{i}.delete(gl);
-            end
-            Texture.DeleteAll(gl);
-            obj.removeGL();
-        end % fin de delete
+        end
 
         function setCouleurSelection(obj, newColor)
             if (numel(newColor) == 3)
@@ -174,9 +157,7 @@ classdef Scene3D < handle
             end
         end % fin de setCouleurSelection
 
-        function setCouleurFond(obj, newColor)
-            %SETCOULEURFOND change la couleur du fond de l'écran.
-            %Peut prendre en entrée une matrice 1x3 (rgb) ou 1x4 (rgba)
+        function setCouleurFond(obj, newColor) % matrice 1x3 ou 1x4
             if (numel(newColor) == 3)
                 newColor(4) = 1;
             end
@@ -187,8 +168,32 @@ classdef Scene3D < handle
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
-            notify(obj,'evt_update');
+            notify(obj,'evt_redraw');
         end % fin setCouleurFond
+
+        function DrawScene(obj)
+            %DRAW dessine la scene avec tous ses objets
+            gl = obj.getGL();
+            gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
+            
+            %dessiner les objet interne a la scene
+            if ~isempty(obj.lumiere.forme)
+                obj.drawElem(gl, obj.lumiere.forme);
+            end
+            for i=obj.idLastInternal:-1
+                obj.drawElem(gl, obj.mapElements(i));
+            end
+            %dessiner les objets de l'experience
+            listeElem = obj.orderElem();
+            for i=1:numel(listeElem)
+                if (listeElem{i}.getId() > 0)
+                    obj.drawElem(gl, listeElem{i});
+                end
+            end
+
+            obj.context.release();
+            obj.canvas.swapBuffers(); % rafraichi la fenetre
+        end % fin de Draw
     
         function screenShot(obj)
             gl = obj.getGL();
@@ -196,6 +201,8 @@ classdef Scene3D < handle
             h = obj.canvas.getHeight();
             disp('capture en cours...')
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
+
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT, 1);
             buffer = java.nio.ByteBuffer.allocate(3 * w * h);
             gl.glReadPixels(0, 0, w, h, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, buffer);
             img = typecast(buffer.array, 'uint8');
@@ -203,9 +210,20 @@ classdef Scene3D < handle
             img = permute(img,[2 3 1]);
             img = rot90(img);
             imshow(img);
-            obj.removeGL();
-        end % fin de screenShot        
-    
+        end % fin de screenShot
+
+        function delete(obj)
+            %DELETE Supprime les objets de la scene
+            disp('deleting Scene3D...')
+            gl = obj.getGL();
+            listeElem = values(obj.mapElements);
+            for i=1:numel(listeElem)
+                listeElem{i}.delete(gl);
+            end
+            Texture.DeleteAll(gl);
+            obj.camLightUBO.delete(gl);
+            obj.context.release();
+        end % fin de delete
     end % fin des methodes defauts
 
     methods (Access = private)
@@ -216,34 +234,32 @@ classdef Scene3D < handle
             gl = obj.context.getCurrentGL();
         end % fin de getGL
 
-        function removeGL(obj)
-            if obj.context.isCurrent()
-                obj.context.release();
-            end
-        end
+        function drawElem(obj, gl, elem)
+            elem.shader.Bind(gl);
+            [cam, model] = obj.getOrientationMatrices(elem);
+            elem.shader.SetUniformMat4(gl, 'uModelMatrix', model);
+            elem.shader.SetUniformMat4(gl, 'uCamMatrix', cam);
+            elem.Draw(gl);
+        end % fin de drawElem
 
         function generateInternalObject(obj)
-            obj.axesId = -1;
-            tailleAxe = 50;
-            [pos, idx, color] = generateAxis(-tailleAxe, tailleAxe);
-            axesGeom = MyGeom(obj.axesId, pos, idx, 'ligne');
+            tailleAxes = 50;
+            obj.idLastInternal = obj.idLastInternal - 1;
+            axesGeom = GeomAxes(obj.idLastInternal, -tailleAxes, tailleAxes);
             elem = obj.AddElement(axesGeom);
-            elem.AddColor(color);
+            elem.AddColor(axesGeom.color);
 
-            obj.grilleId = -2;
-            [pos, idx] = generateGrid(tailleAxe, 2);
-            grilleGeom = MyGeom(obj.grilleId, pos, idx, 'ligne');
+            obj.idLastInternal = obj.idLastInternal - 1;
+            grilleGeom = GeomGrille(obj.idLastInternal, tailleAxes, 2);
             elem = obj.AddElement(grilleGeom);
             elem.setEpaisseur(1);
             elem.setCouleur([0.3 0.3 0.3]);
 
-            obj.gyroscopeId = -3;
-            tailleGysmo = 1;
-            [pos, idx, color] = generateAxis(0, tailleGysmo);
-            gysmoGeom = MyGeom(obj.gyroscopeId, pos, idx, 'ligne');
+            obj.idLastInternal = obj.idLastInternal - 1;
+            gysmoGeom = GeomAxes(obj.idLastInternal, 0, 1);
             elem = obj.AddElement(gysmoGeom);
-            elem.AddColor(color);
-            elem.typeOrientation = 4;
+            elem.AddColor(gysmoGeom.color);
+            elem.setOrientation("REPERE");
             elem.setEpaisseur(4);
 
             obj.pickingTexture = Framebuffer(obj.getGL(), obj.canvas.getWidth(), obj.canvas.getHeight());
@@ -257,7 +273,7 @@ classdef Scene3D < handle
                 if listeTrie{i}.typeOrientation >= 4 %ortho ou fixe
                     distance(i) = 0;
                 else
-                    distance(i) = norm(listeTrie{i}.getPosition() - obj.camera.getPosition());
+                    distance(i) = norm(listeTrie{i}.getPosition() - obj.camera.position);
                 end
             end
             [~, newOrder] = sort(distance, 'descend');
@@ -276,32 +292,25 @@ classdef Scene3D < handle
 
             %create programme d'id
             shader3D = ShaderProgram(gl, [3 0 0 0], "id");
-            shader2D = ShaderProgram(gl, [2 0 0 0], "id");
+            shader3D.Bind(gl);
 
-            %trier les objets
-            %% pas bseoin de les trier !!
-            listeElem = obj.orderElem();
-
-            %dessiner les objets uniquement sur le pixel qui nous interresse
-            camAttrib = obj.camera.getAttributes();
-            gl.glEnable(gl.GL_SCISSOR_TEST);
-            gl.glScissor(x, y, 1, 1);
+            %dessiner les objets
+            gl.glEnable(gl.GL_SCISSOR_TEST); % limite la zone de dessin au pixel
+            gl.glScissor(x, y, 1, 1);        % qui nous interesse (optimisation)
             if obj.couleurFond(1) > 0
                 gl.glClearColor(0, 0, 0, 0);
             end
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
-            % dessiner la lumiere
+            listeElem = obj.mapElements.values;
             for i=1:numel(listeElem)
                 elem = listeElem{i};
-                if elem.GLGeom.is2D() == true
-                    oldShader = elem.setShader(gl, shader2D);
-                else
-                    oldShader = elem.setShader(gl, shader3D);
-                end
-                elem.DrawId(gl, camAttrib);
-                elem.setShader(gl, oldShader);
+                [cam, model] = obj.getOrientationMatrices(elem);
+                shader3D.SetUniformMat4(gl, 'uModelMatrix', model);
+                shader3D.SetUniformMat4(gl, 'uCamMatrix', cam);
+                shader3D.SetUniform1i(gl, 'id', elem.getId());
+                elem.DrawId(gl);
             end
-            shader2D.delete(gl);
+
             shader3D.delete(gl);
 
             %lire le pixel de couleurs -> obtenir l'id
@@ -313,6 +322,7 @@ classdef Scene3D < handle
             gl.glReadPixels(x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
             profondeur = typecast(buffer.array(), 'single');
 
+%<<<<<<< HEAD
             if profondeur == 1
                 worldCoord = 0;
                 disp('le lancer n a pas touché de cible');
@@ -328,10 +338,20 @@ classdef Scene3D < handle
                 % disp('le lancer n a pas touché de cible');
             else
                 NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
+%=======
+            
+%            NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
+%>>>>>>> 0a4e26a8d22708fedc7e774cbe8eea7584e9ebe9
 
-                worldCoord = obj.camera.getProjMatrix * obj.camera.getViewMatrix \ NDC;
-                worldCoord = worldCoord(1:3)./worldCoord(4);
-                worldCoord = worldCoord';
+            worldCoord = obj.camera.projMatrix * obj.camera.viewMatrix \ NDC;
+            worldCoord = worldCoord(1:3)./worldCoord(4);
+            worldCoord = worldCoord';
+            if profondeur == 1
+                %si on touche le fond alors on trouve l'intersection entre le
+                %vecteur camera->worldCoord & le plan de normale z
+                vect =  double(worldCoord) - obj.camera.position;
+                t = obj.camera.position(3) / vect(3);
+                worldCoord = obj.camera.position - t * vect;
             end
 
             %unbind le frameBuffer, remise des parametre de la scene
@@ -340,9 +360,7 @@ classdef Scene3D < handle
             if obj.couleurFond(1) > 0
                 obj.setCouleurFond(obj.couleurFond);
             end
-            obj.removeGL();
         end % fin de pickingObject
-
 
         function colorSelection(obj, elemId)
             newElem = obj.mapElements(elemId);
@@ -356,13 +374,59 @@ classdef Scene3D < handle
                 obj.selectObject = newElem.select(obj.selectObject);
             end
         end % fin de colorSelection
+
+        function [cam, model] = getOrientationMatrices(obj, elem)
+            %typeOrientation '1000' fixe, '0100' Normale a l'ecran, '0010' orthonorme, '0001' perspective, '0' rien
+            model = elem.getModelMatrix();
+            cam = eye(4);
+            camAttrib = obj.camera.getAttributes();
+            if elem.typeOrientation == 1 %'0001' PERSPECTIVE
+                cam = camAttrib.proj * camAttrib.view;
+            elseif elem.typeOrientation == 8 %'1000' fixe (pour texte)
+                % on utilise la matrice modele pour positionner le texte
+                % dans le repere ecran (-1;+1)
+                % pour changer la taille, on change le scaling de la
+                % matrice model
+                model(1, 4) = model(1, 4) * camAttrib.maxX;
+                model(2, 4) = model(2, 4) * camAttrib.maxY;
+                model(3, 4) = -camAttrib.near - 5e-4;
+                model = model * MScale3D(camAttrib.coef);%coef pour dimension identique en ortho ou perspective
+                cam =  camAttrib.proj;
+            else
+                if bitand(elem.typeOrientation, 2) > 0 % 0010 'face a l'ecran
+                    model(1:3, 1:3) = camAttrib.view(1:3, 1:3) \ model(1:3, 1:3);
+                    cam =  camAttrib.proj * camAttrib.view;
+                    % cam*model = proj*view*inv(view)*model
+                end
+                if bitand(elem.typeOrientation, 4) > 0 %'0100' coin inferieur gauche 
+                    % rotation seulement activée sur un point de l'ecran
+                    cam = MProj3D('O', [camAttrib.ratio*16 16 1 20]) * camAttrib.view;
+                    cam(1,4) = -0.97 + 0.1/camAttrib.ratio;
+                    cam(2,4) = -0.87;
+                    cam(3,4) =  0;
+                end
+            end
+        end % fin de getOrientationMatrices
+
+        function fillCamUbo(obj)
+            obj.camLightUBO.putVec3(obj.getGL(), obj.camera.position, 64);
+        end % fin de fillCamUbo
+
+        function fillLightUbo(obj)
+            gl = obj.getGL();
+            obj.camLightUBO.putVec3(gl, obj.lumiere.position, 0);
+            obj.camLightUBO.putVec3(gl, obj.lumiere.couleurLumiere, 16);
+            obj.camLightUBO.putVec3(gl, obj.lumiere.directionLumiere, 32);
+            obj.camLightUBO.putVec3(gl, obj.lumiere.paramsLumiere, 48);
+        end % fin de fillLightUbo
     end % fin des methodes privees
 
     methods % callback
         function cbk_MousePressed(obj, ~, event)
-            %disp('MousePressed')
-            obj.startX = event.getPoint.getX();
-            obj.startY = event.getPoint.getY();
+            obj.cbk_manager.rmCallback('MouseDragged');
+            disp('MousePressed')
+            obj.startX = event.getX();
+            obj.startY = event.getY();
             obj.mouseButton = event.getButton();
 
             if obj.mouseButton == 1
@@ -371,14 +435,24 @@ classdef Scene3D < handle
                 disp(['ID = ' num2str(elemId) ' Coord = ' num2str(worldCoord)]);
             
                 mod = event.getModifiers();
+%<<<<<<< HEAD
                 if elemId ~= 0 && mod==18 %CTRL LEFT CLICK              
                     obj.colorSelection(elemId);
                 end
                 if mod==24 %ALT LEFT CLICK
+%=======
+%                if elemId ~= 0 && mod == 18 %CTRL LEFT CLICK
+%                        obj.colorSelection(elemId);
+%                elseif mod==24 %ALT LEFT CLICK
+%>>>>>>> 0a4e26a8d22708fedc7e774cbe8eea7584e9ebe9
                     obj.camera.setTarget(worldCoord);
                 end
             end
+%<<<<<<< HEAD
             obj.DrawScene();
+%=======
+%            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
+%>>>>>>> 0a4e26a8d22708fedc7e774cbe8eea7584e9ebe9
         end
         
 
@@ -388,7 +462,7 @@ classdef Scene3D < handle
 
         function cbk_MouseDragged(obj, ~, event)
             obj.cbk_manager.rmCallback('MouseDragged');
-            %disp('MouseDragged')
+            redraw = false;
             posX = event.getX();
             dx = posX - obj.startX;
             obj.startX = posX;
@@ -398,17 +472,21 @@ classdef Scene3D < handle
 
             mod = event.getModifiers();
             ctrlPressed = bitand(mod,event.CTRL_MASK);
-            if ctrlPressed
-                obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-            else
-                if (obj.mouseButton == 3)
+            if (obj.mouseButton == 3)
+                redraw = true;
+                if ctrlPressed
+                    obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+                else
                     obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
                 end
             end
             if (obj.lumiere.onCamera == true)
-                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
+                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.targetDir);
+                redraw = true;
             end
-            obj.DrawScene();
+            if (redraw == true)
+                obj.DrawScene();
+            end
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 
@@ -446,6 +524,7 @@ classdef Scene3D < handle
                     end
                case 'i'
                      obj.screenShot();
+                     redraw = false;
                 otherwise
                     redraw = false;
             end
@@ -456,18 +535,18 @@ classdef Scene3D < handle
 
         function cbk_MouseWheelMoved(obj, ~,event)
             obj.cbk_manager.rmCallback('MouseWheelMoved');
-            obj.camera.zoom(event.getWheelRotation());
+            obj.camera.zoom(-event.getWheelRotation());
             if obj.lumiere.onCamera == true
-                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.target);
+                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.targetDir);
             end
             obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
         end
     
-        function cbk_ComponentResized(obj, source, ~)
+        function cbk_ComponentResized(obj, ~, ~)
             obj.cbk_manager.rmCallback('ComponentResized');
-            w=source.getSize.getWidth;
-            h=source.getSize.getHeight;
+            w = obj.canvas.getWidth();
+            h = obj.canvas.getHeight();
             %disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
             gl = obj.getGL();
             gl.glViewport(0, 0, w, h);
@@ -476,14 +555,23 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
 
-        function cbk_update(obj, ~, ~)
-            disp('cbk_Update');
+        function cbk_updateUbo(obj, source, ~)
+            if isa(source, 'Light')
+                obj.fillLightUbo()
+            elseif isa(source, 'Camera')
+                obj.fillCamUbo();
+            end
+        end % fin de cbk_updateUbo
+
+        function cbk_redraw(obj, ~, ~)
+            disp('cbk_redraw');
             obj.DrawScene;
         end
 
         function cbk_giveGL(obj, source, event)
-            source.glUpdate(obj.getGL());
-            obj.removeGL();
+            disp('cbk_giveGL');
+            source.glUpdate(obj.getGL(), event.EventName);
+            obj.DrawScene();
         end
     end % fin des methodes callback
 
