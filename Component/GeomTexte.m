@@ -37,7 +37,11 @@ classdef GeomTexte < ClosedGeom
         end % fin du constructeur TextGeom
 
         function setPolice(obj, newPolice)
-            obj.police = newPolice;
+            if isa(newPolice, "char") || isa(newPolice, "string")
+                obj.police = Police(newPolice);
+            else
+                obj.police = newPolice;
+            end
             obj.generateText();
             if event.hasListener(obj, 'evt_updateGeom')
                 obj.attributes = ["police", "mapping"];
@@ -110,7 +114,7 @@ classdef GeomTexte < ClosedGeom
                 pos(base + 3, 1:2) = [cursor.x+infos.width  cursor.y-infos.height];
                 pos(base + 4, 1:2) = [cursor.x              cursor.y-infos.height];
                 pos(base+1:base+4, 3) = zValue;
-                maxY = 512 - infos.y;
+                maxY = obj.police.tailleImage - infos.y;
                 map(base + 1, 1:2) = [ infos.x                 maxY              ];
                 map(base + 2, 1:2) = [ infos.x+infos.width     maxY              ];
                 map(base + 3, 1:2) = [ infos.x+infos.width     maxY-infos.height ];
@@ -144,7 +148,7 @@ classdef GeomTexte < ClosedGeom
             end
             pos(:, 1) = pos(:, 1) - xDep;
             pos(:, 2) = pos(:, 2) - yDep;
-            map = map/512;
+            map = map/obj.police.tailleImage;
             obj.mapping = map;
             obj.listeConnection = ind;
             obj.listePoints = pos;

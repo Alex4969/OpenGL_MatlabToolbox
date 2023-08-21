@@ -54,7 +54,7 @@ classdef Light < handle
                     obj.forme.setVisibilite(false);
                 else 
                     obj.forme.setVisibilite(true);
-                    obj.cbk_evt_updateModel(obj.forme.Geom)
+                    obj.cbk_evt_updateModel(obj.forme.geom)
                 end
             end
         end % fin de putOnCamera
@@ -69,7 +69,7 @@ classdef Light < handle
         function setPosition(obj, newPos)
             obj.position = newPos;
             if ~isempty(obj.forme)
-                model = obj.forme.Geom.modelMatrix;
+                model = obj.forme.geom.modelMatrix;
                 model(1:3, 4) = newPos';
                 obj.forme.setModelMatrix(model);
             end
@@ -156,7 +156,7 @@ classdef Light < handle
             obj.forme.setCouleur(obj.couleurLumiere);
             obj.forme.setModeRendu("UNIFORME", "SANS");
             obj.forme.glUpdate(gl, "evt_updateModel")
-            obj.modelListener = addlistener(obj.forme.Geom,'evt_updateModel',@obj.cbk_evt_updateModel);
+            obj.modelListener = addlistener(obj.forme.geom,'evt_updateModel',@obj.cbk_evt_updateModel);
         end % fin de glUpdate
     end % fin des methodes defauts
 end % fin classe light

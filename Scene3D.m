@@ -105,7 +105,7 @@ classdef Scene3D < handle
             end
             obj.mapElements(elem.getId()) = elem;
             addlistener(elem,'evt_redraw',@obj.cbk_redraw);
-            addlistener(elem.Geom, 'evt_updateModel', @obj.cbk_redraw);
+            addlistener(elem.geom, 'evt_updateModel', @obj.cbk_redraw);
             addlistener(elem,'evt_updateRendu',@obj.cbk_giveGL);
             addlistener(elem.GLGeom,'evt_updateLayout',@obj.cbk_giveGL);
         end % fin de AddElement
@@ -545,6 +545,7 @@ classdef Scene3D < handle
             elseif isa(source, 'Camera')
                 obj.fillCamUbo();
             end
+            obj.DrawScene();
         end % fin de cbk_updateUbo
 
         function cbk_redraw(obj, ~, ~)
@@ -558,5 +559,4 @@ classdef Scene3D < handle
             obj.DrawScene();
         end
     end % fin des methodes callback
-
 end % fin de la classe Scene3D

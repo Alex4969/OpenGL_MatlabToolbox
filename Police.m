@@ -5,6 +5,7 @@ classdef Police < handle
         letterProperties %dictionary    % dictionary caractère (int) -> struct
         name             string         % le nom de la police
         taille           int16          % la taille de la police dans le fichier donné
+        tailleImage      double         % la taille de l'image .png
     end
     
     methods
@@ -22,16 +23,26 @@ classdef Police < handle
             % caractère -> propriété de ce caractère
             dico = dictionary;
             fId = fopen(fileName);
+
+            %ligne 1
             tline = fgetl(fId);
             tmp = extractBetween(tline, 'size=', ' ');
             obj.taille = str2double(tmp{1});
-            for i=1:3
-                tline = fgetl(fId);
-            end
-            
+
+            % ligne 2
+            tline = fgetl(fId);
+            tmp = extractBetween(tline, 'scaleW=', ' ');
+            obj.tailleImage = str2double(tmp{1});
+
+            %ligne 3
+            fgetl(fId);
+
+            % ligne 4
+            tline = fgetl(fId);
             nbLigne = extractAfter(tline, 'count=');
             nbLigne = str2double(nbLigne);
         
+            %toutes les lignes qui suivents
             for i=1:nbLigne
                 tline = fgetl(fId);
                 [letter, infos] = obj.decodeLine(tline);

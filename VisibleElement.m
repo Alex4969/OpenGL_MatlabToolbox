@@ -3,18 +3,18 @@ classdef (Abstract) VisibleElement < handle
     
     properties (GetAccess = public, SetAccess = protected)
         Type            string
-        Geom            % GeomComponent
-        GLGeom          GLGeometry
-        shader          ShaderProgram
-        typeRendu       uint8   = 17         %type de coloration & type de shading chacun sur 4 bit
-        visible         logical       = true
+        geom            % GeomComponent
+        GLGeom          GLGeometry          % la geometry pour OpenGL
+        shader          ShaderProgram       % Le programme de rendu de cet element
+        typeRendu       uint8   = 17        % type de coloration & type de shading chacun sur 4 bit
+        visible         logical = true      % decide s'il faut l'afficher ou non
 
-        parent
-        typeOrientation uint8 = 1 % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe
+        parent                              % vide ou un Ensemble
+        typeOrientation uint8 = 1           % '0001' Perspective, '0010' Normale a l'ecran, '0100' orthonorme, '1000' fixe
     end
 
     properties (Constant = true)
-        enumOrientation = dictionary("PERPECTIVE", 1, "NORMAL", 2, "REPERE", 4, "REPERE_NORMAL", 6, "FIXE", 8);
+        enumOrientation = dictionary("PERSPECTIVE", 1, "NORMAL", 2, "REPERE", 4, "REPERE_NORMAL", 6, "FIXE", 8);
         enumColoration  = dictionary("UNIFORME", 1, "PAR_SOMMET", 2, "TEXTURE", 4);
         enumShading     = dictionary("SANS", 16, "DUR", 32, "LISSE", 64);
     end
@@ -27,17 +27,17 @@ classdef (Abstract) VisibleElement < handle
     methods
         function obj = VisibleElement(gl, aGeom)
             %VISIBLEELEMENT
-            obj.Geom = aGeom;
-            obj.GLGeom = GLGeometry(gl, obj.Geom.listePoints, obj.Geom.listeConnection);
+            obj.geom = aGeom;
+            obj.GLGeom = GLGeometry(gl, obj.geom.listePoints, obj.geom.listeConnection);
 
-            addlistener(obj.Geom,'evt_updateGeom',@obj.cbk_updateGeom);
+            addlistener(obj.geom,'evt_updateGeom',@obj.cbk_updateGeom);
         end % fin du constructeur de VisibleElement
 
         function model = getModelMatrix(obj)
             if isa(obj.parent, 'Ensemble')
-                model = obj.parent.getModelMatrix() * obj.Geom.modelMatrix;
+                model = obj.parent.getModelMatrix() * obj.geom.modelMatrix;
             else
-                model = obj.Geom.modelMatrix;
+                model = obj.geom.modelMatrix;
             end
         end % fin de getModelMatrix
 
@@ -55,25 +55,30 @@ classdef (Abstract) VisibleElement < handle
         end % fin de isVisible
 
         function id = getId(obj)
-            id = obj.Geom.id;
+            id = obj.geom.id;
         end % fin de getId
 
         function setVisibilite(obj, b)
             obj.visible = b;
+            notify(obj, 'evt_redraw');
         end % fin de setVisibilite
 
-        function setModeRendu(obj, newTypeColoration, newTypeLumiere)
-            if nargin == 2 && obj.enumColoration.isKey(newTypeColoration)
-                obj.typeRendu = bitand(obj.typeRendu, 0xF0); % on grade la composante de lumiere
-                obj.typeRendu = obj.typeRendu + obj.enumColoration(newTypeColoration);
-                notify(obj, 'evt_updateRendu');
-            elseif obj.enumColoration.isKey(newTypeColoration) && obj.enumShading.isKey(newTypeLumiere)
-                obj.typeRendu = obj.enumColoration(newTypeColoration) + obj.enumShading(newTypeLumiere);
+        function setModelMatrix(obj, newModel)
+            obj.geom.setModelMatrix(newModel);
+        end % fin de setModelMatrix
+
+        function ModifyModelMatrix(obj, matrix, after)
+            if nargin < 3, after = 0; end
+            obj.geom.modifyModelMatrix(matrix, after);
+        end % fin de ModifymodelMatrix
+
+        function setModeRendu(obj, newTypeColoration)
+            if obj.enumColoration.isKey(newTypeColoration)
+                obj.typeRendu = obj.enumShading("SANS") + obj.enumColoration(newTypeColoration);
                 notify(obj, 'evt_updateRendu');
             else
-                disp('valeurs incompatibles')
-                disp(['valeurs pour la coloration : ' obj.enumColoration.keys'])
-                disp(['valeurs pour le shading : ' obj.enumShading.keys'])
+                disp('Valuer non existante');
+                disp(['valeurs pour la coloration : ' obj.enumColoration.keys']);
             end
         end % fin de setModeRendu
 
@@ -87,15 +92,6 @@ classdef (Abstract) VisibleElement < handle
             end
         end % fin de setOrientation
 
-        function setModelMatrix(obj, newModel)
-            obj.Geom.setModelMatrix(newModel);
-        end % fin de setModelMatrix
-
-        function ModifyModelMatrix(obj, matrix, after)
-            if nargin < 3, after = 0; end
-            obj.Geom.modifyModelMatrix(matrix, after);
-        end % fin de ModifymodelMatrix
-
         function AddColor(obj, matColor)
             if size(matColor, 1) == 1
                 obj.setCouleur(matColor);
@@ -108,8 +104,8 @@ classdef (Abstract) VisibleElement < handle
         end % fin de AddColor
 
         function toString(obj)
-            nbPoint = size(obj.Geom.listePoints, 1);
-            nbTriangle = numel(obj.Geom.listeConnection)/3;
+            nbPoint = size(obj.geom.listePoints, 1);
+            nbTriangle = numel(obj.geom.listeConnection)/3;
             disp(['L objet contient ' num2str(nbPoint) ' points et ' num2str(nbTriangle) ' triangles']);
             disp(['Le vertex Buffer contient : ' num2str(obj.GLGeom.nLayout(1)) ' valeurs pour la position, ' ...
                 num2str(obj.GLGeom.nLayout(2)) ' valeurs pour la couleur, ' num2str(obj.GLGeom.nLayout(3)) ...
@@ -128,7 +124,7 @@ classdef (Abstract) VisibleElement < handle
         end % fin de setParent
 
         function cbk_updateGeom(obj, source, ~) % source = geomComponent
-            obj.GLGeom.nouvelleGeom(obj.Geom.listePoints, obj.Geom.listeConnection);
+            obj.GLGeom.nouvelleGeom(obj.geom.listePoints, obj.geom.listeConnection);
             if isa(source, 'ClosedGeom')
                 if any(source.attributes == "police")
                     obj.changePolice();
@@ -145,11 +141,6 @@ classdef (Abstract) VisibleElement < handle
             end
         end % fin de cbk_evt_updateGeom
 
-        function oldShader = setShader(obj, newShader)
-            oldShader = obj.shader;
-            obj.shader = newShader;
-        end % fin de setShader
-
         function glUpdate(obj, gl, ~)
             obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeRendu);
         end % fin de glUpdate
@@ -157,6 +148,7 @@ classdef (Abstract) VisibleElement < handle
 
     methods (Abstract = true)
         Draw(obj, gl)
+        DrawId(obj, gl)
         setCouleur(obj, matColor)
         sNew = select(obj, s)
         sNew = deselect(obj, s)

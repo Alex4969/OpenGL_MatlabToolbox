@@ -26,12 +26,6 @@ classdef ElementFace < VisibleElement
             obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeRendu);
         end % fin constructeur ElementFace
 
-        function DrawId(obj, gl)
-            % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
-            obj.GLGeom.Bind(gl);
-            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-        end % fin de drawID
-
         function useTexture(obj, fileName)
             if obj.GLGeom.nLayout(3) == 0
                 warning('l objet ne contient pas le mapping pour appliquer la texture. Annulation')
@@ -76,13 +70,28 @@ classdef ElementFace < VisibleElement
             if newChoix == 0
                 obj.visible = false;
                 disp('rien a afficher, objet est rendu invisible');
-            elseif newChoix < 0
+            elseif newChoix < 0 || newChoix > 7
                 disp('valeur incorrect');
             else
                 obj.quoiAfficher = newChoix;
                 notify(obj,'evt_redraw');
             end
         end % fin de setQuoiAfficher
+
+        function setModeRendu(obj, newTypeColoration, newTypeLumiere)
+            if nargin == 2 && obj.enumColoration.isKey(newTypeColoration)
+                obj.typeRendu = bitand(obj.typeRendu, 0xF0); % on grade la composante de lumiere
+                obj.typeRendu = obj.typeRendu + obj.enumColoration(newTypeColoration);
+                notify(obj, 'evt_updateRendu');
+            elseif obj.enumColoration.isKey(newTypeColoration) && obj.enumShading.isKey(newTypeLumiere)
+                obj.typeRendu = obj.enumColoration(newTypeColoration) + obj.enumShading(newTypeLumiere);
+                notify(obj, 'evt_updateRendu');
+            else
+                disp('valeurs incompatibles')
+                disp(['valeurs pour la coloration : ' obj.enumColoration.keys'])
+                disp(['valeurs pour le shading : ' obj.enumShading.keys'])
+            end
+        end % fin de setModeRendu
 
         function AddMapping(obj, matMapping)
             obj.GLGeom.addDataToBuffer(matMapping, 3);
@@ -97,7 +106,7 @@ classdef ElementFace < VisibleElement
         end % fin de AddNormals
 
         function GenerateNormals(obj)
-            normales = calculVertexNormals(obj.Geom.listePoints, obj.Geom.listeConnection);
+            normales = calculVertexNormals(obj.geom.listePoints, obj.geom.listeConnection);
             obj.GLGeom.addDataToBuffer(normales, 4);
             obj.typeRendu = bitand(obj.typeRendu, 0x0F) + 64;
             notify(obj, 'evt_updateRendu');
@@ -116,7 +125,7 @@ classdef ElementFace < VisibleElement
             if bitand(obj.quoiAfficher, 1) > 0
                 if bitand(obj.typeRendu, 4) == 4 && ~isempty(obj.texture)
                     obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
-                    gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+                    gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
                 elseif bitand(obj.typeRendu, 1) == 1
                     obj.shader.SetUniform4f(gl, 'uFaceColor', obj.couleur);
                 end
@@ -131,8 +140,14 @@ classdef ElementFace < VisibleElement
                 obj.shader.SetUniform4f(gl, 'uPointColor', obj.couleurPoints);
                 obj.shader.SetUniform1f(gl, 'uPointSize', obj.epaisseurPoints);
             end
-            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
         end % fin de Draw
+
+        function DrawId(obj, gl)
+            % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
+            obj.GLGeom.Bind(gl);
+            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+        end % fin de drawID
 
         function sNew = select(obj, s)
             sNew.id = obj.getId();

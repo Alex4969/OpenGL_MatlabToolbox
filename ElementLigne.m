@@ -15,22 +15,6 @@ classdef ElementLigne < VisibleElement
             obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeRendu);
         end % fin du constructeur ElementLigne
 
-        function Draw(obj, gl)
-            %DRAW dessine cet objet
-            if obj.isVisible() == false
-                return
-            end
-            obj.GLGeom.Bind(gl);
-
-            gl.glLineWidth(obj.epaisseur);
-            if bitand(obj.typeRendu, 1) == 1
-                obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
-            end
-            gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-
-            %CheckError(gl, 'apres le dessin');
-        end % fin de Draw
-
         function setEpaisseur(obj, newEp)
             obj.epaisseur = newEp;
             notify(obj,'evt_redraw');
@@ -48,11 +32,25 @@ classdef ElementLigne < VisibleElement
             end
         end % fin de setCouleur
     end % fin des methodes defauts
+
     methods (Hidden = true)
+        function Draw(obj, gl)
+            %DRAW dessine cet objet
+            if obj.isVisible() == false
+                return
+            end
+            obj.GLGeom.Bind(gl);
+
+            gl.glLineWidth(obj.epaisseur);
+            if bitand(obj.typeRendu, 1) == 1
+                obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
+            end
+            gl.glDrawElements(gl.GL_LINES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+        end % fin de Draw
         function DrawId(obj, gl)
             % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
             obj.GLGeom.Bind(gl);
-            gl.glDrawElements(gl.GL_LINES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+            gl.glDrawElements(gl.GL_LINES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
         end % fin de drawID
 
         function sNew = select(obj, s)

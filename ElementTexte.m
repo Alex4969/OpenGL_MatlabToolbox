@@ -16,31 +16,13 @@ classdef ElementTexte < VisibleElement
             %ELEMENTTEXTE
             obj@VisibleElement(gl, geomComp);
             obj.Type = 'Texte';
-            obj.AddMapping(obj.Geom.mapping);
+            obj.AddMapping(obj.geom.mapping);
             obj.GLGeom.glUpdate(gl)
             obj.typeOrientation = 2; % normal a l'ecran
             obj.typeRendu = 16 + 4; % sans shading + texture
-            obj.texture = Texture(gl, obj.Geom.police.name + ".png");
+            obj.texture = Texture(gl, obj.geom.police.name + ".png");
             obj.shader = ShaderProgram(gl, obj.GLGeom.nLayout, obj.Type, obj.typeRendu);
         end % fin du constructeur Texte
-
-        function Draw(obj, gl)
-            %DRAW dessine cet objet
-            if obj.isVisible() == false
-                return
-            end
-            obj.GLGeom.Bind(gl);
-            obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
-            obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
-            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-            %CheckError(gl, 'apres le dessin d un texte');
-        end % fin de Draw
-
-        function DrawId(obj, gl)
-            % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
-            obj.GLGeom.Bind(gl);
-            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.Geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
-        end % fin de drawID
 
         function setCouleur(obj, newColor)
             %SETCOULEURFOND change la couleur du texte
@@ -55,9 +37,30 @@ classdef ElementTexte < VisibleElement
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
         end % fin setCouleurFond
+
+        function setPolice(obj, newPolice)
+            obj.geom.setPolice(newPolice)
+        end % fin de setPolice
     end % fin des methodes defauts
 
     methods (Hidden = true)
+        function Draw(obj, gl)
+            %DRAW dessine cet objet
+            if obj.isVisible() == false
+                return
+            end
+            obj.GLGeom.Bind(gl);
+            obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
+            obj.shader.SetUniform4f(gl, 'uColor', obj.couleur);
+            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+            %CheckError(gl, 'apres le dessin d un texte');
+        end % fin de Draw
+
+        function DrawId(obj, gl)
+            % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
+            obj.GLGeom.Bind(gl);
+            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+        end % fin de drawID
         function AddMapping(obj, matMapping)
             obj.GLGeom.addDataToBuffer(matMapping, 3);
         end % fin de AddMapping
@@ -71,7 +74,7 @@ classdef ElementTexte < VisibleElement
         end % fin de glUpdate
 
         function changePolice(obj)
-            obj.texture = obj.Geom.police.name + ".png";
+            obj.texture = obj.geom.police.name + ".png";
             notify(obj, 'evt_textureUpdate');
         end % fin de changerPolice
 

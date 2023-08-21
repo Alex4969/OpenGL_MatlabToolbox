@@ -4,7 +4,7 @@ classdef Ensemble < handle
     properties (GetAccess = public, SetAccess = protected)
         id              int32
         sousElements    containers.Map
-        groupMatrix     (4,4) double     = eye(4);
+        groupMatrix     (4,4) double   = eye(4);
         visible         logical
     end    
 
@@ -15,11 +15,6 @@ classdef Ensemble < handle
             obj.visible = true;
             obj.sousElements = containers.Map('KeyType', 'int32', 'ValueType', 'any');
         end % fin du constructeur Ensemble
-
-        function AddElem(obj, elem)
-            obj.sousElements(elem.getId()) = elem;
-            elem.setParent(obj);
-        end % fin de AddElem
 
         function mod = getModelMatrix(obj)
             mod = obj.groupMatrix;
@@ -33,6 +28,11 @@ classdef Ensemble < handle
             obj.visible = b;
         end % fin de setVisibilite
 
+        function AddElem(obj, elem)
+            obj.sousElements(elem.getId()) = elem;
+            elem.setParent(obj);
+        end % fin de AddElem
+
         function elem = removeElem(obj, elemId)
             if obj.sousElements.isKey(elemId)
                 elem = obj.sousElements(elemId);
@@ -42,6 +42,10 @@ classdef Ensemble < handle
                 disp('l objet a supprimer n est pas dans la liste')
             end
         end % fin de removeElem
+
+        function setModelMatrix(obj, model)
+            obj.groupMatrix = model;
+        end % fin de setModelMatrix
 
         function modifyModelMatrix(obj, model, after)
             %ADDTOMODELMATRIX multiplie la nouvelle matrice modele par
@@ -53,15 +57,11 @@ classdef Ensemble < handle
             end
         end % fin de modifyModelMatrix
 
-        function setModelMatrix(obj, model)
-            obj.groupMatrix = model;
-        end % fin de setModelMatrix
-
         function delete(obj)
             listeElem = obj.sousElements.values;
             for i=1:numel(listeElem)
                 listeElem{i}.setParent([]);
             end
-        end
+        end % fin de delete
     end % fin methodes defauts
 end % fin classe Ensemble

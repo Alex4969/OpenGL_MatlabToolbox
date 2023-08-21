@@ -91,7 +91,7 @@ classdef Camera < handle
 
         function att = getAttributes(obj) % contient near, maxY, maxX, coef, view, proj, ratio
             att.near = obj.near;
-            if obj.type % perpective
+            if obj.type % perspective
                 maxY = obj.near * tan(deg2rad(obj.fov/2));
                 att.coef = 0.1 * obj.near;
             else
