@@ -1,6 +1,6 @@
 classdef Camera < handle
     %CAMERA Gestion d'une caméra pour la scène 3D
-    properties (GetAccess = public, SetAccess = protected)
+    properties (GetAccess = public, SetAccess = private)
         %%% Attributs de la caméra
         position    (1,3) double   % position de la caméra
         targetDir   (1,3) double   % position de la cible/objet regardé par la caméra
@@ -11,7 +11,7 @@ classdef Camera < handle
         near        (1,1) double   % distance du plan rapproché
         far         (1,1) double   % distance du plan éloigné
         ratio       (1,1) double   % ration d'observation (width/height)
-        fov         (1,1) double   % angle de vue d'observation (en degré)
+        fov         (1,1) double   % angle de vue d'observation (en degré) mieux entre 50 & 80
         type        (1,1) logical  % 1 pour perspective, 0 pour orthonormé
         projMatrix  (4,4) double   % matrice de projection correspondant aux valeurs ci dessus
 
@@ -30,8 +30,8 @@ classdef Camera < handle
         function obj = Camera(ratio)
         %CAMERA Construct an instance of this class
             obj.position = [0 0 10];
-            obj.targetDir = [0 0 -10];
             obj.centreMvt = [0 0 0];
+            obj.targetDir = obj.centreMvt - obj.position;
             obj.up = [0 1 0];
             obj.computeView();
 
@@ -65,11 +65,7 @@ classdef Camera < handle
         end % fin de setUp
 
         function switchProjType(obj)
-            if obj.type == 1
-                obj.type = 0;
-            else 
-                obj.type = 1;
-            end
+            obj.type = bitxor(obj.type, 1);
             obj.computeProj();
         end % fin de switchProjType
 
@@ -93,10 +89,10 @@ classdef Camera < handle
             att.near = obj.near;
             if obj.type % perspective
                 maxY = obj.near * tan(deg2rad(obj.fov/2));
-                att.coef = 0.1 * obj.near;
+                att.coef = 0.1 * obj.near; % ne s'adapte pas aux variations de fov...
             else
                 maxY = norm(obj.targetDir)/2;
-                att.coef = 1.73 * obj.near * maxY; % 1.73 trouvé par essaies
+                att.coef = 0.173 * maxY; % 1.73 trouvé par essaies
             end
             maxX = maxY * obj.ratio;
             att.maxX  = maxX;
@@ -170,23 +166,23 @@ classdef Camera < handle
         function defaultView(obj)
             obj.position = [10 10 10];
             obj.up = [0 1 0];
-            obj.targetDir = [-10 -10 -10];
+            obj.targetDir = obj.centreMvt - obj.position;
             obj.centreMvt = [0 0 0];
             obj.computeView();
         end  
 
         function upView(obj)
-            obj.position=[0 10 0];
-            obj.up=[1 0 0];
-            obj.targetDir=[0 -10 0];
+            obj.position = [0 10 0];
+            obj.up = [1 0 0];
+            obj.targetDir = obj.centreMvt - obj.position;
             obj.centreMvt = [0 0 0];
             obj.computeView();
         end
 
         function faceView(obj)
-            obj.position=[0 0 10];
-            obj.up=[0 1 0];
-            obj.targetDir=[0 0 -10];
+            obj.position = [0 0 10];
+            obj.up = [0 1 0];
+            obj.targetDir = obj.centreMvt - obj.position;
             obj.centreMvt = [0 0 0];
             obj.computeView();
         end        

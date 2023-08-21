@@ -20,8 +20,8 @@ classdef GLGeometry < handle
     events
         evt_updateLayout        % les données du vertex Buffer doivent être modifié
     end
-    
-    methods (Hidden = true)
+
+    methods
         function obj = GLGeometry(gl, sommets, indices)
             obj.vertexData = sommets;
             obj.indexData = uint32(indices);
@@ -29,7 +29,9 @@ classdef GLGeometry < handle
 
             obj.CreateGLObject(gl);
         end % fin du constructeur GLGeometry
-
+    end
+    
+    methods (Hidden = true)
         function addDataToBuffer(obj, mat, pos)
             % ADDDATATOBUFFER : modifie vertexData pour qu'il continnent les informations ajouter dans l'ordre :
             % pos, couleur, mapping, normales. Si on ajoute une composant qui existe deja, elle est remplacé par la nouvelle
@@ -48,7 +50,44 @@ classdef GLGeometry < handle
             obj.nLayout(pos) = size(mat, 2);
             notify(obj, 'evt_updateLayout');
         end % fin de addDataToBuffer
-        
+
+        function nouvelleGeom(obj, newVertexData, newIndices)
+            obj.vertexData = newVertexData;
+            obj.indexData = uint32(newIndices);
+            nPos = size(newVertexData, 2);
+            obj.nLayout = [nPos, 0, 0, 0];
+            notify(obj, 'evt_updateLayout');
+        end % fin de nouvelleGeom
+
+        function Bind(obj, gl)
+            gl.glBindVertexArray(obj.VAOId);
+            gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
+        end % fin de bind
+
+        function Unbind(~, gl)
+            %UNBIND retire les objets du contexte OpenGL
+            gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0);
+            gl.glBindVertexArray(0);
+        end % fin de unbind
+
+        function glUpdate(obj, gl, ~)
+            obj.Bind(gl);
+            obj.fillVBO(gl);
+            obj.fillEBO(gl);
+            obj.declareVertexAttrib(gl);
+            %CheckError(gl, 'Erreur de la mise a jour');
+            obj.Unbind(gl);
+        end % fin de glUpdate
+
+        function delete(obj, gl)
+            %DELETE Supprime l'objet de la mémoire
+            gl.glDeleteBuffers(1, obj.VAOBuffer);
+            gl.glDeleteBuffers(1, obj.VBOBuffer);
+            gl.glDeleteBuffers(1, obj.EBOBuffer);
+        end % fin de delete
+    end % fin des methodes defauts
+
+    methods (Access = private)
         function CreateGLObject(obj, gl)
             %CREATEGLOBJECT
             obj.generateVAO(gl);
@@ -63,45 +102,6 @@ classdef GLGeometry < handle
             obj.Unbind(gl);
         end % fin de createGLObject
 
-        function nouvelleGeom(obj, newVertexData, newIndices)
-            obj.vertexData = newVertexData;
-            obj.indexData = uint32(newIndices);
-            nPos = size(newVertexData, 2);
-            obj.nLayout = [nPos, 0, 0, 0];
-            notify(obj, 'evt_updateLayout');
-        end % fin de nouvelleGeom
-
-        function Bind(obj, gl)
-            %BIND Met en contexte le vertexBuffer. S'il a été modifié, applique la modification
-            gl.glBindVertexArray(obj.VAOId);
-            gl.glBindBuffer(gl.GL_ARRAY_BUFFER, obj.VBOId);
-        end % fin de bind
-
-        function Unbind(~, gl)
-            %UNBIND retire les objets du contexte OpenGL
-            gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0);
-            gl.glBindVertexArray(0);
-            gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, 0);
-        end % fin de unbind
-
-        function glUpdate(obj, gl, ~)
-            obj.Bind(gl);
-            obj.fillVBO(gl);
-            obj.fillEBO(gl);
-            obj.declareVertexAttrib(gl);
-            %CheckError(gl, 'Erreur de la mise a jour');
-            obj.Unbind(gl);
-        end
-
-        function delete(obj, gl)
-            %DELETE Supprime l'objet de la mémoire
-            gl.glDeleteBuffers(1, obj.VAOBuffer);
-            gl.glDeleteBuffers(1, obj.VBOBuffer);
-            gl.glDeleteBuffers(1, obj.EBOBuffer);
-        end % fin de delete
-    end % fin des methodes defauts
-
-    methods (Access = private)
         function generateVAO(obj, gl)
             %GENERATEVERTEXARRAY : Creer le VAO
             obj.VAOBuffer = java.nio.IntBuffer.allocate(1);

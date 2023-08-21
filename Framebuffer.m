@@ -2,7 +2,7 @@ classdef Framebuffer < handle
     %FRAMEBUFFER Un frame buffer permet de généré une image dans une texture avant d'afficher la-dite texture
     %Cette methode permet de récupéré la projection de la souris dans la scène 3D
 
-    properties (GetAccess = public, SetAccess = protected)
+    properties (GetAccess = public, SetAccess = private)
         FBOId       uint32      %Frame Buffer Id
         RBOId       uint32      %Render Buffer Id
         texture     Texture     %Texture dans laquelle on ecrit l'image d'id
@@ -12,7 +12,7 @@ classdef Framebuffer < handle
         RBOBuffer               %Render Buffer Object (contient le champs de profondeur)
     end
 
-    methods (Hidden = true)
+    methods
         function obj = Framebuffer(gl, width, height)
             obj.generateFramebuffer(gl);
             
@@ -38,11 +38,11 @@ classdef Framebuffer < handle
 
         function Bind(obj, gl)
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, obj.FBOId);
-        end
+        end % fin de Bind
 
         function UnBind(~, gl)
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0);
-        end
+        end % fin de Unbind
     end % fin des methodes defauts
 
     methods (Access = private)
@@ -67,10 +67,7 @@ classdef Framebuffer < handle
             fboStatus = gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER);
             if (fboStatus ~= gl.GL_FRAMEBUFFER_COMPLETE)
                 warning('frame buffer  mal construit');
-            % else 
-            %     disp('frameBuffer OK !');
             end
         end % fin de checkRenderBuffer
-
     end % fin des methodes privées
 end % fin classe Framebuffer

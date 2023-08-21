@@ -1,7 +1,7 @@
 classdef Light < handle
     %LIGHT
     
-    properties (GetAccess = public, SetAccess = protected)
+    properties (GetAccess = public, SetAccess = private)
         position       (1,3) double     %position de la lumiere dans la scene
         couleurLumiere (1,3) double     %couleur de la lumière
 
@@ -54,7 +54,7 @@ classdef Light < handle
                     obj.forme.setVisibilite(false);
                 else 
                     obj.forme.setVisibilite(true);
-                    obj.cbk_evt_updateModel(obj.forme.geom)
+                    obj.cbk_updateModel(obj.forme.geom)
                 end
             end
         end % fin de putOnCamera
@@ -77,13 +77,6 @@ classdef Light < handle
             obj.onCamera = false;
         end % fin de SetPosition
 
-        function setPositionCamera(obj, newPos, direction)
-            % positionne la lumiere & la direction comme la camera
-            obj.position = newPos;
-            obj.directionLumiere = direction;
-            notify(obj, 'evt_updateUbo');
-        end % fin de setPositionCamera
-
         function setColor(obj, newCol)
             obj.couleurLumiere = newCol(1:3);
             if ~isempty(obj.forme)
@@ -97,10 +90,12 @@ classdef Light < handle
             notify(obj, 'evt_updateUbo');
         end % fin de setDirection
 
-        function setParam(obj, newParam)
-            obj.paramsLumiere = newParam;
+        function activate(obj)
+            if obj.oldType > 0
+                obj.paramsLumiere(1) = obj.oldType;
+            end
             notify(obj, 'evt_updateUbo');
-        end % fin de setParam
+        end % fin de activate
 
         function desactivate(obj)
             if obj.paramsLumiere(1) > 0
@@ -110,16 +105,10 @@ classdef Light < handle
             notify(obj, 'evt_updateUbo');
         end % fin de desactivate
 
-        function activate(obj)
-            if obj.oldType > 0
-                obj.paramsLumiere(1) = obj.oldType;
-            end
-            notify(obj, 'evt_updateUbo');
-        end % fin de activate
-
         function dotLight(obj, a, b)
+            % lumiere avec une atténuation de 1/a*dist² + b*dist + 1
             if nargin == 1
-                a = 0.01; b = 0;
+                a = 0.01; b = 0; % valeurs de a et b par defaut
             end
             obj.paramsLumiere = [1 a b];
             notify(obj, 'evt_updateUbo');
@@ -134,21 +123,36 @@ classdef Light < handle
             notify(obj, 'evt_updateUbo');
         end % fin de directionalLight
 
-        function spotLight(obj, angle)
-            if nargin == 1
-                angle = 20;
+        function spotLight(obj, angleInt, angleExt)
+            % lumiere de projecteur qui forme un cone
+            % on a besoin d'un deuxieme angle pour avoir un effet d'attenuation de la lumiere doux
+            if nargin == 3
+                angles = [angleInt, angleExt];
+            else
+                if nargin == 1
+                    angleInt = 20;
+                end
+                angles = [angleInt angleInt*1.3];
             end
-            angles = [angle angle*1.3];
             angles = cos(deg2rad(angles));
             obj.paramsLumiere = [3 angles];
             notify(obj, 'evt_updateUbo');
         end % fin de spotLight
+    end % fin des methodes defauts
 
-        function cbk_evt_updateModel(obj, source, ~)
+    methods (Hidden = true)
+        function setPositionWithCamera(obj, newPos, direction)
+            % positionne la lumiere & la direction comme la camera
+            obj.position = newPos;
+            obj.directionLumiere = direction;
+            notify(obj, 'evt_updateUbo');
+        end % fin de setPositionWithCamera
+
+        function cbk_updateModel(obj, source, ~)
             newPos = source.modelMatrix(1:3, 4)';
             obj.position = newPos;
             notify(obj, 'evt_updateUbo');
-        end
+        end % fin de cbk_updateModel
 
         function glUpdate(obj, gl, ~)
             obj.forme = ElementFace(gl, obj.comp);
@@ -156,7 +160,7 @@ classdef Light < handle
             obj.forme.setCouleur(obj.couleurLumiere);
             obj.forme.setModeRendu("UNIFORME", "SANS");
             obj.forme.glUpdate(gl, "evt_updateModel")
-            obj.modelListener = addlistener(obj.forme.geom,'evt_updateModel',@obj.cbk_evt_updateModel);
+            obj.modelListener = addlistener(obj.forme.geom,'evt_updateModel',@obj.cbk_updateModel);
         end % fin de glUpdate
-    end % fin des methodes defauts
+    end % fin des methodes cachées
 end % fin classe light

@@ -1,7 +1,7 @@
 classdef UBO < handle
     %UBO place des données utilisés par les shaders dans le GPU
     
-    properties (GetAccess = public, SetAccess = protected)
+    properties (GetAccess = public, SetAccess = private)
         UBOId uint32        % id du uniform buffer object
         taille uint16       % taille en octets des données contenues dans le buffer
         binding uint8       % n° du bind dans le shader
@@ -9,14 +9,16 @@ classdef UBO < handle
     properties (Access = private)
         UBOBuffer
     end
-    
-    methods (Hidden = true)
+
+    methods
         function obj = UBO(gl, binding, taille)
             obj.binding = binding;
             obj.taille = taille;
             obj.generateUbo(gl);
         end % fin du constructeur UBO
-
+    end
+    
+    methods (Hidden = true)
         function putVec3(obj, gl, vec, deb)
             % met un vecteur a 3 dimensions dans l'UBO a la position deb
             % dans les UBO les valeurs font 1, 2 ou 4 octets donc on occupe 16 bits pour un vec3

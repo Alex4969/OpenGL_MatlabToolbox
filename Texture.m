@@ -14,12 +14,13 @@ classdef Texture < handle
         mapTextures = containers.Map('KeyType','char', 'ValueType', 'any');
         % map qui contient les textures deja créé pour pouvoir les redonner 
         % cela permet de gérer les numéro de slot et d'optimiser
+        % Cette map ne se supprime pas avec un clear all
     end
     
     methods
         function obj = Texture(gl, fileName, width, height)
             %TEXTURE
-            if isempty(fileName)
+            if isempty(fileName) % sans fileName on créé une texture avec une taille donnée pour le frameBuffer
                 obj.slot = 0;
                 obj.generateTextureFBO(gl, width, height);
             else
@@ -77,6 +78,9 @@ classdef Texture < handle
         end % fin de generateTexture
 
         function generateTextureFBO(obj, gl, w, h)
+            % La texture du frameBuffer sert uniquement pour reperer un objet en cliquant dessus.
+            % la texture contient pour chaque pixel l'id de l'élément dessiné ici
+            % Au lieu dêtre une texture RGBA, c'est une texture uniquement Red
             obj.texBuffer = java.nio.IntBuffer.allocate(1);
             gl.glGenTextures(1, obj.texBuffer);
             obj.textureId = typecast(obj.texBuffer.array(), 'uint32');
@@ -105,4 +109,3 @@ classdef Texture < handle
         end
     end
 end % fin classe Texture
-
