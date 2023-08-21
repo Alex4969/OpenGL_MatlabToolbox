@@ -1,31 +1,28 @@
 classdef Scene3D < handle
     %SCENE3D la scene 3D a afficher
     
-    properties (GetAccess = public, SetAccess = private)
+    properties
         fenetre jOGLframe   % jOGLframe contient la fenetre, un panel, le canvas, la toolbar ...
-        canvas              % GLCanvas dans lequel on peut utiliser les fonction openGL getacces = public sinon impossible de fermer la fenetre
+        canvas              % GLCanvas dans lequel on peut utiliser les fonction openGL
         context             % GLContext
+        pickingTexture Framebuffer % contient l'image 2D de la scène a afficher
 
         mapElements containers.Map  % map contenant les objets 3D de la scenes
         mapGroups   containers.Map  % map contenant les ensembles
 
-        camera Camera             % instance de la camera
-        lumiere Light             % instance de la lumiere
-
-        selectObject struct       % struct qui contient les données de l'objets selectionné
-        couleurFond (1,4) double  % couleur du fond de la scene
-    end %fin de propriete defaut
-    properties(Access = private)
-        pickingTexture Framebuffer % contient l'image 2D de la scène a afficher
-
-        idLastInternal int32 = 0; % id du dernier objet interne
-        camLightUBO UBO     % données de la caméra et de la lumière transmises aux shaders
+        camera Camera           % instance de la camera
+        lumiere Light           % instance de la lumiere
+        idLastInternal int32 = 0; %id du dernier objet interne
 
         cbk_manager javacallbackmanager
         startX      double        % position x de la souris lorsque je clique
         startY      double        % position y de la souris lorsque je clique
-        mouseButton int8 = -1     % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
-    end
+        mouseButton int8 = -1    % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
+        selectObject struct        % struct qui contient les données de l'objets selectionné
+        couleurFond (1,4) double % couleur du fond de la scene
+
+        camLightUBO UBO     % données de la caméra et de la lumière transmises aux shaders
+    end %fin de propriete defaut
     
     events
         evt_redraw
@@ -53,7 +50,8 @@ classdef Scene3D < handle
 
             gl = obj.getGL();
             gl.glViewport(0, 0, obj.canvas.getWidth(), obj.canvas.getHeight());
-            obj.setCouleurFond([0, 0, 0.4, 1.0]);
+            obj.couleurFond = [0, 0, 0.4, 1.0];
+            obj.setCouleurFond(obj.couleurFond);
             gl.glDepthFunc(gl.GL_LESS);
             gl.glEnable(gl.GL_LINE_SMOOTH);
             gl.glEnable(gl.GL_BLEND);
@@ -70,9 +68,8 @@ classdef Scene3D < handle
             obj.fillCamUbo();
             obj.fillLightUbo();
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
-            addlistener(obj,'evt_redraw',@obj.cbk_redraw);
 
-            %Listeners clavier/souris
+            %Listeners
             obj.cbk_manager = javacallbackmanager(obj.canvas);
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MousePressed');
             %obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseReleased');
@@ -81,6 +78,8 @@ classdef Scene3D < handle
 
             obj.cbk_manager.setMethodCallbackWithSource(obj,'KeyPressed');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
+
+            addlistener(obj,'evt_redraw',@obj.cbk_redraw);
         end % fin du constructeur de Scene3D
 
         function elem = AddElement(obj, comp)
@@ -106,7 +105,7 @@ classdef Scene3D < handle
             end
             obj.mapElements(elem.getId()) = elem;
             addlistener(elem,'evt_redraw',@obj.cbk_redraw);
-            addlistener(elem.geom, 'evt_updateModel', @obj.cbk_redraw);
+            addlistener(elem.Geom, 'evt_updateModel', @obj.cbk_redraw);
             addlistener(elem,'evt_updateRendu',@obj.cbk_giveGL);
             addlistener(elem.GLGeom,'evt_updateLayout',@obj.cbk_giveGL);
         end % fin de AddElement
@@ -140,7 +139,7 @@ classdef Scene3D < handle
             else
                 disp('Le groupe a supprimé n existe pas');
             end
-        end % fin de removeGroup
+        end
 
         function setCouleurSelection(obj, newColor)
             if (numel(newColor) == 3)
@@ -281,7 +280,7 @@ classdef Scene3D < handle
             listeTrie = listeTrie(newOrder);
         end % fin de orderElem
 
-        function elemId = pickObject(obj)
+        function [elemId, worldCoord] = pickObject(obj)
             gl = obj.getGL();
 
             % resize & bind frameBuffer
@@ -319,22 +318,7 @@ classdef Scene3D < handle
             gl.glReadPixels(x, y, 1, 1, gl.GL_RED_INTEGER, gl.GL_INT, buffer);
             elemId = typecast(buffer.array(), 'int32');
 
-            %unbind le frameBuffer, remise des parametre de la scene
-            obj.pickingTexture.UnBind(gl);
-            gl.glDisable(gl.GL_SCISSOR_TEST);
-            if obj.couleurFond(1) > 0
-                obj.setCouleurFond(obj.couleurFond);
-            end
-        end % fin de pickingObject
-
-        function worldCoord = getWorldCoord(obj)
-            w = obj.canvas.getWidth();
-            h = obj.canvas.getHeight();
-            x = obj.startX;
-            y = h - obj.startY;
-            gl = obj.getGL();
             %lire la valeur de profondeur -> position du monde
-            buffer = java.nio.FloatBuffer.allocate(1);
             gl.glReadPixels(x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
             profondeur = typecast(buffer.array(), 'single');
 
@@ -367,20 +351,16 @@ classdef Scene3D < handle
                 %vecteur camera->worldCoord & le plan de normale z
                 vect =  double(worldCoord) - obj.camera.position;
                 t = obj.camera.position(3) / vect(3);
-                if (t > 0) % le clic n'a pas touché le plan
-                    t = obj.camera.position(1) / vect(1); % on prend l'intersection avec le plan 0yz
-                    if (t > 0) % le clic n'a pas touché le plan
-                        t = obj.camera.position(2) / vect(2); % on prend l'intersection avec le plan 0xz
-                    end
-                end
-                if t == Inf % verification pas d'erreur
-                    worldCoord = [0 0 0];
-                    disp('le lancer de rayon n a pas pu aboutir');
-                else
-                    worldCoord = obj.camera.position - t * vect;
-                end
+                worldCoord = obj.camera.position - t * vect;
             end
-        end % fin de getWorldCoord
+
+            %unbind le frameBuffer, remise des parametre de la scene
+            obj.pickingTexture.UnBind(gl);
+            gl.glDisable(gl.GL_SCISSOR_TEST);
+            if obj.couleurFond(1) > 0
+                obj.setCouleurFond(obj.couleurFond);
+            end
+        end % fin de pickingObject
 
         function colorSelection(obj, elemId)
             newElem = obj.mapElements(elemId);
@@ -409,7 +389,7 @@ classdef Scene3D < handle
                 % matrice model
                 model(1, 4) = model(1, 4) * camAttrib.maxX;
                 model(2, 4) = model(2, 4) * camAttrib.maxY;
-                model(3, 4) = -camAttrib.near;
+                model(3, 4) = -camAttrib.near - 5e-4;
                 model = model * MScale3D(camAttrib.coef);%coef pour dimension identique en ortho ou perspective
                 cam =  camAttrib.proj;
             else
@@ -450,22 +430,16 @@ classdef Scene3D < handle
             obj.mouseButton = event.getButton();
 
             if obj.mouseButton == 1
-                elemId = obj.pickObject();
-                worldCoord = obj.getWorldCoord();
+                [elemId, worldCoord] = obj.pickObject();
                 obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
                 disp(['ID = ' num2str(elemId) ' Coord = ' num2str(worldCoord)]);
             
                 mod = event.getModifiers();
+%<<<<<<< HEAD
                 if elemId ~= 0 && mod==18 %CTRL LEFT CLICK              
                     obj.colorSelection(elemId);
-                    obj.DrawScene();
                 end
                 if mod==24 %ALT LEFT CLICK
-
-                    obj.camera.setTarget(worldCoord);
-                end
-            end
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
                     disp('ALT')
 %=======
 %                if elemId ~= 0 && mod == 18 %CTRL LEFT CLICK
@@ -489,6 +463,7 @@ classdef Scene3D < handle
 
         function cbk_MouseDragged(obj, ~, event)
             obj.cbk_manager.rmCallback('MouseDragged');
+            redraw = false;
             posX = event.getX();
             dx = posX - obj.startX;
             obj.startX = posX;
@@ -499,6 +474,7 @@ classdef Scene3D < handle
             mod = event.getModifiers();
             ctrlPressed = bitand(mod,event.CTRL_MASK);
             if (obj.mouseButton == 3)
+                redraw = true;
                 if ctrlPressed
                     obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
                 else
@@ -507,13 +483,18 @@ classdef Scene3D < handle
                 end
             end
             if (obj.lumiere.onCamera == true)
-                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.targetDir);
+                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.targetDir);
+                redraw = true;
+            end
+            if (redraw == true)
+                obj.DrawScene();
             end
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
 
         function cbk_KeyPressed(obj, ~, event)
             % disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
+            redraw = true;
             switch event.getKeyChar()
                 case 'x'
                     obj.camera.xorConstraint([true false false])
@@ -547,6 +528,12 @@ classdef Scene3D < handle
                     end
                case 'i'
                      obj.screenShot();
+                     redraw = false;
+                otherwise
+                    redraw = false;
+            end
+            if redraw
+                obj.DrawScene();
             end
         end
 
@@ -554,7 +541,7 @@ classdef Scene3D < handle
             obj.cbk_manager.rmCallback('MouseWheelMoved');
             obj.camera.zoom(-event.getWheelRotation());
             if obj.lumiere.onCamera == true
-                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.targetDir);
+                obj.lumiere.setPositionCamera(obj.camera.position, obj.camera.targetDir);
             end
             obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
@@ -573,32 +560,23 @@ classdef Scene3D < handle
         end
 
         function cbk_updateUbo(obj, source, ~)
-        % Appeler par la caméra et la light quand il faut mettre leurs données a jour
             if isa(source, 'Light')
                 obj.fillLightUbo()
-                if (obj.lumiere.onCamera == false)
-                    obj.DrawScene();
-                end
             elseif isa(source, 'Camera')
                 obj.fillCamUbo();
-                obj.DrawScene();
             end
         end % fin de cbk_updateUbo
 
         function cbk_redraw(obj, ~, ~)
-        % Appeler par la scene, un élément ou un component quand une valeur a été modifié
-        % et qu'elle nécessite un nouvel affichage pour visualiser la modification
             disp('cbk_redraw');
             obj.DrawScene;
-        end % fin de cbk_redraw
+        end
 
         function cbk_giveGL(obj, source, event)
-        % appeler par element ou GLGeometrie evt_update*
-        % modification des données qui nécessite le comntexte pour être prise en compte
-        % Ces objets implémentent glUpdate()
             disp('cbk_giveGL');
             source.glUpdate(obj.getGL(), event.EventName);
             obj.DrawScene();
-        end % fin de cbk_giveGL
+        end
     end % fin des methodes callback
+
 end % fin de la classe Scene3D
