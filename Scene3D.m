@@ -322,26 +322,7 @@ classdef Scene3D < handle
             gl.glReadPixels(x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, buffer);
             profondeur = typecast(buffer.array(), 'single');
 
-%<<<<<<< HEAD
-            if profondeur == 1
-                worldCoord = 0;
-                disp('le lancer n a pas touché de cible');
-
-                %tentative pour recuperer un point hors cible : fonctionne
-                % mais dans erreur cas particulier
-                % Zt=0;
-                % P=obj.camera.position;
-                % T=worldCoord;T(3)=-obj.camera.far;
-                % k=(Zt-P(3))/(T(3)-P(3));
-                % worldCoord=(T-P)*k+P;
-                % worldCoord(3) = Zt;
-                % disp('le lancer n a pas touché de cible');
-            else
-                NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
-%=======
-            
-%            NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
-%>>>>>>> 0a4e26a8d22708fedc7e774cbe8eea7584e9ebe9
+            NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
 
             worldCoord = obj.camera.projMatrix * obj.camera.viewMatrix \ NDC;
             worldCoord = worldCoord(1:3)./worldCoord(4);
@@ -351,7 +332,18 @@ classdef Scene3D < handle
                 %vecteur camera->worldCoord & le plan de normale z
                 vect =  double(worldCoord) - obj.camera.position;
                 t = obj.camera.position(3) / vect(3);
-                worldCoord = obj.camera.position - t * vect;
+                if (t > 0) % le clic n'a pas touché le plan
+                    t = obj.camera.position(1) / vect(1); % on prend l'intersection avec le plan 0yz
+                    if (t > 0) % le clic n'a pas touché le plan
+                        t = obj.camera.position(2) / vect(2); % on prend l'intersection avec le plan 0xz
+                    end
+                end
+                if t == Inf % verification pas d'erreur
+                    worldCoord = [0 0 0];
+                    disp('le lancer de rayon n a pas pu aboutir');
+                else
+                    worldCoord = obj.camera.position - t * vect;
+                end
             end
 
             %unbind le frameBuffer, remise des parametre de la scene
@@ -435,24 +427,16 @@ classdef Scene3D < handle
                 disp(['ID = ' num2str(elemId) ' Coord = ' num2str(worldCoord)]);
             
                 mod = event.getModifiers();
-%<<<<<<< HEAD
                 if elemId ~= 0 && mod==18 %CTRL LEFT CLICK              
                     obj.colorSelection(elemId);
                 end
                 if mod==24 %ALT LEFT CLICK
-%=======
-%                if elemId ~= 0 && mod == 18 %CTRL LEFT CLICK
-%                        obj.colorSelection(elemId);
-%                elseif mod==24 %ALT LEFT CLICK
-%>>>>>>> 0a4e26a8d22708fedc7e774cbe8eea7584e9ebe9
                     obj.camera.setTarget(worldCoord);
                 end
             end
-%<<<<<<< HEAD
             obj.DrawScene();
-%=======
-%            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
-%>>>>>>> 0a4e26a8d22708fedc7e774cbe8eea7584e9ebe9
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
+
         end
         
 
