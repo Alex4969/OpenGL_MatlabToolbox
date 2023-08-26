@@ -1,28 +1,26 @@
 classdef jToolbar < javacallbackmanager
     % basic JFrame display in matlab
     properties
-        java % javax.swing.JFrame
-        toolBar
-        mainPanel
+        javaObj javax.swing.JToolBar
     end
     
     methods
         
-        function obj = jToolbar(name,sz)
-            if nargin < 1
-                name = 'javax.swing.JFrame';
-            end
-            if nargin < 2, sz = [800 600]; end
+        function obj = jToolbar(name)
+            % if nargin < 1
+            %     name = 'javax.swing.JFrame';
+            % end
+            % if nargin < 2, sz = [800 600]; end
             
-            obj.java = javax.swing.JFrame(name);
-            obj.java.setDefaultCloseOperation(obj.java.DISPOSE_ON_CLOSE);
-            obj.setSize(sz);
-            obj.java.setLocationRelativeTo([]); % set position to center of screen
+            obj.javaObj = javax.swing.JToolBar(name);
+            % obj.java.setDefaultCloseOperation(obj.java.DISPOSE_ON_CLOSE);
+            % obj.setSize(sz);
+            % obj.java.setLocationRelativeTo([]); % set position to center of screen
             obj.setVisible(true);
 
-            obj.mainPanel = javax.swing.JPanel(java.awt.BorderLayout());
-            panel=obj.java.getRootPane;
-            panel.setContentPane(obj.mainPanel);
+            % obj.mainPanel = javax.swing.JPanel(java.awt.BorderLayout());
+            % panel=obj.java.getRootPane;
+            % panel.setContentPane(obj.mainPanel);
 
             obj.populateCallbacks(obj.java);
             obj.setCallback('WindowClosed',@(~,~) obj.delete);
@@ -34,12 +32,12 @@ classdef jToolbar < javacallbackmanager
         end
 
         function setVisible(obj,value)
-            obj.java.setVisible(value);
+            obj.javaObj.setVisible(value);
         end
 
         function setSize(obj,sz)
 %             sz = double(sz);
-            obj.java.setSize(sz(1),sz(2));
+            obj.javaObj.setSize(sz(1),sz(2));
         end
 
         function setIconImage(obj,pathToFileOnDisk)
@@ -48,7 +46,7 @@ classdef jToolbar < javacallbackmanager
         end
         
         function setTitle(obj,title)
-            obj.java.setTitle(title);
+            obj.javaObj.setTitle(title);
         end
 
         function jPanel=getRootPane(obj)

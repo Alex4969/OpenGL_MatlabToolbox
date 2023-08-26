@@ -5,7 +5,7 @@ addpath('java\');
 addpath('Component\');
 
 viewer = Scene3D();
-viewer.setCouleurFond([0 0 0.4])
+viewer.setBackgroundColor([0 0 0.4])
 viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
 viewer.lumiere.setColor([1 1 1]);
 viewer.DrawScene();
@@ -60,7 +60,7 @@ elem.AddNormals(posBoule);
 chessGeom = MyGeom(5, "face", "objets3D/chess4_ascii.stl");
 elem = viewer.AddElement(chessGeom);
 
-elem.setCouleur(rand(1, 3));
+elem.setColor(rand(1, 3));
 elem.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02)); % pour la piece d'echec
 % chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2)); % pour le loup
 elem.GenerateNormals();
@@ -80,7 +80,7 @@ elemtexte.setOrientation("FIXE");
 geomTexteX = GeomTexte(111, 'X', ravie, "CENTRE");
 elementTexte = viewer.AddElement(geomTexteX);
 elementTexte.setModelMatrix(MTrans3D([1 0 0]));
-elementTexte.setCouleur([1 0 0]);
+elementTexte.setColor([1 0 0]);
 elementTexte.setOrientation("REPERE_NORMAL");
 
 %% Creation d'un group
@@ -95,7 +95,7 @@ elementTexte.setOrientation("REPERE_NORMAL");
     bouleNormalesGeom2 = MyGeom(32, "face", posBoule, indBoule);
     bouleNormalesGeom2.setModelMatrix(MTrans3D([0 3.9 0]) * MScale3D(1.2));
     elem = viewer.AddElement(bouleNormalesGeom2);
-    elem.setCouleur([0 1 0.8 1]);
+    elem.setColor([0 1 0.8 1]);
     
     % pyramide avec texture
     pyraTexGeom = MyGeom(33, "face", posPyramide, indicesPyramide);

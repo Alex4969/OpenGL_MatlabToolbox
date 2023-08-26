@@ -80,7 +80,7 @@ classdef Light < handle
         function setColor(obj, newCol)
             obj.couleurLumiere = newCol(1:3);
             if ~isempty(obj.forme)
-                obj.forme.setCouleur(obj.couleurLumiere);
+                obj.forme.setColor(obj.couleurLumiere);
             end
             notify(obj, 'evt_updateUbo');
         end % fin de setCouleur
@@ -157,7 +157,7 @@ classdef Light < handle
         function glUpdate(obj, gl, ~)
             obj.forme = ElementFace(gl, obj.comp);
             obj.forme.setModelMatrix(MTrans3D(obj.position));
-            obj.forme.setCouleur(obj.couleurLumiere);
+            obj.forme.setColor(obj.couleurLumiere);
             obj.forme.setModeRendu("UNIFORME", "SANS");
             obj.forme.glUpdate(gl, "evt_updateModel")
             obj.modelListener = addlistener(obj.forme.geom,'evt_updateModel',@obj.cbk_updateModel);

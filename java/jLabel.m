@@ -34,6 +34,7 @@ classdef jLabel < jComponent
         end
 
         function setFont(obj,police,style,siz)
+            % style: 0 (normal) , 1 (bold) 2 (italic) 3 (bold+italic)
             import java.awt.*;
             obj.javaObj.setFont(Font(police,style,siz));
         end

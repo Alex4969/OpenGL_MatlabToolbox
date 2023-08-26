@@ -1,5 +1,25 @@
 classdef Scene3D < handle
-    %SCENE3D la scene 3D a afficher
+    %OpenGL 3D scene
+
+
+    % mask code for extended modifiers
+    properties (Hidden, Constant) 
+        SHIFT=64        
+        CTRL=128
+        ALT=512
+
+        BUTTON1=1024
+        BUTTON2=2048
+        BUTTON3=4096
+    end
+
+    % constants for mouse action
+    properties (Access=public)
+        MOUSE_ROTATE 
+        MOUSE_TRANSLATE
+        MOUSE_SELECT
+        MOUSE_TARGET
+    end
     
     properties (GetAccess = public, SetAccess = private)
         fenetre jOGLframe   % jOGLframe contient la fenetre, un panel, le canvas, la toolbar ...
@@ -14,7 +34,9 @@ classdef Scene3D < handle
 
         selectObject struct       % struct qui contient les données de l'objets selectionné
         couleurFond (1,4) double  % couleur du fond de la scene
+        currentCamTarget
     end %fin de propriete defaut
+
     properties(Access = private)
         pickingTexture Framebuffer % contient l'image 2D de la scène a afficher
 
@@ -25,6 +47,8 @@ classdef Scene3D < handle
         startX      double        % position x de la souris lorsque je clique
         startY      double        % position y de la souris lorsque je clique
         mouseButton int8 = -1     % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
+        currentWorldCoord
+        
     end
     
     events
@@ -32,6 +56,7 @@ classdef Scene3D < handle
     end
 
     methods
+        %Constructor
         function obj = Scene3D(windowSize)
             obj.fenetre = jOGLframe('GL4',0);
             if nargin == 0
@@ -41,7 +66,18 @@ classdef Scene3D < handle
             else
                 error('Bad argument number')
             end
-            
+
+            % To remove in final app
+            addpath('outils\');
+            addpath('java\');
+            addpath('Component\');
+
+            % define mouse actions
+            obj.MOUSE_ROTATE=obj.BUTTON1;
+            obj.MOUSE_TRANSLATE=obj.BUTTON3;
+            obj.MOUSE_SELECT=obj.BUTTON1+obj.CTRL;
+            obj.MOUSE_TARGET=obj.BUTTON1+obj.ALT;
+
             obj.canvas = obj.fenetre.canvas.javaObj;
             obj.canvas.setAutoSwapBufferMode(false);
             obj.canvas.display();
@@ -53,7 +89,7 @@ classdef Scene3D < handle
 
             gl = obj.getGL();
             gl.glViewport(0, 0, obj.canvas.getWidth(), obj.canvas.getHeight());
-            obj.setCouleurFond([0, 0, 0.4, 1.0]);
+            obj.setBackgroundColor([0, 0, 0.4, 1.0]);
             gl.glDepthFunc(gl.GL_LESS);
             gl.glEnable(gl.GL_LINE_SMOOTH);
             gl.glEnable(gl.GL_BLEND);
@@ -75,14 +111,33 @@ classdef Scene3D < handle
             %Listeners clavier/souris
             obj.cbk_manager = javacallbackmanager(obj.canvas);
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MousePressed');
-            %obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseReleased');
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseReleased');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
 
             obj.cbk_manager.setMethodCallbackWithSource(obj,'KeyPressed');
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'KeyTyped');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
-        end % fin du constructeur de Scene3D
+        end
 
+        %Destructor
+        function delete(obj)
+            %DELETE Supprime les objets de la scene
+            disp('deleting Scene3D...')
+            gl = obj.getGL();
+            listeElem = values(obj.mapElements);
+            for i=1:numel(listeElem)
+                listeElem{i}.delete(gl);
+            end
+            Texture.DeleteAll(gl);
+            obj.camLightUBO.delete(gl);
+            obj.context.release();
+        end
+
+    end
+
+    methods
+        % Add Element to scene (map)
         function elem = AddElement(obj, comp)
             if ~isa(comp, 'GeomComponent')
                 warning('pas possible d ajouter un objet de ce type');
@@ -109,13 +164,15 @@ classdef Scene3D < handle
             addlistener(elem.geom, 'evt_updateModel', @obj.cbk_redraw);
             addlistener(elem,'evt_updateRendu',@obj.cbk_giveGL);
             addlistener(elem.GLGeom,'evt_updateLayout',@obj.cbk_giveGL);
-        end % fin de AddElement
+        end
 
+        %Add empty group of elements
         function group = CreateGroup(obj, groupId)
             group = Ensemble(groupId);
             obj.mapGroups(groupId) = group;
-        end % fin de createGroup
+        end
 
+        %Remove element from 3D Scene
         function elem = RemoveElement(obj, elemId) % element et texte
             if isKey(obj.mapElements, elemId)
                 elem = obj.mapElements(elemId);
@@ -127,10 +184,11 @@ classdef Scene3D < handle
                 end
                 remove(obj.mapElements, elemId);
             else
-                disp('objet a supprimé n existe pas');
+                disp('Element ID does not exist');
             end
-        end % fin de RemoveElement
+        end
 
+        %Remove element's group 
         function RemoveGroup(obj, groupId)
             if isKey(obj.mapGroups, groupId)
                 group = obj.mapGroups(groupId);
@@ -138,10 +196,11 @@ classdef Scene3D < handle
                 obj.mapGroups.remove(groupId);
                 notify(obj, 'evt_redraw');
             else
-                disp('Le groupe a supprimé n existe pas');
+                disp('This group ID does not exist');
             end
         end % fin de removeGroup
 
+        %Set the color to highlight the selected object
         function setCouleurSelection(obj, newColor)
             if (numel(newColor) == 3)
                 newColor(4) = 1;
@@ -156,9 +215,10 @@ classdef Scene3D < handle
                     obj.selectObject.couleur = newColor;
                 end
             end
-        end % fin de setCouleurSelection
+        end
 
-        function setCouleurFond(obj, newColor) % matrice 1x3 ou 1x4
+        %Set background color: 1x3 or 1x4
+        function setBackgroundColor(obj, newColor) 
             if (numel(newColor) == 3)
                 newColor(4) = 1;
             end
@@ -170,8 +230,9 @@ classdef Scene3D < handle
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
             notify(obj,'evt_redraw');
-        end % fin setCouleurFond
+        end
 
+        %Draw the whole scene
         function DrawScene(obj)
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
@@ -193,10 +254,11 @@ classdef Scene3D < handle
             end
 
             obj.context.release();
-            obj.canvas.swapBuffers(); % rafraichi la fenetre
-        end % fin de Draw
+            obj.canvas.swapBuffers(); % refresh the scene
+        end
     
-        function screenShot(obj)
+        %Screenshot
+        function img=screenShot(obj)
             gl = obj.getGL();
             w = obj.canvas.getWidth();
             h = obj.canvas.getHeight();
@@ -211,22 +273,288 @@ classdef Scene3D < handle
             img = permute(img,[2 3 1]);
             img = rot90(img);
             imshow(img);
-        end % fin de screenShot
+        end
 
-        function delete(obj)
-            %DELETE Supprime les objets de la scene
-            disp('deleting Scene3D...')
-            gl = obj.getGL();
-            listeElem = values(obj.mapElements);
-            for i=1:numel(listeElem)
-                listeElem{i}.delete(gl);
+    end
+
+    % callback
+    methods 
+        function cbk_MousePressed(obj, ~, event)
+            obj.cbk_manager.rmCallback('MouseDragged');
+            disp('MousePressed')
+            obj.startX = event.getX();
+            obj.startY = event.getY();
+            obj.mouseButton = event.getButton();
+
+            event.getButton;
+            mod = event.getModifiersEx()
+
+            % if obj.mouseButton == 1
+            %     elemId = obj.pickObject();
+            %     worldCoord = obj.getWorldCoord();
+            %     obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
+            %     disp(['ID = ' num2str(elemId) ' Coord = ' num2str(worldCoord)]);
+            % 
+            %     mod = event.getModifiers();
+            %     if elemId ~= 0 && mod==18 %CTRL LEFT CLICK              
+            %         obj.colorSelection(elemId);
+            %         obj.DrawScene();
+            %     end
+            %     if mod==24 %ALT LEFT CLICK
+            %         disp('ALT')
+            %         obj.camera.setTarget(worldCoord,false);
+            %     end
+            % end
+
+            obj.currentWorldCoord = obj.getWorldCoord();
+            obj.currentCamTarget=obj.camera.target;
+
+            disp([' Coord = ' num2str(obj.currentWorldCoord)]);
+            if mod == obj.MOUSE_SELECT
+                elemId = obj.pickObject();                
+                obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
+                disp(['ID = ' num2str(elemId)]);% ' Coord = ' num2str(worldCoord)]);
+                if elemId ~= 0              
+                    obj.colorSelection(elemId);
+                    obj.DrawScene();
+                end
             end
-            Texture.DeleteAll(gl);
-            obj.camLightUBO.delete(gl);
-            obj.context.release();
-        end % fin de delete
-    end % fin des methodes defauts
+            if mod == obj.MOUSE_TARGET
+                    disp('Set Target')
+                    obj.camera.setTarget(obj.currentWorldCoord);
+            end
+            
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
+                    
+        end
+        
 
+        function cbk_MouseReleased(obj,~,event)
+            disp('MouseReleased')
+            mod = event.getModifiersEx();
+            if mod ~= obj.ALT
+                obj.camera.setTarget(obj.currentCamTarget);
+            end
+            % obj.DrawScene;
+        end
+
+          
+        function cbk_MouseDragged(obj, ~, event)
+            obj.cbk_manager.rmCallback('MouseDragged');
+            posX = event.getX();
+            dx = posX - obj.startX;
+            obj.startX = posX;
+            posY = event.getY();
+            dy = posY - obj.startY;
+            obj.startY = posY;
+
+            % worldcoord=obj.getWorldCoord()
+
+            mod = event.getModifiersEx();
+            % ctrlPressed = bitand(mod,event.CTRL_MASK);
+            % if (obj.mouseButton == 3)
+            %     if ctrlPressed
+            if mod==obj.MOUSE_TRANSLATE
+                    obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+            elseif mod==obj.MOUSE_ROTATE
+                    obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight(),obj.camera.target);
+            elseif mod==obj.MOUSE_ROTATE+obj.SHIFT
+                    obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight(),obj.currentWorldCoord);
+            elseif mod==obj.BUTTON1+obj.SHIFT+obj.CTRL
+                obj.camera.selfRotate((posX-obj.canvas.getWidth()/2)/obj.canvas.getWidth(),(posY-obj.canvas.getHeight()/2)/obj.canvas.getHeight(),dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+            end
+            if (obj.lumiere.onCamera == true)
+                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.targetDir);
+            end
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
+        end
+
+        function cbk_KeyPressed(obj, ~, event)
+            % for CTRL + character
+            % for special keys : F1 ... F12 , esc ...
+            % ATTENTION : event.getKeyCode() retourne toujours le code ascii de la majuscule
+            disp(['KeyPressed : ' event.getKeyChar  '   modifiersEx : ' num2str(event.getModifiersEx) '   ascii : ' num2str(event.getKeyCode)])
+
+            % code=event.getModifiersEx+uint32(event.getKeyCode);
+            % disp(['CODE : ' num2str(code)])
+
+            
+            code=uint32(event.getKeyChar);
+            isPrintable=code>=33 & code<=126;
+
+            % NO MODIFIERS
+            if event.getModifiersEx==0                
+                if isPrintable % printable ASCII character
+                    switch code
+                        case 'x'
+                            obj.camera.xorConstraint([true false false])
+                        case 'y'
+                            obj.camera.xorConstraint([false true false])
+                        case 'z'
+                            obj.camera.xorConstraint([false false true])                 
+                        case 'p' %perspective/ortho
+                            obj.camera.switchProjType;
+                        case '+' %increase cam speed
+                            %obj.camera.speed=min(100,obj.camera.speed+1)
+                            obj.camera.changeSpeed(+1);
+                            disp('JUSTE +')
+                        case uint32('-') %decrease cam speed
+                            %obj.camera.speed=max(5,obj.camera.speed-1)   
+                            obj.camera.changeSpeed(-1);           
+                    end
+                else                
+                    switch event.getKeyCode() % NON PRINTABLE ASCII Character
+                        case event.VK_ESCAPE  % ECHAP
+                            if obj.selectObject.id ~= 0
+                                elem = obj.mapElements(obj.selectObject.id);
+                                obj.selectObject = elem.deselect(obj.selectObject);
+                                obj.DrawScene();
+                            end
+                        case event.VK_DELETE % SUPPR
+                            if obj.selectObject.id ~= 0
+                                obj.RemoveElement(obj.selectObject.id);
+                                obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
+                                obj.DrawScene();
+                            end
+                        case event.VK_F10   %'i'
+                             obj.screenShot();
+                    end
+                end
+
+            % SHIFT MODIFIER
+            elseif event.getModifiersEx==obj.SHIFT
+                if isPrintable % printable ASCII character
+                    switch code
+                        
+                        case '+' %increase cam speed
+                        %obj.camera.speed=min(100,obj.camera.speed+1)
+                        % obj.camera.changeSpeed(+1);
+                        disp('SHIFT +')
+                    end
+                else % NON PRINTABLE ASCII Character
+                    switch event.getKeyCode()
+                    end
+                end
+
+            % CTRL MODIFIER
+            elseif event.getModifiersEx==obj.CTRL
+                code_ctrl=event.getKeyCode();
+                isPrintable=code_ctrl>=33 & code_ctrl<=126;
+                if isPrintable % printable ASCII character
+                    
+                    switch code_ctrl
+                        case 'O' %origin
+                            obj.camera.defaultView;
+                        case uint32('F') %up
+                            obj.camera.faceView;    
+                        case uint32('B') %up
+                            obj.camera.backView;    
+                        case uint32('U') %up
+                            obj.camera.upView;
+                        case uint32('D') %up
+                            obj.camera.downView;    
+                        case uint32('L') %up
+                            obj.camera.leftView;
+                        case uint32('R') %up
+                            obj.camera.rightView;  
+                        case '+' %increase cam speed
+                            disp('CTRL +')                            
+                    end
+                else % NON PRINTABLE ASCII Character
+                    switch event.getKeyCode()
+                    end
+                end
+
+            % ALT MODIFIER
+            elseif event.getModifiersEx==obj.ALT
+                if isPrintable % printable ASCII character
+                    switch code
+                        case '+' %increase cam speed
+                        disp('ALT +')
+                    end
+                else % NON PRINTABLE ASCII Character
+                    switch event.getKeyCode()
+                    end
+                end
+
+            % CTRL+SHIFT MODIFIER    
+            elseif event.getModifiersEx==(obj.CTRL+obj.SHIFT)
+                code_ctrl=event.getKeyCode();
+                isPrintable=code_ctrl>=33 & code_ctrl<=126;
+                if isPrintable % printable ASCII character
+                    switch code_ctrl
+                        case uint32('B') %up
+                            obj.camera.rearView;                         
+                        case '+' %increase cam speed
+                        disp('CTRL+ALT +')                        
+                    end
+                else % NON PRINTABLE ASCII Character
+                    switch event.getKeyCode()
+                    end
+                end
+            end
+
+        end
+
+        function cbk_KeyTyped(obj, ~, event)
+            disp(['KeyTyped : ' event.getKeyChar  '   modifiersEx : ' num2str(event.getModifiersEx) '   ascii : ' num2str(event.getKeyCode)])
+            
+
+        end
+
+        function cbk_MouseWheelMoved(obj, ~,event)
+            obj.cbk_manager.rmCallback('MouseWheelMoved');
+            obj.camera.zoom(-event.getWheelRotation(),event.getModifiersEx());
+            if obj.lumiere.onCamera == true
+                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.targetDir);
+            end
+            obj.DrawScene();
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
+        end
+    
+        function cbk_ComponentResized(obj, ~, ~)
+            obj.cbk_manager.rmCallback('ComponentResized');
+            w = obj.canvas.getWidth();
+            h = obj.canvas.getHeight();
+            %disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
+            gl = obj.getGL();
+            gl.glViewport(0, 0, w, h);
+            obj.camera.setRatio(w/h);
+            obj.DrawScene();
+            obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
+        end
+
+        function cbk_updateUbo(obj, source, ~)
+        % Appeler par la caméra et la light quand il faut mettre leurs données a jour
+            if isa(source, 'Light')
+                obj.fillLightUbo()
+                if (obj.lumiere.onCamera == false)
+                    obj.DrawScene();
+                end
+            elseif isa(source, 'Camera')
+                obj.fillCamUbo();
+                obj.DrawScene();
+            end
+        end % fin de cbk_updateUbo
+
+        function cbk_redraw(obj, ~, ~)
+        % Appeler par la scene, un élément ou un component quand une valeur a été modifié
+        % et qu'elle nécessite un nouvel affichage pour visualiser la modification
+            disp('cbk_redraw');
+            obj.DrawScene;
+        end % fin de cbk_redraw
+
+        function cbk_giveGL(obj, source, event)
+        % appeler par element ou GLGeometrie evt_update*
+        % modification des données qui nécessite le comntexte pour être prise en compte
+        % Ces objets implémentent glUpdate()
+            disp('cbk_giveGL');
+            source.glUpdate(obj.getGL(), event.EventName);
+            obj.DrawScene();
+        end % fin de cbk_giveGL
+    end % fin des methodes callback
+
+    % Private methods
     methods (Access = private)
         function gl = getGL(obj)
             if ~obj.context.isCurrent()
@@ -254,7 +582,7 @@ classdef Scene3D < handle
             grilleGeom = GeomGrille(obj.idLastInternal, tailleAxes, 2);
             elem = obj.AddElement(grilleGeom);
             elem.setEpaisseur(1);
-            elem.setCouleur([0.3 0.3 0.3]);
+            elem.setColor([0.3 0.3 0.3]);
 
             obj.idLastInternal = obj.idLastInternal - 1;
             gysmoGeom = GeomAxes(obj.idLastInternal, 0, 1);
@@ -323,7 +651,7 @@ classdef Scene3D < handle
             obj.pickingTexture.UnBind(gl);
             gl.glDisable(gl.GL_SCISSOR_TEST);
             if obj.couleurFond(1) > 0
-                obj.setCouleurFond(obj.couleurFond);
+                obj.setBackgroundColor(obj.couleurFond);
             end
         end % fin de pickingObject
 
@@ -439,166 +767,415 @@ classdef Scene3D < handle
             obj.camLightUBO.putVec3(gl, obj.lumiere.directionLumiere, 32);
             obj.camLightUBO.putVec3(gl, obj.lumiere.paramsLumiere, 48);
         end % fin de fillLightUbo
-    end % fin des methodes privees
+    end
 
-    methods % callback
-        function cbk_MousePressed(obj, ~, event)
-            obj.cbk_manager.rmCallback('MouseDragged');
-            disp('MousePressed')
-            obj.startX = event.getX();
-            obj.startY = event.getY();
-            obj.mouseButton = event.getButton();
+    
 
-            if obj.mouseButton == 1
-                elemId = obj.pickObject();
-                worldCoord = obj.getWorldCoord();
-                obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
-                disp(['ID = ' num2str(elemId) ' Coord = ' num2str(worldCoord)]);
+% ******************** TESTS AND DEBUG ********************
+
+    %test and debug with static functions
+    methods (Static)
+        function testStatic1(~)
+            % clear all
             
-                mod = event.getModifiers();
-                if elemId ~= 0 && mod==18 %CTRL LEFT CLICK              
-                    obj.colorSelection(elemId);
-                    obj.DrawScene();
-                end
-                if mod==24 %ALT LEFT CLICK
+            addpath('outils\');
+            addpath('java\');
+            addpath('Component\');
+            
+            viewer = Scene3D();
+            viewer.setBackgroundColor([0 0 0.4])
+            viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
+            viewer.lumiere.setColor([1 1 1]);
+            viewer.DrawScene();
+            %%%%  definition des objets  %%%%
+            
+            % generation des parametre de la pyramide
+            [posPyramide, indicesPyramide, mappingPyramide] = generatePyramide(4, 0.8);
+            
+            % pyramide avec une couleur par sommet
+            pyraColorGeom = GeomFace(1, posPyramide, indicesPyramide);
+            viewer.AddElement(pyraColorGeom);
+            
+            couleurPyramide = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
+            elem = viewer.mapElements(1);
+            elem.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
+            elem.AddColor(couleurPyramide);
+            
+            % % nuage de points avec une couleur par sommet
+            N = 10000;
+            m = -1; M = 1;
+            posPoints=rand(N,3)*(M-m)+m;
+            cloudGeom = GeomPoint(25, posPoints);
+            elem = viewer.AddElement(cloudGeom);
+            elem.setModelMatrix(MTrans3D([-2 4 -4]) * MRot3D([0 0 45]) * MScale3D(1));
+            
+            couleurPoints = rand(N,3);
+            elem.AddColor(couleurPoints);
+            
+            % % generation des données d'une sphere
+            [posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
+            
+            % % sphere wireframe
+            bouleGeom = MyGeom(2, "face", posBoule, indBoule);
+            elem = viewer.AddElement(bouleGeom);
+            
+            elem.setCouleurArretes([1 1 0]);
+            elem.setEpaisseurArretes(3);
+            elem.setQuoiAfficher(2);
+            elem.setModelMatrix(MTrans3D([-4 1 0]));
+            
+            % % sphere avec texture map monde
+            bouleTexGeom = MyGeom(3, "face", posBoule, indBoule);
+            elem = viewer.AddElement(bouleTexGeom);
+            
+            elem.AddMapping(mappingBoule);
+            elem.useTexture('textures/monde.jpg');
+            elem.setModelMatrix(MTrans3D([3, 0, 0]));
+            elem.ModifyModelMatrix(MRot3D([180 0 0]) * MScale3D(2), 1);
+            elem.AddNormals(posBoule);
+            
+            % % piece d'echec depuis un fichier
+            chessGeom = MyGeom(5, "face", "objets3D/chess4_ascii.stl");
+            elem = viewer.AddElement(chessGeom);
+            
+            elem.setColor(rand(1, 3));
+            elem.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02)); % pour la piece d'echec
+            % chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2)); % pour le loup
+            elem.GenerateNormals();
+            elem.setQuoiAfficher(3);
+            elem.setModeRendu("UNIFORME", "DUR"); % uniform & dur
+            
+            ravie = Police("textes/ravie");
+            geomTexte = GeomTexte(101, 'Hello World !', ravie, "CENTRE");
+            elemtexte = viewer.AddElement(geomTexte);
+            elemtexte.setModelMatrix(MTrans3D([2 2.2 2]) * MScale3D(0.4));
+            
+            geomTexteFixe = GeomTexte(102, 'Bienvenue', ravie, "HAUT_GAUCHE");
+            elemtexte = viewer.AddElement(geomTexteFixe);
+            elemtexte.setModelMatrix(MTrans3D([-1 1 0]));
+            elemtexte.setOrientation("FIXE");
+            
+            geomTexteX = GeomTexte(111, 'X', ravie, "CENTRE");
+            elementTexte = viewer.AddElement(geomTexteX);
+            elementTexte.setModelMatrix(MTrans3D([1 0 0]));
+            elementTexte.setColor([1 0 0]);
+            elementTexte.setOrientation("REPERE_NORMAL");
+            
+            %% Creation d'un group
+                % sphere avec des normales pour rendu lisse
+                bouleNormalesGeom = MyGeom(31, "face", posBoule, indBoule);
+                bouleNormalesGeom.setModelMatrix(MTrans3D([0 0.8 0]) * MScale3D(0.8));
+                elem = viewer.AddElement(bouleNormalesGeom);
+                elem.AddNormals(posBoule);
+                elem.setCouleurArretes([1 0 1 1]);
+                
+                % autre sphere
+                bouleNormalesGeom2 = MyGeom(32, "face", posBoule, indBoule);
+                bouleNormalesGeom2.setModelMatrix(MTrans3D([0 3.9 0]) * MScale3D(1.2));
+                elem = viewer.AddElement(bouleNormalesGeom2);
+                elem.setColor([0 1 0.8 1]);
+                
+                % pyramide avec texture
+                pyraTexGeom = MyGeom(33, "face", posPyramide, indicesPyramide);
+                pyraTexGeom.setModelMatrix(MTrans3D([0 1.8 0]) * MRot3D([0 -45 0]) * MScale3D(1.3));
+                elem = viewer.AddElement(pyraTexGeom);
+                
+                elem.AddMapping(mappingPyramide);
+                elem.useTexture('textures/briques.jpg');
+                
+                % plan
+                [pos, ind, map] = generatePlan(3, 3);
+                planGeom = MyGeom(34, "face", pos, ind);
+                planGeom.setModelMatrix(MRot3D([90 0 0]));
+                viewer.AddElement(planGeom);
+                
+                % creation du groupe
+                group = viewer.CreateGroup(1);
+                group.AddElem(viewer.mapElements(31));
+                group.AddElem(viewer.mapElements(32));
+                group.AddElem(viewer.mapElements(33));
+                group.AddElem(viewer.mapElements(34));
+                group.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
+            
+            [posLight, indLight] = generatePyramide(50, 1);
+            bouleLightGeom = MyGeom(1000, "face", posLight, indLight);
+            elem = viewer.lumiere.setForme(bouleLightGeom);
+            
+            %%%%  affichage  %%%%
+            viewer.DrawScene();
+            
+            %%%%  suppression  %%%%
+            % viewer.delete();            
+        end
+    end
 
-                    obj.camera.setTarget(worldCoord);
-                end
-            end
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
-                    disp('ALT')
-%=======
-%                if elemId ~= 0 && mod == 18 %CTRL LEFT CLICK
-%                        obj.colorSelection(elemId);
-%                elseif mod==24 %ALT LEFT CLICK
-%>>>>>>> 0a4e26a8d22708fedc7e774cbe8eea7584e9ebe9
-                    obj.camera.setTarget(worldCoord);
-                end
-            end
-%<<<<<<< HEAD
-            obj.DrawScene();
-%=======
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
-%>>>>>>> 0a4e26a8d22708fedc7e774cbe8eea7584e9ebe9
+    %test and debug with member functions
+    methods
+        function test1(obj)
+            
+            addpath('outils\');
+            addpath('java\');
+            addpath('Component\');
+            
+            viewer = obj;
+            viewer.setBackgroundColor([0 0 0.4])
+            viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
+            viewer.lumiere.setColor([1 1 1]);
+            viewer.DrawScene();
+            %%%%  definition des objets  %%%%
+            
+            % generation des parametre de la pyramide
+            [posPyramide, indicesPyramide, mappingPyramide] = generatePyramide(4, 0.8);
+            
+            % pyramide avec une couleur par sommet
+            pyraColorGeom = GeomFace(1, posPyramide, indicesPyramide);
+            viewer.AddElement(pyraColorGeom);
+            
+            couleurPyramide = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
+            elem = viewer.mapElements(1);
+            elem.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
+            elem.AddColor(couleurPyramide);
+            
+            % % nuage de points avec une couleur par sommet
+            N = 10000;
+            m = -1; M = 1;
+            posPoints=rand(N,3)*(M-m)+m;
+            cloudGeom = GeomPoint(25, posPoints);
+            elem = viewer.AddElement(cloudGeom);
+            elem.setModelMatrix(MTrans3D([-2 4 -4]) * MRot3D([0 0 45]) * MScale3D(1));
+            
+            couleurPoints = rand(N,3);
+            elem.AddColor(couleurPoints);
+            
+            % % generation des données d'une sphere
+            [posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
+            
+            % % sphere wireframe
+            bouleGeom = MyGeom(2, "face", posBoule, indBoule);
+            elem = viewer.AddElement(bouleGeom);
+            
+            elem.setCouleurArretes([1 1 0]);
+            elem.setEpaisseurArretes(3);
+            elem.setQuoiAfficher(2);
+            elem.setModelMatrix(MTrans3D([-4 1 0]));
+            
+            % % sphere avec texture map monde
+            bouleTexGeom = MyGeom(3, "face", posBoule, indBoule);
+            elem = viewer.AddElement(bouleTexGeom);
+            
+            elem.AddMapping(mappingBoule);
+            elem.useTexture('textures/monde.jpg');
+            elem.setModelMatrix(MTrans3D([3, 0, 0]));
+            elem.ModifyModelMatrix(MRot3D([180 0 0]) * MScale3D(2), 1);
+            elem.AddNormals(posBoule);
+            
+            % % piece d'echec depuis un fichier
+            chessGeom = MyGeom(5, "face", "objets3D/chess4_ascii.stl");
+            elem = viewer.AddElement(chessGeom);
+            
+            elem.setColor(rand(1, 3));
+            elem.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02)); % pour la piece d'echec
+            % chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2)); % pour le loup
+            elem.GenerateNormals();
+            elem.setQuoiAfficher(3);
+            elem.setModeRendu("UNIFORME", "DUR"); % uniform & dur
+            
+            ravie = Police("textes/ravie");
+            geomTexte = GeomTexte(101, 'Hello World !', ravie, "CENTRE");
+            elemtexte = viewer.AddElement(geomTexte);
+            elemtexte.setModelMatrix(MTrans3D([2 2.2 2]) * MScale3D(0.4));
+            
+            geomTexteFixe = GeomTexte(102, 'Bienvenue', ravie, "HAUT_GAUCHE");
+            elemtexte = viewer.AddElement(geomTexteFixe);
+            elemtexte.setModelMatrix(MTrans3D([-1 1 0]));
+            elemtexte.setOrientation("FIXE");
+            
+            geomTexteX = GeomTexte(111, 'X', ravie, "CENTRE");
+            elementTexte = viewer.AddElement(geomTexteX);
+            elementTexte.setModelMatrix(MTrans3D([1 0 0]));
+            elementTexte.setOrientation("REPERE_NORMAL");
+            
+            %% Creation d'un group
+                % sphere avec des normales pour rendu lisse
+                bouleNormalesGeom = MyGeom(31, "face", posBoule, indBoule);
+                bouleNormalesGeom.setModelMatrix(MTrans3D([0 0.8 0]) * MScale3D(0.8));
+                elem = viewer.AddElement(bouleNormalesGeom);
+                elem.AddNormals(posBoule);
+                elem.setCouleurArretes([1 0 1 1]);
+                
+                % autre sphere
+                bouleNormalesGeom2 = MyGeom(32, "face", posBoule, indBoule);
+                bouleNormalesGeom2.setModelMatrix(MTrans3D([0 3.9 0]) * MScale3D(1.2));
+                elem = viewer.AddElement(bouleNormalesGeom2);
+                elem.setColor([0 1 0.8 1]);
+                
+                % pyramide avec texture
+                pyraTexGeom = MyGeom(33, "face", posPyramide, indicesPyramide);
+                pyraTexGeom.setModelMatrix(MTrans3D([0 1.8 0]) * MRot3D([0 -45 0]) * MScale3D(1.3));
+                elem = viewer.AddElement(pyraTexGeom);
+                
+                elem.AddMapping(mappingPyramide);
+                elem.useTexture('textures/briques.jpg');
+                
+                % plan
+                [pos, ind, map] = generatePlan(3, 3);
+                planGeom = MyGeom(34, "face", pos, ind);
+                planGeom.setModelMatrix(MRot3D([90 0 0]));
+                viewer.AddElement(planGeom);
+                
+                % creation du groupe
+                group = viewer.CreateGroup(1);
+                group.AddElem(viewer.mapElements(31));
+                group.AddElem(viewer.mapElements(32));
+                group.AddElem(viewer.mapElements(33));
+                group.AddElem(viewer.mapElements(34));
+                group.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
+            
+            [posLight, indLight] = generatePyramide(50, 1);
+            bouleLightGeom = MyGeom(1000, "face", posLight, indLight);
+            elem = viewer.lumiere.setForme(bouleLightGeom);
+            
+            %%%%  affichage  %%%%
+            viewer.DrawScene();
+            
+            %%%%  suppression  %%%%
+            % viewer.delete();            
+        end
+
+        function test2(obj)
+            
+            addpath('outils\');
+            addpath('java\');
+            addpath('Component\');
+            
+            viewer = obj;
+            viewer.setBackgroundColor([0.05 0.05 0.1]);
+            viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
+            viewer.lumiere.setColor([1 1 1]);
+            viewer.DrawScene();
+            %%%%  definition des objets  %%%%
+            
+            % generation des parametre de la pyramide
+            [posPyramide, indicesPyramide, mappingPyramide] = generatePyramide(4, 0.8);
+            
+            % pyramide avec une couleur par sommet
+            pyraColorGeom = GeomFace(1, posPyramide, indicesPyramide);
+            viewer.AddElement(pyraColorGeom);
+            
+            couleurPyramide = [ 1 0 0 1 ; 1 1 0 1 ; 0 1 0 1 ; 0 0.6 1 1 ; 1 1 1 0];
+            elem = viewer.mapElements(1);
+            elem.setModelMatrix(MTrans3D([-7 0 0]) * MRot3D([0 45 0]) * MScale3D(2.5));
+            elem.AddColor(couleurPyramide);
+            
+            % % nuage de points avec une couleur par sommet
+            N = 10000;
+            m = -1; M = 1;
+            posPoints=rand(N,3)*(M-m)+m;
+            cloudGeom = GeomPoint(25, posPoints);
+            elem = viewer.AddElement(cloudGeom);
+            elem.setModelMatrix(MTrans3D([-2 4 -4]) * MRot3D([0 0 45]) * MScale3D(1));
+            
+            couleurPoints = rand(N,3);
+            elem.AddColor(couleurPoints);
+            
+            % % generation des données d'une sphere
+            [posBoule, indBoule, mappingBoule] = generateSphere(12, 16, pi * 2);
+            
+            % % sphere wireframe
+            bouleGeom = MyGeom(2, "face", posBoule, indBoule);
+            elem = viewer.AddElement(bouleGeom);
+            
+            elem.setCouleurArretes([1 1 0]);
+            elem.setEpaisseurArretes(3);
+            elem.setQuoiAfficher(2);
+            elem.setModelMatrix(MTrans3D([-4 1 0]));
+            
+            % % sphere avec texture map monde
+            bouleTexGeom = MyGeom(3, "face", posBoule, indBoule);
+            elem = viewer.AddElement(bouleTexGeom);
+            
+            elem.AddMapping(mappingBoule);
+            elem.useTexture('textures/monde.jpg');
+            elem.setModelMatrix(MTrans3D([3, 0, 0]));
+            elem.ModifyModelMatrix(MRot3D([180 0 0]) * MScale3D(2), 1);
+            elem.AddNormals(posBoule);
+            
+            % % piece d'echec depuis un fichier
+            chessGeom = MyGeom(5, "face", "objets3D/chess4_ascii.stl");
+            elem = viewer.AddElement(chessGeom);
+            
+            elem.setColor(rand(1, 3));
+            elem.setModelMatrix(MTrans3D([2 0 2]) * MScale3D(0.02)); % pour la piece d'echec
+            % chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2)); % pour le loup
+            elem.GenerateNormals();
+            elem.setQuoiAfficher(3);
+            elem.setModeRendu("UNIFORME", "DUR"); % uniform & dur
+            
+            ravie = Police("textes/ravie");
+            geomTexte = GeomTexte(101, 'Hello World !', ravie, "CENTRE");
+            elemtexte = viewer.AddElement(geomTexte);
+            elemtexte.setModelMatrix(MTrans3D([2 2.2 2]) * MScale3D(0.4));
+            
+            geomTexteFixe = GeomTexte(102, 'Bienvenue', ravie, "HAUT_GAUCHE");
+            elemtexte = viewer.AddElement(geomTexteFixe);
+            elemtexte.setModelMatrix(MTrans3D([-1 1 0]));
+            elemtexte.setOrientation("FIXE");
+            
+            timesnewroman = Police("textes/timesnewroman");
+            geomTexteX = GeomTexte(111, 'X', timesnewroman, "CENTRE");
+            elementTexte = viewer.AddElement(geomTexteX);
+            elementTexte.setModelMatrix(MTrans3D([1.3 0 0]));
+            elementTexte.setColor([1 0 0]);
+            elementTexte.setSize(0.3);
+            elementTexte.setOrientation("REPERE_NORMAL");
+            
+            %% Creation d'un group
+                % sphere avec des normales pour rendu lisse
+                bouleNormalesGeom = MyGeom(31, "face", posBoule, indBoule);
+                bouleNormalesGeom.setModelMatrix(MTrans3D([0 0.8 0]) * MScale3D(0.8));
+                elem = viewer.AddElement(bouleNormalesGeom);
+                elem.AddNormals(posBoule);
+                elem.setCouleurArretes([1 0 1 1]);
+                
+                % autre sphere
+                bouleNormalesGeom2 = MyGeom(32, "face", posBoule, indBoule);
+                bouleNormalesGeom2.setModelMatrix(MTrans3D([0 3.9 0]) * MScale3D(1.2));
+                elem = viewer.AddElement(bouleNormalesGeom2);
+                elem.setColor([0 1 0.8 1]);
+                
+                % pyramide avec texture
+                pyraTexGeom = MyGeom(33, "face", posPyramide, indicesPyramide);
+                pyraTexGeom.setModelMatrix(MTrans3D([0 1.8 0]) * MRot3D([0 -45 0]) * MScale3D(1.3));
+                elem = viewer.AddElement(pyraTexGeom);
+                
+                elem.AddMapping(mappingPyramide);
+                elem.useTexture('textures/briques.jpg');
+                
+                % plan
+                [pos, ind, map] = generatePlan(3, 3);
+                planGeom = MyGeom(34, "face", pos, ind);
+                planGeom.setModelMatrix(MRot3D([90 0 0]));
+                viewer.AddElement(planGeom);
+                
+                % creation du groupe
+                group = viewer.CreateGroup(1);
+                group.AddElem(viewer.mapElements(31));
+                group.AddElem(viewer.mapElements(32));
+                group.AddElem(viewer.mapElements(33));
+                group.AddElem(viewer.mapElements(34));
+                group.setModelMatrix(MTrans3D([3 3 -3]) * MRot3D([0 45 0]));
+            
+            [posLight, indLight] = generatePyramide(50, 1);
+            bouleLightGeom = MyGeom(1000, "face", posLight, indLight);
+            elem = viewer.lumiere.setForme(bouleLightGeom);
+            
+            %%%%  affichage  %%%%
+            viewer.DrawScene();
+            
+            %%%%  suppression  %%%%
+            % viewer.delete();            
         end
         
+    end
 
-        function cbk_MouseReleased(~,~,~)
-            disp('MouseReleased')
-        end
-
-        function cbk_MouseDragged(obj, ~, event)
-            obj.cbk_manager.rmCallback('MouseDragged');
-            posX = event.getX();
-            dx = posX - obj.startX;
-            obj.startX = posX;
-            posY = event.getY();
-            dy = posY - obj.startY;
-            obj.startY = posY;
-
-            mod = event.getModifiers();
-            ctrlPressed = bitand(mod,event.CTRL_MASK);
-            if (obj.mouseButton == 3)
-                if ctrlPressed
-                    obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-                else
-                    obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
-                    disp('*****')
-                end
-            end
-            if (obj.lumiere.onCamera == true)
-                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.targetDir);
-            end
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
-        end
-
-        function cbk_KeyPressed(obj, ~, event)
-            % disp(['KeyPressed : ' event.getKeyChar  '   ascii : ' num2str(event.getKeyCode)])
-            switch event.getKeyChar()
-                case 'x'
-                    obj.camera.xorConstraint([true false false])
-                case 'y'
-                    obj.camera.xorConstraint([false true false])
-                case 'z'
-                    obj.camera.xorConstraint([false false true])
-                case 'o' %origin
-                    obj.camera.defaultView;
-                case 'u' %up
-                    obj.camera.upView;
-                case 'f' %up
-                    obj.camera.faceView;    
-                case 'p' %perspective/ortho
-                    obj.camera.switchProjType;
-                case '+' %increase cam speed
-                    %obj.camera.speed=min(100,obj.camera.speed+1)
-                    obj.camera.changeSpeed(+1);
-                case '-' %decrease cam speed
-                    %obj.camera.speed=max(5,obj.camera.speed-1)   
-                    obj.camera.changeSpeed(-1);
-                case char(27) % ECHAP
-                    if obj.selectObject.id ~= 0
-                        elem = obj.mapElements(obj.selectObject.id);
-                        obj.selectObject = elem.deselect(obj.selectObject);
-                    end
-                case char(127) % SUPPR
-                    if obj.selectObject.id ~= 0
-                        obj.RemoveElement(obj.selectObject.id);
-                        obj.selectObject = struct('id', 0, 'couleur', [1 0.6 0 1], 'epaisseur', 6);
-                    end
-               case 'i'
-                     obj.screenShot();
-            end
-        end
-
-        function cbk_MouseWheelMoved(obj, ~,event)
-            obj.cbk_manager.rmCallback('MouseWheelMoved');
-            obj.camera.zoom(-event.getWheelRotation());
-            if obj.lumiere.onCamera == true
-                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.targetDir);
-            end
-            obj.DrawScene();
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
-        end
-    
-        function cbk_ComponentResized(obj, ~, ~)
-            obj.cbk_manager.rmCallback('ComponentResized');
-            w = obj.canvas.getWidth();
-            h = obj.canvas.getHeight();
-            %disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
-            gl = obj.getGL();
-            gl.glViewport(0, 0, w, h);
-            obj.camera.setRatio(w/h);
-            obj.DrawScene();
-            obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
-        end
-
-        function cbk_updateUbo(obj, source, ~)
-        % Appeler par la caméra et la light quand il faut mettre leurs données a jour
-            if isa(source, 'Light')
-                obj.fillLightUbo()
-                if (obj.lumiere.onCamera == false)
-                    obj.DrawScene();
-                end
-            elseif isa(source, 'Camera')
-                obj.fillCamUbo();
-                obj.DrawScene();
-            end
-        end % fin de cbk_updateUbo
-
-        function cbk_redraw(obj, ~, ~)
-        % Appeler par la scene, un élément ou un component quand une valeur a été modifié
-        % et qu'elle nécessite un nouvel affichage pour visualiser la modification
-            disp('cbk_redraw');
-            obj.DrawScene;
-        end % fin de cbk_redraw
-
-        function cbk_giveGL(obj, source, event)
-        % appeler par element ou GLGeometrie evt_update*
-        % modification des données qui nécessite le comntexte pour être prise en compte
-        % Ces objets implémentent glUpdate()
-            disp('cbk_giveGL');
-            source.glUpdate(obj.getGL(), event.EventName);
-            obj.DrawScene();
-        end % fin de cbk_giveGL
-    end % fin des methodes callback
 end % fin de la classe Scene3D

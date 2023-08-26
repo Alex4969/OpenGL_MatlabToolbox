@@ -21,11 +21,12 @@ classdef javacallbackmanager < handle %matlab.mixin.Copyable
     end
     
     properties(Access=private)
-        h
+        h %java handle
     end
     
     methods(Sealed=true)
         
+        % Constructor
         function obj = javacallbackmanager(javaObj)
             if nargin < 1
                 return;
@@ -43,7 +44,10 @@ classdef javacallbackmanager < handle %matlab.mixin.Copyable
             fn = fn(endsWith(fn,'CallbackData'));
             obj.callback_list = extractBefore(fn,'CallbackData');
         end
-        
+    end
+
+    %protected methods : think about
+    methods (Access=public)
         function tf = isValidCallback(obj,target,errorFlag)
             assert(ischar(target));
             tf = ismember(target,obj.callback_list);

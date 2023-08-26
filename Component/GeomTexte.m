@@ -12,7 +12,7 @@ classdef GeomTexte < ClosedGeom
     end
 
     properties (Constant = true)  % choix d'ancrage disponible
-        enumAncrage = dictionary("CENTRE"     , 0, ...
+        enumAnchor = dictionary("CENTRE"     , 0, ...
                                  "HAUT_GAUCHE", 1, ...
                                  "HAUT_DROITE", 2, ...
                                  "BAS_GAUCHE" , 3, ...
@@ -25,8 +25,8 @@ classdef GeomTexte < ClosedGeom
             obj@ClosedGeom(id, "texte");
             obj.str = str;
             obj.police = police;
-            if obj.enumAncrage.isKey(ancre)
-                obj.ancre = obj.enumAncrage(ancre);
+            if obj.enumAnchor.isKey(ancre)
+                obj.ancre = obj.enumAnchor(ancre);
             elseif ancre > 4 || ancre < 0
                 obj.ancre = 0;
             else
@@ -49,8 +49,8 @@ classdef GeomTexte < ClosedGeom
             end
         end % fin de setPolice
 
-        function setTexte(obj, newTexte)
-            obj.str = newTexte;
+        function setText(obj, newText)
+            obj.str = newText;
             obj.generateText();
             if event.hasListener(obj, 'evt_updateGeom')
                 obj.attributes = "mapping";
@@ -58,13 +58,13 @@ classdef GeomTexte < ClosedGeom
             end
         end % fin de setTexte
 
-        function setAncrage(obj, newAncre)
-            if obj.enumAncrage.isKey(newAncre)
-                obj.ancre = obj.enumAncrage(newAncre);
-            elseif newAncre > 4 || newAncre < 0
+        function setAnchor(obj, newAnchor)
+            if obj.enumAnchor.isKey(newAnchor)
+                obj.ancre = obj.enumAnchor(newAnchor);
+            elseif newAnchor > 4 || newAnchor < 0
                 obj.ancre = 0;
             else
-                obj.ancre = newAncre;
+                obj.ancre = newAnchor;
             end
             minX = min(obj.listePoints(:,1));
             maxX = max(obj.listePoints(:,1));

@@ -5,7 +5,7 @@ classdef ElementFace < VisibleElement
         texture
         epaisseurArretes (1,1) double = 1
         epaisseurPoints  (1,1) double = 2
-        couleur          (1,4) double = [1 0 0 1]
+        color          (1,4) double = [1 0 0 1]
         couleurArretes   (1,4) double = [0 1 0 1]
         couleurPoints    (1,4) double = [0 0 1 1]
         
@@ -48,8 +48,8 @@ classdef ElementFace < VisibleElement
             notify(obj,'evt_redraw');
         end
 
-        function setCouleur(obj, newCol)
-            obj.couleur = obj.testNewCol(newCol);
+        function setColor(obj, newCol)
+            obj.color = obj.testNewCol(newCol);
             obj.quoiAfficher = bitor(obj.quoiAfficher, 1);
             notify(obj,'evt_redraw');
         end
@@ -127,7 +127,7 @@ classdef ElementFace < VisibleElement
                     obj.shader.SetUniform1i(gl, 'uTexture', obj.texture.slot);
                     gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
                 elseif bitand(obj.typeRendu, 1) == 1
-                    obj.shader.SetUniform4f(gl, 'uFaceColor', obj.couleur);
+                    obj.shader.SetUniform4f(gl, 'uFaceColor', obj.color);
                 end
             end
             % On affiche les lignes

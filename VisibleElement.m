@@ -58,7 +58,7 @@ classdef (Abstract) VisibleElement < handle
             id = obj.geom.id;
         end % fin de getId
 
-        function setVisibilite(obj, b)
+        function setVisible(obj, b)
             obj.visible = b;
             notify(obj, 'evt_redraw');
         end % fin de setVisibilite
@@ -94,7 +94,7 @@ classdef (Abstract) VisibleElement < handle
 
         function AddColor(obj, matColor)
             if size(matColor, 1) == 1
-                obj.setCouleur(matColor);
+                obj.setColor(matColor);
                 obj.typeRendu = bitand(obj.typeRendu, 0xF0) + 1;
             else
                 obj.GLGeom.addDataToBuffer(matColor, 2);
@@ -149,7 +149,7 @@ classdef (Abstract) VisibleElement < handle
     methods (Abstract = true)
         Draw(obj, gl)
         DrawId(obj, gl)
-        setCouleur(obj, matColor)
+        setColor(obj, matColor)
         sNew = select(obj, s)
         sNew = deselect(obj, s)
     end % fin des methodes abstraites

@@ -1,91 +1,88 @@
-classdef jFrame < jComponent
+classdef jFrame < jObject
     % basic JFrame display in matlab
 
-    properties (Hidden,SetAccess=protected,GetAccess=public)
-        InitialFrameLayout
+    properties (Constant,Hidden)
+        FRAME_CLOSE_OPERATION struct=struct('DISPOSE_ON_CLOSE',2, 'DO_NOTHING_ON_CLOSE',0, 'HIDE_ON_CLOSE' ,1, 'EXIT_ON_CLOSE',3)
     end
 
     properties (Constant)
         LOOKANDFEEL="System" % Metal, System or Motif
     end
 
+    properties (Hidden,SetAccess=protected,GetAccess=public)
+        InitialFrameLayout
+    end    
+
     properties %(SetAccess=protected,GetAccess=protected)
-        toolBar containers.Map %javax.swing.JToolBar
+        toolBarMap containers.Map %javax.swing.JToolBar
     end 
+
+    % Recordable properties
+    properties (SetAccess=protected,GetAccess=public)
+        title
+    end
     
     methods
-        
-        function obj = jFrame(jF)
-
+        % Constructor
+        function obj = jFrame(title)
+            obj = obj@jObject;
+            
             if nargin==0
-                obj.initialize;
+                % obj.initialize;
+                obj.setTitle("New Frame");
             elseif nargin==1
-                obj.initialize(jF);
+                % obj.initialize(jF);
+                obj.setTitle(title);
             end
 
-            obj.toolBar=containers.Map('KeyType','char','ValueType','any');
+            % Look and Feel
+            obj.initLookAndFeel(obj.LOOKANDFEEL); %Metal System Motif
+            obj.javaObj.setDefaultLookAndFeelDecorated(true);
+            %  an alternative way to set the Metal L&F is to replace the previous line with: lookAndFeel = "javax.swing.plaf.metal.MetalLookAndFeel";
+
+            % initialize Frame
+            obj.setBounds(100,100,1000,1000);
+            obj.setContentPaneColor([0.5 0.5 0.5]);
+            
+            % ToolBar
+            obj.toolBarMap=containers.Map('KeyType','char','ValueType','any');
+            
             % store frame layout
             contentPane=obj.getContentPane;
             obj.InitialFrameLayout=contentPane.getLayout;
 
             % Callback
+            obj.populateCallbacks(obj.javaObj);
             obj.setCallback('WindowClosing',@(~,~) obj.cbk_WindowClosing);%'WindowClosed'
+            obj.setCallback('WindowClosed',@(~,~) obj.cbk_WindowClosed);
             
+            % Frame behavior
+
+            % option=obj.
+            option=obj.FRAME_CLOSE_OPERATION;% option DISPOSE_ON_CLOSE, DO_NOTHING_ON_CLOSE, HIDE_ON_CLOSE , EXIT_ON_CLOSE
+            obj.setBehaviorOnClose(option.HIDE_ON_CLOSE);
+            % obj.javaObj.setLocationRelativeTo([]); % set position to center of screen 
+
+            % obj.setVisible(true);
         end
         
-    
-        function initialize(obj,jF)
-
-            obj.initLookAndFeel(obj.LOOKANDFEEL); %Metal System Motif
-            obj.javaObj.setDefaultLookAndFeelDecorated(true);
-            %  an alternative way to set the Metal L&F is to replace the 
-              % previous line with:
-              % lookAndFeel = "javax.swing.plaf.metal.MetalLookAndFeel";
-
-            if nargin==1 %default
-                iconpath='C:\Users\pduvauchelle\Philippe\Matlab\Simulation\VXIforMatlab_dev(git)\icon\collection';
-                iconFile=fullfile(iconpath,'icons8-atome-66.png');
-                title='Default JFrame';
-                obj.setContentPaneColor([0.5 0.5 0.5]);
-            elseif nargin==2
-
-                title=jF.javaObj.getTitle;
-                iconFile=jF.javaObj.getIconImage();
-            end
-                obj.setTitle(title);
-                obj.setIconImage(iconFile);
-
-                obj.setBehaviorOnClose(obj.javaObj.DISPOSE_ON_CLOSE)
-                % option DISPOSE_ON_CLOSE, DO_NOTHING_ON_CLOSE, HIDE_ON_CLOSE , EXIT_ON_CLOSE
-                obj.javaObj.setLocationRelativeTo([]); % set position to center of screen   
-        end
-    
+        % Destructor
         function delete(obj)
             disp('deleting jFrame')
-%             obj.rmCallback; % in jComponent
             obj.javaObj.dispose;
         end    
-
-        function cbk_WindowClosing(obj)
-            disp('What do i when you click here ?')
-            state=obj.javaObj.getDefaultCloseOperation();
-            
-            switch state
-                % option DISPOSE_ON_CLOSE, DO_NOTHING_ON_CLOSE, HIDE_ON_CLOSE , EXIT_ON_CLOSE
-
-                case 0 % DO_NOTHING_ON_CLOSE
-                case 1 % HIDE_ON_CLOSE
-                case 2 %DISPOSE_ON_CLOSE
-                    disp('Byeeee')                   
-                    %obj.delete;
-                case 3 %EXIT_ON_CLOSE
-            end
-        end
-
+        
     end
+
 
     methods
 
+        % Windows Title
+        function setTitle(obj,title)
+            obj.javaObj.setTitle(title);
+            obj.title=title;
+        end      
+        
         % Menu
         function setMenuVisible(obj,value)
             obj.getMenuBar.setVisible(value);
@@ -93,45 +90,59 @@ classdef jFrame < jComponent
 
         % Toolbar
         function addToolbar(obj,name)
-            import java.awt.BorderLayout;  
-            import java.awt.Container;  
-            import javax.swing.JButton;  
-            import javax.swing.JComboBox;  
-            import javax.swing.JFrame;  
-            import javax.swing.JScrollPane;  
-            import javax.swing.JTextArea;  
+            import javax.swing.JButton;   
             import javax.swing.JToolBar;  
 
+            toolbar=JToolBar(name);
 
-            toolBar=JToolBar();
-            toolBar.setRollover(true);
+            toolbar.setRollover(true);
+            toolbar.setFloatable(true);
 
-            button = JButton(strcat('File(', name, ')')); 
-            toolBar.add(button);
-            toolBar.addSeparator();
-            toolBar.add(JButton("Edit")); 
+            button = JButton(name);            
+            toolbar.add(button);
+            toolbar.addSeparator();
 
-            contentPane = obj.javaObj.getContentPane;  
-            contentPane.add(toolBar, BorderLayout.NORTH);%%%%%%
-            
-%             textArea = JTextArea();  
-%             mypane = JScrollPane(textArea);  
-%             contentPane.add(mypane, BorderLayout.EAST); %%%%% 
-%              obj.setSize([450, 250]);  
-             %obj.setVisible(true);  
+            obj.toolBarMap(name)=toolbar;
 
         end
 
         % Frame
         function setIconImage(obj,pathToFileOnDisk)
-            img=javax.swing.ImageIcon(pathToFileOnDisk);
+            img=obj.makeJimageIcon(pathToFileOnDisk);
             obj.javaObj.setIconImage(img.getImage());
         end
         
-        function setTitle(obj,title)
-            obj.javaObj.setTitle(title);
+        function jImage=getIconImage(obj)
+            jImage=obj.javaObj.getIconImage();
         end
 
+        function setBehaviorOnClose(obj,operation)
+                % option DISPOSE_ON_CLOSE, DO_NOTHING_ON_CLOSE, HIDE_ON_CLOSE , EXIT_ON_CLOSE
+                obj.javaObj.setDefaultCloseOperation(operation);%obj.javaObj.DISPOSE_ON_CLOSE);
+        end    
+
+        % ContentPane
+        function setContentPaneColor(obj,color)
+            jCol=obj.makeJcolor(color);
+            contentPane=obj.getContentPane;
+            contentPane.setBackground(jCol); 
+            obj.refresh;
+        end
+    
+        function setContentPane(obj,panel)
+%             mainPanel = obj.getRootPane;
+%             javax.swing.JPanel(java.awt.BorderLayout());
+            if isa(panel,'javax.swing.JPanel')
+                obj.javaObj.setContentPane(panel);
+            elseif isa(panel,'jPanel')
+                obj.javaObj.setContentPane(panel.javaObj);
+            end
+        end
+
+        function jPanel=getContentPane(obj)
+            jPanel=obj.javaObj.getContentPane();
+        end        
+        
     end
 
     %java methods
@@ -152,35 +163,11 @@ classdef jFrame < jComponent
             jmenubar=obj.javaObj.getJMenuBar();
         end
 
-        % ContentPane
-        function setContentPane(obj,panel)
-%             mainPanel = obj.getRootPane;
-%             javax.swing.JPanel(java.awt.BorderLayout());
-            if isa(panel,'javax.swing.JPanel')
-                obj.javaObj.setContentPane(panel);
-            elseif isa(panel,'jPanel')
-                obj.javaObj.setContentPane(panel.javaObj);
-            end
-        end
 
-        function jPanel=getContentPane(obj)
-            jPanel=obj.javaObj.getContentPane();
-        end        
-        
-        function setContentPaneColor(obj,color)
-            if length(color)==3
-                jCol=java.awt.Color(color(1),color(2),color(3));
-            elseif length(color)==4
-                jCol=java.awt.Color(color(1),color(2),color(3),color(4));
-            end
-            contentPane=obj.getContentPane;
-            contentPane.setBackground(jCol); 
-            obj.update;
-        end
     end
 
     %tests and demo
-    methods (Access=protected)
+    methods (Access=public, Hidden)
         % Other
         function demoLayout(obj)
             obj.setLayout(java.awt.BorderLayout(5,10));
@@ -232,15 +219,30 @@ classdef jFrame < jComponent
     end
 
     % Callback
-    methods(Access=public)
+    methods(Access=protected)
 
-        function setBehaviorOnClose(obj,operation)
+        function cbk_WindowClosing(obj)
+            disp('WindowClosing .... What do i when you click here ?')
+            state=obj.javaObj.getDefaultCloseOperation();
+            
+            switch state
                 % option DISPOSE_ON_CLOSE, DO_NOTHING_ON_CLOSE, HIDE_ON_CLOSE , EXIT_ON_CLOSE
-                obj.javaObj.setDefaultCloseOperation(operation);%obj.javaObj.DISPOSE_ON_CLOSE);
+
+                case 0 % DO_NOTHING_ON_CLOSE
+                case 1 % HIDE_ON_CLOSE
+                    disp('Windows is hidden')
+                case 2 %DISPOSE_ON_CLOSE
+                    disp('Windows is closed ... Byeeee')                   
+                    obj.delete;
+                case 3 %EXIT_ON_CLOSE
+            end
         end
 
+        function cbk_WindowClosed(obj)
+            disp('WindowClosed .... ')
+            state=obj.javaObj.getDefaultCloseOperation();
+        end
 
-        % Callback
         function MousePressed(obj,src,evt)
             disp('MousePressed  ')
         end
@@ -251,7 +253,8 @@ classdef jFrame < jComponent
 
     end
 
-    methods(Access=private)
+    % Other protected methods
+    methods(Access=protected)
         function lookAndFeel = initLookAndFeel(obj,LOOKANDFEEL)
                import javax.swing.UIManager;
             switch LOOKANDFEEL

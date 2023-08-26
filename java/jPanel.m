@@ -49,33 +49,7 @@ classdef jPanel < jComponent
     end
 
 methods
-
-        function setBorder(obj,jborder)
-            % jborder : javax.swing.border object create by javax.swing.BorderFactory
-            %blackline = javax.swing.BorderFactory.createLineBorder(java.awt.Color.black);
-            %raisedetched = javax.swing.BorderFactory.createEtchedBorder(javax.swing.border.EtchedBorder.RAISED); 
-            obj.javaObj.setBorder(jborder);
-        end
-
-
-
-%         function setSize(obj,sz)
-% %             sz = double(sz);
-%             obj.javaObj.setSize(sz(1),sz(2));
-%         end
-% 
-%         function setIconImage(obj,pathToFileOnDisk)
-%             img=javax.swing.ImageIcon(pathToFileOnDisk);
-%             obj.javaObj.setIconImage(img.getImage());
-%         end
-%         
-%         function setTitle(obj,title)
-%             obj.javaObj.setTitle(title);
-%         end
-% 
-%         function jPanel=getRootPane(obj)
-%             jPanel=obj.javaObj.getRootPane();
-%         end        
+   
 
         function addToolBar(obj,name)
             import javax.swing.*
