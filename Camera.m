@@ -127,6 +127,8 @@ classdef Camera < matlab.mixin.Copyable
             att.view = obj.viewMatrix;
             att.proj = obj.projMatrix;
             att.ratio = obj.ratio;
+            att.pos = obj.position;
+            att.direction=obj.getDirection();
         end % fin de getAttribute
     
         % Speed of camera
@@ -313,6 +315,20 @@ classdef Camera < matlab.mixin.Copyable
 
     methods %specific view
         
+        function specificView(obj,camParam)
+            %camParam : can be obtained with getParametersView function
+            obj.position = camParam.position;
+            obj.up = camParam.up;
+            obj.target = camParam.target;
+            obj.computeView(obj.smooth);
+        end 
+
+        function camParam=getParametersView(obj)
+            camParam.position=obj.position;
+            camParam.up=obj.up;
+            camParam.target=obj.target;
+        end       
+
         function defaultView(obj,cadran,dist)
             if nargin==1
                 cadran=2;
@@ -473,12 +489,20 @@ classdef Camera < matlab.mixin.Copyable
             Mtrans(1:3,4) = -obj.position';
 
             T1 = Mrot * Mtrans;
-            T0=obj.viewMatrix;
-            M=obj.transformInterp(N,T0,T1);
+            T0 = obj.viewMatrix;
+            sameMatrix=sum(abs(T1(:)-T0(:)))<1e-6;
+            if ~sameMatrix && N==1
+                obj.viewMatrix=T1;
+                notify(obj, 'evt_updateUbo');
+            elseif ~sameMatrix && N>1
+                M=obj.transformInterp(N,T0,T1);
                 for i=1:size(M,3)
                     obj.viewMatrix=M(:,:,i);
                     notify(obj, 'evt_updateUbo');
                 end
+            % else
+            %     disp('Same Matrix')
+            end
 
             % obj.viewMatrix=T1;
             % notify(obj, 'evt_updateUbo');
@@ -493,6 +517,7 @@ classdef Camera < matlab.mixin.Copyable
             else % vue en perspective
                 obj.projMatrix = MProj3D('P', [obj.ratio, obj.fov, obj.near, obj.far]);
             end
+            notify(obj, 'evt_updateUbo');
         end % fin de computeProj
 
         % Matrix interpolation for smooth moving
@@ -501,6 +526,70 @@ classdef Camera < matlab.mixin.Copyable
             % Only rotation and translation
             % mat : 4x4xN matrices
             
+            s=[0:1/(double(N)-1):1];
+            
+            q0=tform2quat(T0);
+            q1=tform2quat(T1);      
+            theta=acos(dot(q0,q1));
+            % if theta==0 || N==1
+            %     mat=T1;
+            %     return;
+            % end
+
+            % s=[0:1/(double(N)-1):1];
+            t0=T0([13:15]);
+            t1=T1([13:15]);
+
+            mat=zeros(4,4,N);
+            if theta==0
+                R=zeros(3,3);
+                R=T1(1:3,1:3);
+                for i=1:N        
+                    new_t=(1-s(i))*t0+s(i)*t1;
+                    mat(:,:,i)=eye(4);
+                    mat(1:3,1:3,i)=R;
+                    mat([13:15]+16*(double(i)-1))=new_t;
+                end                
+            else
+                for i=1:N
+                    new_t=(1-s(i))*t0+s(i)*t1;
+                    new_q=(sin((1-s(i))*theta)*q0+sin(s(i)*theta)*q1)/sin(theta);
+                    R=quat2rotm(new_q);
+                    mat(:,:,i)=eye(4);
+                    mat(1:3,1:3,i)=R;
+                    mat([13:15]+16*(double(i)-1))=new_t;
+                end                
+            end
+
+            % mat=zeros(4,4,N);            
+            % for i=1:N
+            %     new_t=(1-s(i))*t0+s(i)*t1;
+            %     new_q=(sin((1-s(i))*theta)*q0+sin(s(i)*theta)*q1)/sin(theta);
+            %     R=quat2rotm(new_q);
+            %     mat(:,:,i)=eye(4);
+            %     mat(1:3,1:3,i)=R;
+            %     mat([13:15]+16*(double(i)-1))=new_t;
+            % end
+
+        end
+
+        function mat = obsolete_transformInterp(obj,N,T0,T1)
+            % compute interpolated matrix between T0 and T1, N steps
+            % Only rotation and translation
+            % mat : 4x4xN matrices
+            
+            q0=tform2quat(T0);
+            q1=tform2quat(T1);      
+            theta=acos(dot(q0,q1));
+            if theta==0 || N==1
+                mat=T1;
+                return;
+            end
+
+            s=[0:1/(double(N)-1):1];
+            t0=T0([13:15]);
+            t1=T1([13:15]);
+
             q0=tform2quat(T0);
             q1=tform2quat(T1);      
             theta=acos(dot(q0,q1));

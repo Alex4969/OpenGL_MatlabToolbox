@@ -33,7 +33,7 @@ classdef Scene3D < handle
         lumiere Light             % instance de la lumiere
 
         selectObject struct       % struct qui contient les données de l'objets selectionné
-        couleurFond (1,4) double  % couleur du fond de la scene
+        backgroundColor (1,4) double  % couleur du fond de la scene
         currentCamTarget
     end %fin de propriete defaut
 
@@ -48,7 +48,7 @@ classdef Scene3D < handle
         startY      double        % position y de la souris lorsque je clique
         mouseButton int8 = -1     % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
         currentWorldCoord
-        
+        counter_view=1 % value of pre-defined view
     end
     
     events
@@ -69,7 +69,7 @@ classdef Scene3D < handle
 
             % To remove in final app
             addpath('outils\');
-            addpath('java\');
+            addpath('icons\');
             addpath('Component\');
 
             % define mouse actions
@@ -97,6 +97,7 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_DEPTH_TEST);
             % gl.glEnable(gl.GL_CULL_FACE); % optimisation : supprime l'affichage des faces arrieres
 
+            % Camera and Light
             obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
             addlistener(obj.camera, 'evt_updateUbo', @obj.cbk_updateUbo);
             obj.lumiere = Light();
@@ -118,6 +119,12 @@ classdef Scene3D < handle
             obj.cbk_manager.setMethodCallbackWithSource(obj,'KeyPressed');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'KeyTyped');
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
+
+            % Toolbar listeners
+            addlistener(obj.fenetre.toolBarMap('Views'),'evt_mouseClickedButton',@obj.cbk_toolbarButtonClicked);           
+            addlistener(obj.fenetre.toolBarMap('Camera'),'evt_mouseClickedButton',@obj.cbk_toolbarButtonClicked);
+
+            
         end
 
         %Destructor
@@ -132,8 +139,86 @@ classdef Scene3D < handle
             Texture.DeleteAll(gl);
             obj.camLightUBO.delete(gl);
             obj.context.release();
+            obj.fenetre.delete();
         end
 
+    
+        function cbk_toolbarButtonClicked(obj,source,event)
+            tb=char(source.javaObj.getName());
+            event_name=char(event.handle.getName());
+
+            switch tb
+                case 'Views'
+                    switch event_name
+                        case 'standard'
+                            obj.camera.defaultView();
+                            obj.fenetre.setTextLeft('Standard view');
+                        case 'multiviews'
+                            obj.counter_view=obj.counter_view+1;
+                            if obj.counter_view>8
+                                obj.counter_view=1;
+                            end
+                            obj.camera.defaultView(obj.counter_view);
+                            obj.fenetre.setTextLeft(['Multiviews (' num2str(obj.counter_view) ')']);
+                        case 'face'
+                            obj.fenetre.setTextLeft('Front view');
+                            obj.camera.faceView();                            
+                        case 'back'
+                            obj.fenetre.setTextLeft('Back view');
+                            obj.camera.backView();                            
+                        case 'rear'
+                            obj.fenetre.setTextLeft('Rear view');
+                            obj.camera.rearView();                           
+                        case 'left'                           
+                            obj.fenetre.setTextLeft('Left view');
+                            obj.camera.leftView();
+                        case 'right'
+                            obj.fenetre.setTextLeft('Right view');
+                            obj.camera.rightView();                           
+                        case 'top'
+                            obj.fenetre.setTextLeft('Top view');
+                            obj.camera.upView();                             
+                        case 'bottom'
+                            obj.fenetre.setTextLeft('Bottom view');
+                            obj.camera.downView();                          
+                        case 'perspective'
+                            if event.handle.isSelected
+                                obj.fenetre.setTextLeft('Orthographic mode');
+                            else
+                                obj.fenetre.setTextLeft('Perspective mode');
+                            end
+                            obj.camera.switchProjType();
+                            
+
+                    end
+
+                case 'Camera'
+                    switch event_name
+                        case 'color'
+                            col=obj.getBackGroundColor();
+                            col=col(1:3);
+                            newCol=uisetcolor(col,'Select a background color');
+                            if ~isequal(col,newCol)
+                                obj.setBackgroundColor(newCol);
+                                obj.fenetre.setTextLeft('Background Color changed');
+                            end
+                        case 'flash'
+                            if event.handle.isSelected
+                                obj.fenetre.setTextLeft('Flash mode On (light is on camera)');
+                                obj.lumiere.putOnCamera(true);
+                                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.getDirection());
+                            else
+                                obj.fenetre.setTextLeft('Flash mode Off');
+                                obj.lumiere.putOnCamera(false);
+                            end
+                        case 'screenshot'
+                            obj.screenShot();
+                            obj.fenetre.setTextLeft('Screenshot done');
+                    end
+            end
+
+        end
+    
     end
 
     methods
@@ -224,12 +309,17 @@ classdef Scene3D < handle
             end
             if numel(newColor) == 4
                 gl = obj.getGL();
-                obj.couleurFond = newColor;
+                obj.backgroundColor = newColor;
                 gl.glClearColor(newColor(1), newColor(2), newColor(3), newColor(4));
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
             notify(obj,'evt_redraw');
+        end
+
+        %Get backGroundColor
+        function col=getBackGroundColor(obj)
+            col=obj.backgroundColor;
         end
 
         %Draw the whole scene
@@ -312,8 +402,8 @@ classdef Scene3D < handle
             disp([' Coord = ' num2str(obj.currentWorldCoord)]);
             if mod == obj.MOUSE_SELECT
                 elemId = obj.pickObject();                
-                obj.fenetre.setTextRight(['ID = ' num2str(elemId) '  ']);
-                disp(['ID = ' num2str(elemId)]);% ' Coord = ' num2str(worldCoord)]);
+                obj.fenetre.setTextRight(['Selected (ID = ' num2str(elemId) ')']);
+                disp(['Selected (ID = ' num2str(elemId)]);% ' Coord = ' num2str(worldCoord)]);
                 if elemId ~= 0              
                     obj.colorSelection(elemId);
                     obj.DrawScene();
@@ -321,7 +411,10 @@ classdef Scene3D < handle
             end
             if mod == obj.MOUSE_TARGET
                     disp('Set Target')
+                    elemId = obj.pickObject()
                     obj.camera.setTarget(obj.currentWorldCoord);
+                    
+                    obj.fenetre.setTextRight(['Camera target setted (ID = ' num2str(elemId) ')'],5);
             end
             
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
@@ -364,7 +457,7 @@ classdef Scene3D < handle
                 obj.camera.selfRotate((posX-obj.canvas.getWidth()/2)/obj.canvas.getWidth(),(posY-obj.canvas.getHeight()/2)/obj.canvas.getHeight(),dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
             end
             if (obj.lumiere.onCamera == true)
-                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.targetDir);
+                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.getDirection());
             end
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
         end
@@ -506,7 +599,7 @@ classdef Scene3D < handle
             obj.cbk_manager.rmCallback('MouseWheelMoved');
             obj.camera.zoom(-event.getWheelRotation(),event.getModifiersEx());
             if obj.lumiere.onCamera == true
-                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.targetDir);
+                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.getDirection());
             end
             obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
@@ -528,9 +621,9 @@ classdef Scene3D < handle
         % Appeler par la caméra et la light quand il faut mettre leurs données a jour
             if isa(source, 'Light')
                 obj.fillLightUbo()
-                if (obj.lumiere.onCamera == false)
+                % if (obj.lumiere.onCamera == false)
                     obj.DrawScene();
-                end
+                % end
             elseif isa(source, 'Camera')
                 obj.fillCamUbo();
                 obj.DrawScene();
@@ -626,7 +719,7 @@ classdef Scene3D < handle
             %dessiner les objets
             gl.glEnable(gl.GL_SCISSOR_TEST); % limite la zone de dessin au pixel
             gl.glScissor(x, y, 1, 1);        % qui nous interesse (optimisation)
-            if obj.couleurFond(1) > 0
+            if obj.backgroundColor(1) > 0
                 gl.glClearColor(0, 0, 0, 0);
             end
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
@@ -650,8 +743,8 @@ classdef Scene3D < handle
             %unbind le frameBuffer, remise des parametre de la scene
             obj.pickingTexture.UnBind(gl);
             gl.glDisable(gl.GL_SCISSOR_TEST);
-            if obj.couleurFond(1) > 0
-                obj.setBackgroundColor(obj.couleurFond);
+            if obj.backgroundColor(1) > 0
+                obj.setBackgroundColor(obj.backgroundColor);
             end
         end % fin de pickingObject
 
@@ -1053,6 +1146,10 @@ classdef Scene3D < handle
             viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
             viewer.lumiere.setColor([1 1 1]);
             viewer.DrawScene();
+
+            %welcome message
+            viewer.fenetre.setTextNorth('Welcome in virtual X-ray Imaging',10);
+
             %%%%  definition des objets  %%%%
             
             % generation des parametre de la pyramide

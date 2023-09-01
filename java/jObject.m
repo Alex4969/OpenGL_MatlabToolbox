@@ -17,8 +17,29 @@ classdef (Abstract) jObject <javacallbackmanager
             disp('jObject constructor...')
 
             if isa(obj,'jFrame')
-                    obj.javaObj = javax.swing.JFrame;
+                obj.javaObj = javax.swing.JFrame;
+            elseif isa(obj,'jPanel')
+                obj.javaObj = javax.swing.JPanel();
+                % obj.setSize([800 600]);
+            elseif isa(obj,'jLabel')
+                obj.javaObj = javax.swing.JLabel();  
+                % obj.setSize([150 40]);
+            elseif isa(obj,'jToolbar')
+                obj.javaObj = javax.swing.JToolBar();
+            elseif isa(obj,'jButton')
+                obj.javaObj = javax.swing.JButton();  
+            elseif isa(obj,'jTextField')
+                obj.javaObj = javax.swing.JTextField();                  
+            else
+               warning('No java object known')
+               return;
             end
+
+            % Default values
+            % obj.setVisible(false);
+
+            % Callback
+            obj.populateCallbacks(obj.javaObj);
             
 
         end
@@ -40,14 +61,12 @@ classdef (Abstract) jObject <javacallbackmanager
             if nargin==2
                 if isjava(children)
                     obj.javaObj.add(children);
-                % elseif ismember(class(children),obj.javaComponentAvailable)
                 elseif isa(children,'jComponent')
                     obj.javaObj.add(children.javaObj);
                 end                
             elseif nargin==3
                 if isjava(children)
                     obj.javaObj.add(children,idx);
-                % elseif ismember(class(children),obj.javaComponentAvailable)
                 elseif isa(children,'jComponent')
                     obj.javaObj.add(children.javaObj,idx);
                 end
@@ -67,13 +86,18 @@ classdef (Abstract) jObject <javacallbackmanager
             obj.javaObj.setSize(sz(1),sz(2));
         end     
 
+        function setName(obj,name)
+            obj.javaObj.setName(name);
+        end
+
         function setBackground(obj,color)
-            jCol=obj.makeJcolor(color);
+            jCol=obj.getJcolor(color);
             obj.javaObj.setBackground(jCol);
+            obj.refresh;
         end        
     
         function setBounds(obj,x,y,width,height)
-            jRect=obj.makeJrectangle(x, y, width, height);
+            jRect=obj.getJrectangle(x, y, width, height);
             obj.javaObj.setBounds(jRect);
         end
 
@@ -156,6 +180,7 @@ classdef (Abstract) jObject <javacallbackmanager
             end            
         end
 
+        % gap 1x2
         function setFlowLayout(obj,align, gap)
             %https://docs.oracle.com/javase/8/docs/api/java/awt/FlowLayout.html
             
@@ -187,7 +212,7 @@ classdef (Abstract) jObject <javacallbackmanager
     %Native java methods
     methods (Access=public)%protected)
         % get java color 1x3 or 1x4
-        function jCol=makeJcolor(obj,color_)
+        function jCol=getJcolor(obj,color_)
             if length(color_)==3
                 jCol=java.awt.Color(color_(1),color_(2),color_(3));
             elseif length(color_)==4
@@ -195,20 +220,61 @@ classdef (Abstract) jObject <javacallbackmanager
             end
         end
     
-        function jImg=makeJimageIcon(obj,pathToFileOnDisk)
+        function jImg=getJimageIcon(obj,pathToFileOnDisk)
             jImg=javax.swing.ImageIcon(pathToFileOnDisk);
         end    
    
-        function jRect=makeJrectangle(obj,x, y, width, height)
+        function jRect=getJrectangle(obj,x, y, width, height)
             jRect=java.awt.Rectangle(x, y, width, height);
         end
     
-        function jInset=makeInset(obj,top, left, bottom, right)
+        function jInset=getJinset(obj,top, left, bottom, right)
             jInset=java.awt.Insets(top, left, bottom, right);
         end
+
+        % Border
+        % https://docs.oracle.com/javase/tutorial/uiswing/components/border.html
+        function jBorder=getJemptyBorder(obj)
+             	jBorder = javax.swing.BorderFactory.createEmptyBorder();
+        end
+
+        function jBorder=getJlineBorder(obj,color,thickness,rounded)
+            jBorder = javax.swing.BorderFactory.createLineBorder(obj.getJcolor(color),thickness,rounded);
+        end
+
+        function jBorder=getJdashedBorder(obj,color,thickness,length,spacing,rounded)
+            jBorder = javax.swing.BorderFactory.createDashedBorder(obj.getJcolor(color),  thickness,  length,  spacing,  rounded);            
+        end     
+
+        % type : RAISED (0) , LOWERED (1)
+        function jBorder=getJbevelBorder(obj,type)
+            % jBorder = javax.swing.BorderFactory.createBevelBorder(type, obj.getJcolor(ColorhighlightOuter), obj.getJcolor(ColorhighlightInner), obj.getJcolor(ColorshadowOuter), obj.getJcolor(ColorshadowInner))           
+            jBorder = javax.swing.BorderFactory.createBevelBorder(type);           
+        end 
+
+        % type : RAISED (0) , LOWERED (1)
+        function jBorder=getJetchedBorder(obj,type,ColorHighlight, ColorShadow)
+            jBorder = javax.swing.BorderFactory.createEtchedBorder(type, obj.getJcolor(ColorHighlight), obj.getJcolor(ColorShadow));    
+        end 
+
+
+
+        function jTitleborder=getJtitledBorder(obj,jborder, title)
+            jTitleborder=javax.swing.BorderFactory.createTitledBorder(jborder, title)
+        end  
+
+   % paneEdge = javax.swing.BorderFactory.createEmptyBorder(0,100,100,100);
+   % 
+   %      blackline = javax.swing.BorderFactory.createLineBorder(java.awt.Color.black);
+   %      raisedetched = javax.swing.BorderFactory.createEtchedBorder(javax.swing.border.EtchedBorder.RAISED);
+   % 
+   %      obj.mainPanel.add(down, java.awt.BorderLayout.SOUTH); 
+   %      obj.mainPanel.setBorder(blackline);
+   %      down.setBorder(raisedetched);
+
     end
 
-    methods(Access=protected)
+    methods(Access=public)
         function refresh(obj)
             obj.javaObj.repaint()
             obj.javaObj.revalidate();

@@ -47,15 +47,17 @@ classdef Light < handle
         end % fin de setForme
 
         function putOnCamera(obj, b)
-            if nargin == 1, b = true; end
+            if nargin == 1 ; b = true ; end
+            
             obj.onCamera = b;
             if (~isempty(obj.forme))
                 if (b == true)
-                    obj.forme.setVisibilite(false);
+                    obj.forme.setVisible(false);
                 else 
-                    obj.forme.setVisibilite(true);
-                    obj.cbk_updateModel(obj.forme.geom)
+                    obj.forme.setVisible(true);
+                    obj.cbk_updateModel(obj.forme.geom);
                 end
+                % obj.cbk_updateModel(obj.forme.geom);
             end
         end % fin de putOnCamera
 

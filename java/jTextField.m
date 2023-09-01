@@ -1,4 +1,4 @@
-classdef jLabel < jComponent
+classdef jTextField < jComponent
     % basic JLabel display in matlab
 
 %     properties
@@ -9,7 +9,7 @@ classdef jLabel < jComponent
     
     methods
         
-        function obj = jLabel(text)
+        function obj = jTextField(text)
             if nargin==0
                 % return;
             elseif nargin==1
@@ -18,7 +18,9 @@ classdef jLabel < jComponent
 
             % Initialize default
             obj.setFont("Arial",0,30);
-            obj.javaObj.setOpaque(true);%to view backgroundcolor
+            obj.setEditable(false);
+            obj.setSelectable(false);
+            
 
             % callback : if necessary
             %obj.setMethodCallback('***EVENT***');
@@ -37,9 +39,15 @@ classdef jLabel < jComponent
             obj.javaObj.setFont(Font(police,style,siz));
         end
 
+        % change text color
+        function setForegroundColor(obj,color)
+            jCol=obj.getJcolor(color);
+            obj.javaObj.setForeground(jCol);
+        end   
+
         function setText(obj,newText)
             obj.javaObj.setText(newText);
-        end
+        end  
 
         function setAlignment(obj,option)
             arguments
@@ -49,16 +57,17 @@ classdef jLabel < jComponent
             obj.javaObj.setHorizontalAlignment(javax.swing.JTextField.(option.pos));
         end
 
-        function setIcon(obj,pathToFileOnDisk)
-            newIcon=obj.getJimageIcon(pathToFileOnDisk);
-            obj.javaObj.setIcon(newIcon);
-        end   
+        function setEditable(obj,value)
+            obj.javaObj.setEditable(value);
+        end
 
-        % change text color
-        function setForegroundColor(obj,color)
-            jCol=obj.getJcolor(color);
-            obj.javaObj.setForeground(jCol);
+        function setSelectable(obj,value)
+            if value
+            else
+                obj.javaObj.setHighlighter('');
+            end
         end        
+             
     end
 
 

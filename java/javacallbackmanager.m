@@ -44,6 +44,10 @@ classdef javacallbackmanager < handle %matlab.mixin.Copyable
             fn = fn(endsWith(fn,'CallbackData'));
             obj.callback_list = extractBefore(fn,'CallbackData');
         end
+    
+        function getSettedCallback(obj,target)
+            obj.h.([target 'Callback'])
+        end
     end
 
     %protected methods : think about
@@ -82,5 +86,10 @@ classdef javacallbackmanager < handle %matlab.mixin.Copyable
             end
         end
         
+    end
+    methods
+        % function delete(obj)
+        %     disp('deleting javacallbackmanager')
+        % end
     end
 end

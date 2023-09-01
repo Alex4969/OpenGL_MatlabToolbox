@@ -1,95 +1,119 @@
-classdef jToolbar < javacallbackmanager
+classdef jToolbar < jComponent
     % basic JFrame display in matlab
     properties
-        javaObj javax.swing.JToolBar
+        % javaObj javax.swing.JToolBar
+    end
+
+    events
+        evt_mouseClickedButton
     end
     
     methods
         
         function obj = jToolbar(name)
-            % if nargin < 1
-            %     name = 'javax.swing.JFrame';
-            % end
-            % if nargin < 2, sz = [800 600]; end
-            
-            obj.javaObj = javax.swing.JToolBar(name);
-            % obj.java.setDefaultCloseOperation(obj.java.DISPOSE_ON_CLOSE);
-            % obj.setSize(sz);
-            % obj.java.setLocationRelativeTo([]); % set position to center of screen
-            obj.setVisible(true);
+            if nargin == 0
+                name='';
+            elseif nargin==1
+                obj.javaObj.setName(name);
+            end          
 
-            % obj.mainPanel = javax.swing.JPanel(java.awt.BorderLayout());
-            % panel=obj.java.getRootPane;
-            % panel.setContentPane(obj.mainPanel);
+            % Initialize default           
+            obj.javaObj.setRollover(true);
+            obj.javaObj.setFloatable(true);
 
-            obj.populateCallbacks(obj.java);
-            obj.setCallback('WindowClosed',@(~,~) obj.delete);
+            % obj.addComponent(name);
+
+            % callback : if necessary
+            %obj.setMethodCallback('***EVENT***');            
+
         end
 
-        function add(obj,children)
-            obj.java.add(children);
-            obj.java.show;
+
+        function addSeparator(obj)
+            obj.javaObj.addSeparator();
+            obj.refresh();
         end
 
-        function setVisible(obj,value)
-            obj.javaObj.setVisible(value);
-        end
+        function addComponent(obj,compType,name,iconFile,toolTipText)
+            arguments
+                obj
+                compType {mustBeMember(compType,{'JButton','JToggleButton'})}
+                name char {mustBeTextScalar}
+                iconFile char
+                toolTipText char
+            end
 
-        function setSize(obj,sz)
-%             sz = double(sz);
-            obj.javaObj.setSize(sz(1),sz(2));
-        end
+            if isequal(compType,'JButton')
+                button = javax.swing.JButton();  
+            elseif isequal(compType,'JToggleButton')    
+                button = javax.swing.JToggleButton();
+            end
 
-        function setIconImage(obj,pathToFileOnDisk)
-            img=javax.swing.ImageIcon(pathToFileOnDisk);
-            obj.java.setIconImage(img.getImage());
+            button.setName(name);
+            icon=obj.getJimageIcon(iconFile);
+            button.setIcon(icon);
+            button.setToolTipText(toolTipText);
+
+            obj.javaObj.add(button);
+            obj.addAction();
+
         end
         
-        function setTitle(obj,title)
-            obj.javaObj.setTitle(title);
+        function setComponent(obj,idx,prop)
+            arguments
+                obj
+                idx (1,1) double {mustBeNonnegative,mustBeInteger}
+                prop.iconFile char {mustBeTextScalar}
+                prop.toolTipText char
+            end
+                    
+            comp=obj.getComponentAtIndex(idx);
+            if isfield(prop,'iconFile')
+                icon=obj.getJimageIcon(comp_icon);
+                comp.setIcon(icon);
+            elseif isfield(prop,'toolTipText')
+                comp.setToolTipText(prop.toolTipText);
+            end
         end
 
-        function jPanel=getRootPane(obj)
-            jPanel=obj.java.getRootPane();
+
+
+        function N=getComponentCount(obj)
+            N=obj.javaObj.getComponentCount();
+        end
+
+        %idxList : 1xN
+        function buttonComp=getComponentAtIndex(obj,idxList)
+            for i=1:length(idxList)
+                buttonComp{i}=obj.javaObj.getComponentAtIndex(idxList(i));
+            end
+            buttonComp=cell2mat(buttonComp);
         end        
 
-        function addToolBar(obj,pos)
-            obj.toolBar=javax.swing.JToolBar("mytoolBar");
-            obj.toolBar.setRollover(true);  
-            button = javax.swing.JButton("File");  
-            icon=javax.swing.ImageIcon('C:\Users\pduvauchelle\Philippe\Matlab\Simulation\VXIforMatlab_dev(git)\icon\collection\icons8-atome-66.png');
-            button.setIcon(icon);
-
-            obj.toolBar.add(button); 
-            obj.mainPanel.add(obj.toolBar,java.awt.BorderLayout.NORTH);
-
-
-        textDownR=javax.swing.JLabel("Hello")
-        textDownL=javax.swing.JLabel("Welcome")
-    	textDownR.setFont(java.awt.Font("Arial",0,40));
-    	textDownL.setFont(java.awt.Font("Arial",0,40));
-
-        down = javax.swing.JPanel(java.awt.BorderLayout())    
-        down.add(textDownR, java.awt.BorderLayout.EAST);
-        down.add(textDownL, java.awt.BorderLayout.WEST);
-
-%         blackline= javax.swing.border.Border();
-%         raisedetched= javax.swing.border.Border();
-%         EtchedBorder= javax.swing.border.Border();
-paneEdge = javax.swing.BorderFactory.createEmptyBorder(0,100,100,100);
- 
-        blackline = javax.swing.BorderFactory.createLineBorder(java.awt.Color.black);
-        raisedetched = javax.swing.BorderFactory.createEtchedBorder(javax.swing.border.EtchedBorder.RAISED);
-
-        obj.mainPanel.add(down, java.awt.BorderLayout.SOUTH); 
-        obj.mainPanel.setBorder(blackline);
-        down.setBorder(raisedetched);
-        end
-
         function delete(obj)
-            obj.rmCallback;
-            obj.java.dispose;
+            disp('jToolbar deleting')
+            % obj.rmCallback;
         end
         
     end
+    
+    % Callback
+    methods
+        function cbk_MouseClicked(obj,source,event)
+            disp(['JTOOLBAR ' char(obj.javaObj.getName()) '      >>> Button : ' char(source.getName())]);
+            data=ClassEventData(source,event);
+            notify(obj,'evt_mouseClickedButton',data);
+        end
+    end
+
+    methods (Access=protected)
+        function addAction(obj)
+            N=obj.getComponentCount();
+            c=obj.getComponentAtIndex(N-1);
+            cbk_manager=javacallbackmanager(c);
+            cbk_manager.setMethodCallbackWithSource(obj,'MouseClicked');
+        end
+    end
+
+
 end

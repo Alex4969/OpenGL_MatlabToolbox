@@ -1,37 +1,21 @@
 classdef jComponent < jObject
     % basic JFrame display in matlab
 
-    properties (Constant)
-            javaComponentAvailable={'jFrame' 'jPanel' 'jLabel'}
-    end
-    
+  
     properties
-        % javaObj % javax.swing.JFrame
+
     end
     
     methods
-        
-        function obj = jComponent(jC)
-                if isa(obj,'jPanel')
-                    obj.javaObj = javax.swing.JPanel;
-                    obj.setSize([800 600]);
-                elseif isa(obj,'jLabel')
-                    obj.javaObj = javax.swing.JLabel;  
-                    obj.setSize([150 40]);
-                end
-            
+        % Constructor
+        function obj = jComponent()
 
-            % Default values
-            
-            obj.setVisible(false);
-
-            % Callback
-            obj.populateCallbacks(obj.javaObj);
-
-            %obj.setCallback('MousePressed',@(~,~) obj.Phil);
-%             obj.setMethodCallback('MousePressed');
-%             obj.setMethodCallback('KeyPressed');
         end
+
+        function delete(obj)
+            disp('deleting jComponent')
+        end        
+    
     end
 
     methods
@@ -41,6 +25,9 @@ classdef jComponent < jObject
             %raisedetched = javax.swing.BorderFactory.createEtchedBorder(javax.swing.border.EtchedBorder.RAISED); 
             obj.javaObj.setBorder(jborder);
         end        
+    
+ 
+    
     end
        
 end
