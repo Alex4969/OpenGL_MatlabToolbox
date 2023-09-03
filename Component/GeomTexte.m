@@ -50,7 +50,7 @@ classdef GeomTexte < ClosedGeom
         end % fin de setPolice
 
         function setText(obj, newText)
-            obj.str = newText;
+            obj.str=newText;
             obj.generateText();
             if event.hasListener(obj, 'evt_updateGeom')
                 obj.attributes = "mapping";

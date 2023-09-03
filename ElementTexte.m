@@ -36,14 +36,17 @@ classdef ElementTexte < VisibleElement
             else
                 warning('Le format de la nouvelle couleur n est pas bon, annulation');
             end
-        end % fin setCouleurFond
+        end % fin setColor
 
         function setPolice(obj, newPolice)
             obj.geom.setPolice(newPolice)
         end % fin de setPolice
     
-        function setText(obj, newPolice)
-            obj.geom.setText(newPolice)
+        function setText(obj, newText)
+            if strlength(newText)==0
+                newText =' ';
+            end
+            obj.geom.setText(newText)
         end  
 
         function setAnchor(obj, newAnchor)

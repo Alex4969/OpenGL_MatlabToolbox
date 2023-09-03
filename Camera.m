@@ -9,6 +9,7 @@ classdef Camera < matlab.mixin.Copyable
         SPEED_MAX=100 %max camera speed
         SENSIBILITY_MIN=0.01   %min camera sensibility
         SENSIBILITY_MAX=1   %min camera sensibility
+        DEFAULT_DISTANCE=10
     end
 
     properties (GetAccess = public, SetAccess = protected)
@@ -32,6 +33,8 @@ classdef Camera < matlab.mixin.Copyable
         sensibility (1,1) double = 1;
         
         constraint  (1,3) logical  % pour chaque axe
+        counter_view=1 % value of pre-defined view
+
     end
 
     properties (SetAccess=public)
@@ -46,19 +49,19 @@ classdef Camera < matlab.mixin.Copyable
         %CAMERA Constructor
         function obj = Camera(ratio)
         
-            obj.position = [0 0 10];
+            obj.position = [0 0 obj.DEFAULT_DISTANCE];
             obj.target = [0 0 0];
             % obj.targetDir = obj.target - obj.position;
             obj.up = [0 1 0];
             obj.computeView();
 
-            obj.near = 0.1;
-            obj.far = 100;
+            obj.near = 0.01;
+            obj.far = 10000;
             obj.ratio = ratio;
             obj.fov = 60;
             obj.type = 1;
             obj.computeProj();
-            obj.constraint = [false, false, false];
+            obj.constraint = [true true true]; %XYZ : authorized axis
         end % fin du constructeur camera
     end
 
@@ -129,7 +132,8 @@ classdef Camera < matlab.mixin.Copyable
             att.ratio = obj.ratio;
             att.pos = obj.position;
             att.direction=obj.getDirection();
-        end % fin de getAttribute
+        end
+        % fin de getAttribute
     
         % Speed of camera
         function changeSpeed(obj,increment)
@@ -151,11 +155,37 @@ classdef Camera < matlab.mixin.Copyable
             obj.sensibility
         end
 
-    end %fin des methodes defauts
+    end
+    %fin des methodes defauts
 
     methods % Mouse moving methods
         
         function translatePlanAct(obj,dx,dy)
+            % if any(obj.constraint) % si une contrainte axial est présente : 
+            %     dz = 0;
+            %     if obj.constraint(3)
+            %         if obj.constraint(2)
+            %             dz = dx;
+            %         else
+            %             dz = -dy;
+            %         end
+            %     end
+            %     translation =  [dx, dy, dz] .* obj.constraint;
+            % else % si aucune constrainte on se met dans le plan de la caméra parallele au plan Oxy
+                % translation = dy * obj.up;
+                
+                u_right = cross(obj.getDirection, obj.up);
+                u_right = u_right/norm(u_right);
+                v_up=cross(u_right,obj.getDirection);
+                v_up=v_up/norm(v_up);
+                translation = (-dx * u_right+dy*v_up).*obj.constraint;
+            % end
+            obj.position = obj.position + translation * obj.speed;
+            obj.target = obj.target + translation * obj.speed;
+            obj.computeView();
+        end % fin de translatePlanAct
+
+        function obsolete_translatePlanAct(obj,dx,dy)
             if any(obj.constraint) % si une contrainte axial est présente : 
                 dz = 0;
                 if obj.constraint(3)
@@ -219,10 +249,10 @@ classdef Camera < matlab.mixin.Copyable
             left = cross(forward,obj.up);
             left = left / norm(left);
 
-            up = cross(left,forward);
-            up = up / norm(up);        
+            newUp = cross(left,forward);
+            newUp = newUp / norm(newUp);        
 
-            obj.up=sind(theta)*left+cosd(theta)*up;
+            obj.up=sind(theta)*left+cosd(theta)*newUp;
 
             obj.computeView();
             
@@ -259,7 +289,7 @@ classdef Camera < matlab.mixin.Copyable
         % Rotatin due to (dx,dy) mouse move
         function rotate(obj, dx, dy,centre)
 
-            target=obj.target;
+            % target=obj.target;
             obj.setTarget(centre);
 
             pos = obj.position;
@@ -313,9 +343,11 @@ classdef Camera < matlab.mixin.Copyable
 
     end %% end methods for mouse moving
 
-    methods %specific view
+    %specific view
+    methods
         
-        function specificView(obj,camParam)
+        %user/storage view
+        function userView(obj,camParam)
             %camParam : can be obtained with getParametersView function
             obj.position = camParam.position;
             obj.up = camParam.up;
@@ -323,18 +355,32 @@ classdef Camera < matlab.mixin.Copyable
             obj.computeView(obj.smooth);
         end 
 
-        function camParam=getParametersView(obj)
+        function camParam=getCurrentView(obj)
             camParam.position=obj.position;
             camParam.up=obj.up;
             camParam.target=obj.target;
         end       
 
+        %Default views
+        function numView=nextDefaultView(obj,dist)
+            if nargin==1
+                dist=obj.DEFAULT_DISTANCE;
+            end
+                
+            obj.counter_view=obj.counter_view+1;
+            if obj.counter_view>8
+                obj.counter_view=1;
+            end
+            obj.defaultView(obj.counter_view,dist);
+            numView=obj.counter_view;
+        end
+
         function defaultView(obj,cadran,dist)
             if nargin==1
                 cadran=2;
-                dist=10;
+                dist=obj.DEFAULT_DISTANCE;
             elseif nargin==2
-                dist=10;
+                dist=obj.DEFAULT_DISTANCE;
             elseif nargin==3
                 dist=abs(dist);
             end
@@ -363,9 +409,10 @@ classdef Camera < matlab.mixin.Copyable
             obj.computeView(obj.smooth);
         end  
 
+        %others view
         function faceView(obj,dist)
             if nargin==1
-                dist=10;
+                dist=obj.DEFAULT_DISTANCE;
             elseif nargin==2
                 dist=abs(dist);
             end
@@ -378,7 +425,7 @@ classdef Camera < matlab.mixin.Copyable
 
         function rearView(obj,dist)
             if nargin==1
-                dist=10;
+                dist=obj.DEFAULT_DISTANCE;
             elseif nargin==2
                 dist=abs(dist);
             end
@@ -390,7 +437,7 @@ classdef Camera < matlab.mixin.Copyable
 
         function backView(obj,dist)
             if nargin==1
-                dist=10;
+                dist=obj.DEFAULT_DISTANCE;
             elseif nargin==2
                 dist=abs(dist);
             end
@@ -402,7 +449,7 @@ classdef Camera < matlab.mixin.Copyable
 
         function upView(obj,dist)
             if nargin==1
-                dist=10;
+                dist=obj.DEFAULT_DISTANCE;
             elseif nargin==2
                 dist=abs(dist);
             end
@@ -414,7 +461,7 @@ classdef Camera < matlab.mixin.Copyable
 
         function downView(obj,dist)
             if nargin==1
-                dist=10;
+                dist=obj.DEFAULT_DISTANCE;
             elseif nargin==2
                 dist=abs(dist);
             end
@@ -426,7 +473,7 @@ classdef Camera < matlab.mixin.Copyable
 
         function leftView(obj,dist)
             if nargin==1
-                dist=10;
+                dist=obj.DEFAULT_DISTANCE;
             elseif nargin==2
                 dist=abs(dist);
             end
@@ -438,7 +485,7 @@ classdef Camera < matlab.mixin.Copyable
 
         function rightView(obj,dist)
             if nargin==1
-                dist=10;
+                dist=obj.DEFAULT_DISTANCE;
             elseif nargin==2
                 dist=abs(dist);
             end
@@ -448,6 +495,7 @@ classdef Camera < matlab.mixin.Copyable
             obj.computeView(obj.smooth);
         end        
 
+        % A supprimer si inutile
         function xorConstraint(obj, l)
             obj.constraint = bitxor(obj.constraint, l);
             if all(obj.constraint)
@@ -455,6 +503,11 @@ classdef Camera < matlab.mixin.Copyable
             end
         end
 
+        function setAuthorizedAxis(obj, xyz)
+            obj.constraint=xyz;
+        end
+
+        % A modifier
         function resetConstraint(obj)
             obj.constraint = [false false false];
         end
@@ -497,6 +550,7 @@ classdef Camera < matlab.mixin.Copyable
             elseif ~sameMatrix && N>1
                 M=obj.transformInterp(N,T0,T1);
                 for i=1:size(M,3)
+                    obj.position
                     obj.viewMatrix=M(:,:,i);
                     notify(obj, 'evt_updateUbo');
                 end
@@ -526,7 +580,7 @@ classdef Camera < matlab.mixin.Copyable
             % Only rotation and translation
             % mat : 4x4xN matrices
             
-            s=[0:1/(double(N)-1):1];
+            s=0:1/(double(N)-1):1;
             
             q0=tform2quat(T0);
             q1=tform2quat(T1);      
@@ -537,8 +591,8 @@ classdef Camera < matlab.mixin.Copyable
             % end
 
             % s=[0:1/(double(N)-1):1];
-            t0=T0([13:15]);
-            t1=T1([13:15]);
+            t0=T0(13:15);
+            t1=T1(13:15);
 
             mat=zeros(4,4,N);
             if theta==0
@@ -548,7 +602,7 @@ classdef Camera < matlab.mixin.Copyable
                     new_t=(1-s(i))*t0+s(i)*t1;
                     mat(:,:,i)=eye(4);
                     mat(1:3,1:3,i)=R;
-                    mat([13:15]+16*(double(i)-1))=new_t;
+                    mat((13:15)+16*(double(i)-1))=new_t;
                 end                
             else
                 for i=1:N
@@ -557,7 +611,7 @@ classdef Camera < matlab.mixin.Copyable
                     R=quat2rotm(new_q);
                     mat(:,:,i)=eye(4);
                     mat(1:3,1:3,i)=R;
-                    mat([13:15]+16*(double(i)-1))=new_t;
+                    mat((13:15)+16*(double(i)-1))=new_t;
                 end                
             end
 

@@ -48,7 +48,7 @@ classdef Scene3D < handle
         startY      double        % position y de la souris lorsque je clique
         mouseButton int8 = -1     % numéro du bouton sur lequel j'appuie (1 = gauche, 2 = mil, 3 = droite)
         currentWorldCoord
-        counter_view=1 % value of pre-defined view
+        
     end
     
     events
@@ -103,7 +103,7 @@ classdef Scene3D < handle
             obj.lumiere = Light();
             addlistener(obj.lumiere, 'evt_updateUbo', @obj.cbk_updateUbo);
             addlistener(obj.lumiere, 'evt_updateForme', @obj.cbk_giveGL);
-            obj.camLightUBO = UBO(gl, 0, 80);
+            obj.camLightUBO = UBO(gl, 0, 96);
             obj.fillCamUbo();
             obj.fillLightUbo();
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
@@ -140,83 +140,6 @@ classdef Scene3D < handle
             obj.camLightUBO.delete(gl);
             obj.context.release();
             obj.fenetre.delete();
-        end
-
-    
-        function cbk_toolbarButtonClicked(obj,source,event)
-            tb=char(source.javaObj.getName());
-            event_name=char(event.handle.getName());
-
-            switch tb
-                case 'Views'
-                    switch event_name
-                        case 'standard'
-                            obj.camera.defaultView();
-                            obj.fenetre.setTextLeft('Standard view');
-                        case 'multiviews'
-                            obj.counter_view=obj.counter_view+1;
-                            if obj.counter_view>8
-                                obj.counter_view=1;
-                            end
-                            obj.camera.defaultView(obj.counter_view);
-                            obj.fenetre.setTextLeft(['Multiviews (' num2str(obj.counter_view) ')']);
-                        case 'face'
-                            obj.fenetre.setTextLeft('Front view');
-                            obj.camera.faceView();                            
-                        case 'back'
-                            obj.fenetre.setTextLeft('Back view');
-                            obj.camera.backView();                            
-                        case 'rear'
-                            obj.fenetre.setTextLeft('Rear view');
-                            obj.camera.rearView();                           
-                        case 'left'                           
-                            obj.fenetre.setTextLeft('Left view');
-                            obj.camera.leftView();
-                        case 'right'
-                            obj.fenetre.setTextLeft('Right view');
-                            obj.camera.rightView();                           
-                        case 'top'
-                            obj.fenetre.setTextLeft('Top view');
-                            obj.camera.upView();                             
-                        case 'bottom'
-                            obj.fenetre.setTextLeft('Bottom view');
-                            obj.camera.downView();                          
-                        case 'perspective'
-                            if event.handle.isSelected
-                                obj.fenetre.setTextLeft('Orthographic mode');
-                            else
-                                obj.fenetre.setTextLeft('Perspective mode');
-                            end
-                            obj.camera.switchProjType();
-                            
-
-                    end
-
-                case 'Camera'
-                    switch event_name
-                        case 'color'
-                            col=obj.getBackGroundColor();
-                            col=col(1:3);
-                            newCol=uisetcolor(col,'Select a background color');
-                            if ~isequal(col,newCol)
-                                obj.setBackgroundColor(newCol);
-                                obj.fenetre.setTextLeft('Background Color changed');
-                            end
-                        case 'flash'
-                            if event.handle.isSelected
-                                obj.fenetre.setTextLeft('Flash mode On (light is on camera)');
-                                obj.lumiere.putOnCamera(true);
-                                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.getDirection());
-                            else
-                                obj.fenetre.setTextLeft('Flash mode Off');
-                                obj.lumiere.putOnCamera(false);
-                            end
-                        case 'screenshot'
-                            obj.screenShot();
-                            obj.fenetre.setTextLeft('Screenshot done');
-                    end
-            end
-
         end
     
     end
@@ -424,10 +347,14 @@ classdef Scene3D < handle
 
         function cbk_MouseReleased(obj,~,event)
             disp('MouseReleased')
-            mod = event.getModifiersEx();
-            if mod ~= obj.ALT
-                obj.camera.setTarget(obj.currentCamTarget);
-            end
+
+            % Why this ????
+            % % % mod = event.getModifiersEx();
+            % % % if mod ~= obj.ALT
+            % % %     obj.camera.setTarget(obj.currentCamTarget);
+            % % % end
+
+
             % obj.DrawScene;
         end
 
@@ -480,11 +407,11 @@ classdef Scene3D < handle
                 if isPrintable % printable ASCII character
                     switch code
                         case 'x'
-                            obj.camera.xorConstraint([true false false])
+                            obj.camera.setAuthorizedAxis([1 0 0])
                         case 'y'
-                            obj.camera.xorConstraint([false true false])
+                            obj.camera.setAuthorizedAxis([0 1 0])
                         case 'z'
-                            obj.camera.xorConstraint([false false true])                 
+                            obj.camera.setAuthorizedAxis([0 0 1])                 
                         case 'p' %perspective/ortho
                             obj.camera.switchProjType;
                         case '+' %increase cam speed
@@ -562,6 +489,12 @@ classdef Scene3D < handle
             elseif event.getModifiersEx==obj.ALT
                 if isPrintable % printable ASCII character
                     switch code
+                        case 'x' % YZ plane, X constant
+                            obj.camera.setAuthorizedAxis([0 1 1])
+                        case 'y' % XZ plane, Y constant
+                            obj.camera.setAuthorizedAxis([1 0 1])
+                        case 'z' % XY plane, Z constant
+                            obj.camera.setAuthorizedAxis([1 1 0])                         
                         case '+' %increase cam speed
                         disp('ALT +')
                     end
@@ -616,11 +549,88 @@ classdef Scene3D < handle
             obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
+    
+        %toolbar
+        function cbk_toolbarButtonClicked(obj,source,event)
+            tb=char(source.javaObj.getName());
+            event_name=char(event.handle.getName());
 
+            switch tb
+                case 'Views'
+                    switch event_name
+                        case 'standard'
+                            obj.camera.defaultView();
+                            obj.fenetre.setTextLeft('Standard view');
+                        case 'multiviews'
+                            num=obj.camera.nextDefaultView();
+                            obj.fenetre.setTextLeft(['Multiviews (' num2str(num) ')']);
+                        case 'face'
+                            obj.fenetre.setTextLeft('Front view');
+                            obj.camera.faceView();                            
+                        case 'back'
+                            obj.fenetre.setTextLeft('Back view');
+                            obj.camera.backView();                            
+                        case 'rear'
+                            obj.fenetre.setTextLeft('Rear view');
+                            obj.camera.rearView();                           
+                        case 'left'                           
+                            obj.fenetre.setTextLeft('Left view');
+                            obj.camera.leftView();
+                        case 'right'
+                            obj.fenetre.setTextLeft('Right view');
+                            obj.camera.rightView();                           
+                        case 'top'
+                            obj.fenetre.setTextLeft('Top view');
+                            obj.camera.upView();                             
+                        case 'bottom'
+                            obj.fenetre.setTextLeft('Bottom view');
+                            obj.camera.downView();                          
+                        case 'perspective'
+                            if event.handle.isSelected
+                                obj.fenetre.setTextLeft('Orthographic mode');
+                            else
+                                obj.fenetre.setTextLeft('Perspective mode');
+                            end
+                            obj.camera.switchProjType();
+                            
+
+                    end
+
+                case 'Camera'
+                    switch event_name
+                        case 'color'
+                            col=obj.getBackGroundColor();
+                            col=col(1:3);
+                            newCol=uisetcolor(col,'Select a background color');
+                            if ~isequal(col,newCol)
+                                obj.setBackgroundColor(newCol);
+                                obj.fenetre.setTextLeft('Background Color changed');
+                            end
+                        case 'flash'
+                            if event.handle.isSelected
+                                obj.fenetre.setTextLeft('Flash mode On (light is on camera)');
+                                obj.lumiere.putOnCamera(true);
+                                obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.getDirection());
+                            else
+                                obj.fenetre.setTextLeft('Flash mode Off');
+                                obj.lumiere.putOnCamera(false);
+                            end
+                        case 'screenshot'
+                            obj.screenShot();
+                            obj.fenetre.setTextLeft('Screenshot done');
+                    end
+            end
+
+        end    
+    
+    end
+
+    methods
         function cbk_updateUbo(obj, source, ~)
         % Appeler par la caméra et la light quand il faut mettre leurs données a jour
+            % class(source)
             if isa(source, 'Light')
-                obj.fillLightUbo()
+                obj.fillLightUbo();
                 % if (obj.lumiere.onCamera == false)
                     obj.DrawScene();
                 % end
@@ -628,6 +638,10 @@ classdef Scene3D < handle
                 obj.fillCamUbo();
                 obj.DrawScene();
             end
+            
+            % % % obj.fillLightUbo();
+            % % % obj.fillCamUbo();
+            % % % obj.DrawScene();
         end % fin de cbk_updateUbo
 
         function cbk_redraw(obj, ~, ~)
@@ -850,15 +864,17 @@ classdef Scene3D < handle
         end % fin de getOrientationMatrices
 
         function fillCamUbo(obj)
-            obj.camLightUBO.putVec3(obj.getGL(), obj.camera.position, 64);
+            obj.camLightUBO.putVec3(obj.getGL(), obj.camera.position, 80);
         end % fin de fillCamUbo
 
         function fillLightUbo(obj)
+            % disp('fill UBO')
             gl = obj.getGL();
             obj.camLightUBO.putVec3(gl, obj.lumiere.position, 0);
             obj.camLightUBO.putVec3(gl, obj.lumiere.couleurLumiere, 16);
             obj.camLightUBO.putVec3(gl, obj.lumiere.directionLumiere, 32);
             obj.camLightUBO.putVec3(gl, obj.lumiere.paramsLumiere, 48);
+            obj.camLightUBO.putVec3(gl, [0.5 0 0], 64);
         end % fin de fillLightUbo
     end
 

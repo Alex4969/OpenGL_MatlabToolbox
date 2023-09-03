@@ -108,7 +108,9 @@ classdef Light < handle
         end % fin de desactivate
 
         function dotLight(obj, a, b)
-            % lumiere avec une atténuation de 1/a*dist² + b*dist + 1
+            % lumiere avec une intensite : I=1/a*dist² + b*dist + 1
+            % ou I=exp(-a*dist) 
+            % voir allfrag.glsl
             if nargin == 1
                 a = 0.01; b = 0; % valeurs de a et b par defaut
             end
@@ -128,6 +130,7 @@ classdef Light < handle
         function spotLight(obj, angleInt, angleExt)
             % lumiere de projecteur qui forme un cone
             % on a besoin d'un deuxieme angle pour avoir un effet d'attenuation de la lumiere doux
+
             if nargin == 3
                 angles = [angleInt, angleExt];
             else
@@ -140,7 +143,9 @@ classdef Light < handle
             obj.paramsLumiere = [3 angles];
             notify(obj, 'evt_updateUbo');
         end % fin de spotLight
-    end % fin des methodes defauts
+    
+    end
+    % fin des methodes defauts
 
     methods (Hidden = true)
         function setPositionWithCamera(obj, newPos, direction)
@@ -148,21 +153,25 @@ classdef Light < handle
             obj.position = newPos;
             obj.directionLumiere = direction;
             notify(obj, 'evt_updateUbo');
-        end % fin de setPositionWithCamera
+        end
+        % fin de setPositionWithCamera
 
         function cbk_updateModel(obj, source, ~)
             newPos = source.modelMatrix(1:3, 4)';
             obj.position = newPos;
             notify(obj, 'evt_updateUbo');
-        end % fin de cbk_updateModel
+        end
+        % fin de cbk_updateModel
 
         function glUpdate(obj, gl, ~)
             obj.forme = ElementFace(gl, obj.comp);
             obj.forme.setModelMatrix(MTrans3D(obj.position));
+
             obj.forme.setColor(obj.couleurLumiere);
             obj.forme.setModeRendu("UNIFORME", "SANS");
             obj.forme.glUpdate(gl, "evt_updateModel")
             obj.modelListener = addlistener(obj.forme.geom,'evt_updateModel',@obj.cbk_updateModel);
-        end % fin de glUpdate
+        end
+
     end % fin des methodes cachées
 end % fin classe light

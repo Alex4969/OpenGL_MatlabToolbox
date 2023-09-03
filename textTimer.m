@@ -59,7 +59,7 @@ classdef textTimer < handle
 
         function cbk_stopTimer(obj,source,event)
             % disp('timer stopped')
-            obj.target_component.setText("");
+            obj.target_component.setText('');
             % toc
         end
 

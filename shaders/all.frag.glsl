@@ -21,6 +21,8 @@ layout (std140, binding = 0) uniform light {
     vec3 uLightColor; 
     vec3 uLightDir  ; 
     vec3 uLightData ;
+    //Phil
+    vec3 uLightParam; 
     vec3 uCamPos    ;
 };
 
@@ -42,6 +44,9 @@ void main()
     } else if (uLightData.x == 3.0) {   //LIGHT
         intensiteLumineuse = spotLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightDir, uLightData.y, uLightData.z); //LIGHT
     }   //LIGHT
+
+
+    
 
     vec4 couleur;
     if ((uQuoiAfficher & 1) > 0){
@@ -86,7 +91,9 @@ void main()
         }
     }
 
+    // Phil  * uLightParam.x
     couleur.xyz *= uLightColor * intensiteLumineuse;
+    couleur.xyz *= uLightParam.x;
     fragColor = couleur;
 }
 
@@ -96,7 +103,9 @@ float pointLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
 {
     vec3 lightVec = lightPos - crntPos;
     float dist = length(lightVec);
-    float intensity = 1.0 / (a * dist * dist + b * dist + 1.0);
+    //float intensity = 1.0 / (a * dist * dist + b * dist + 1.0);
+
+    float intensity = exp(-a*dist);
 
     //ambient lighting
     float ambient = 0.3f;
