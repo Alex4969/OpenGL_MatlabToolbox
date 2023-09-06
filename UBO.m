@@ -1,5 +1,6 @@
 classdef UBO < handle
-    %UBO place des données utilisés par les shaders dans le GPU
+    % UBO place des données utilisés par les shaders dans le GPU
+    % https://www.geeks3d.com/3dfr/20140703/uniform-buffers-objects-opengl-31-tutorial/
     
     properties (GetAccess = public, SetAccess = private)
         UBOId uint32        % id du uniform buffer object
@@ -21,7 +22,7 @@ classdef UBO < handle
     methods (Hidden = true)
         function putVec3(obj, gl, vec, deb)
             % met un vecteur a 3 dimensions dans l'UBO a la position deb
-            % dans les UBO les valeurs font 1, 2 ou 4 octets donc on occupe 16 bits pour un vec3
+            % dans les UBO les valeurs sont 1, 2 ou 4 octets donc on occupe 16 bits pour un vec3
             obj.Bind(gl);
             vecUni = java.nio.FloatBuffer.allocate(4);
             vecUni.put(vec(:));
@@ -29,11 +30,23 @@ classdef UBO < handle
             gl.glBufferSubData(gl.GL_UNIFORM_BUFFER, deb, 16, vecUni);
         end % fin de put vec3
 
+        function putStruct(obj, gl, data, deb)
+            % met un vecteur a 3 dimensions dans l'UBO a la position deb
+            % dans les UBO les valeurs font 1, 2 ou 4 octets donc on occupe 16 bits pour un vec3
+            obj.Bind(gl);
+            vecUni = java.nio.FloatBuffer.allocate(24);
+            d=single([[data.lightPosition 0] [data.lightColor 0] [data.lightDirection 0] [data.lightParam 0] [data.lightIntensity 0] [data.cameraPosition 0]]);
+            vecUni.put(d);
+            vecUni.rewind();
+            gl.glBufferSubData(gl.GL_UNIFORM_BUFFER, deb, obj.taille, vecUni);
+        end % fin de put vec3
+
         function Bind(obj, gl)
             gl.glBindBuffer(gl.GL_UNIFORM_BUFFER, obj.UBOId);
         end % fin de bind
 
         function delete(obj, gl)
+            disp('delete UBO')
             gl.glDeleteBuffers(1, obj.UBOBuffer);
         end % fin de delete
     end

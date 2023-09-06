@@ -152,7 +152,7 @@ classdef Light < handle
             % positionne la lumiere & la direction comme la camera
             obj.position = newPos;
             obj.directionLumiere = direction;
-            notify(obj, 'evt_updateUbo');
+            % % % notify(obj, 'evt_updateUbo');
         end
         % fin de setPositionWithCamera
 

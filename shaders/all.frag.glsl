@@ -16,7 +16,8 @@ uniform float uPointSize;
 uniform int  uQuoiAfficher = 1;
 uniform sampler2D uTexture;             //TEX
 
-layout (std140, binding = 0) uniform light {
+//layout (std140, binding = 0) uniform light {
+layout (std140) uniform light {
     vec3 ulightPos  ;
     vec3 uLightColor; 
     vec3 uLightDir  ; 

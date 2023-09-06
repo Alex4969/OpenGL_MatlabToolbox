@@ -6,10 +6,10 @@ classdef Camera < matlab.mixin.Copyable
 
     properties (Constant)
         SPEED_MIN=1   %min camera speed
-        SPEED_MAX=100 %max camera speed
+        SPEED_MAX=10000 %max camera speed
         SENSIBILITY_MIN=0.01   %min camera sensibility
         SENSIBILITY_MAX=1   %min camera sensibility
-        DEFAULT_DISTANCE=10
+        DEFAULT_DISTANCE=500
     end
 
     properties (GetAccess = public, SetAccess = protected)
@@ -23,7 +23,7 @@ classdef Camera < matlab.mixin.Copyable
         %%% Attributs de la projection
         near        (1,1) double   % distance du plan rapproché
         far         (1,1) double   % distance du plan éloigné
-        ratio       (1,1) double   % ration d'observation (width/height)
+        % ratio       (1,1) double   % ration d'observation (width/height)
         fov         (1,1) double   % angle de vue d'observation (en degré) mieux entre 50 & 80
         type        (1,1) logical  % 1 pour perspective, 0 pour orthonormé
         projMatrix  (4,4) double   % matrice de projection correspondant aux valeurs ci dessus
@@ -34,6 +34,9 @@ classdef Camera < matlab.mixin.Copyable
         
         constraint  (1,3) logical  % pour chaque axe
         counter_view=1 % value of pre-defined view
+
+        Width (1,1) double
+        Height (1,1) double
 
     end
 
@@ -47,7 +50,7 @@ classdef Camera < matlab.mixin.Copyable
 
     methods
         %CAMERA Constructor
-        function obj = Camera(ratio)
+        function obj = Camera(width_,height_)
         
             obj.position = [0 0 obj.DEFAULT_DISTANCE];
             obj.target = [0 0 0];
@@ -57,7 +60,8 @@ classdef Camera < matlab.mixin.Copyable
 
             obj.near = 0.01;
             obj.far = 10000;
-            obj.ratio = ratio;
+            obj.Width = width_;
+            obj.Height = height_;
             obj.fov = 60;
             obj.type = 1;
             obj.computeProj();
@@ -90,9 +94,13 @@ classdef Camera < matlab.mixin.Copyable
             obj.computeView();
         end % fin de setUp
 
-        %Perspective or orthographic
-        function switchProjType(obj)
-            obj.type = bitxor(obj.type, 1);
+        %Perspective (1) or orthographic (0)
+        function switchProjType(obj,state)
+            if nargin==1
+                obj.type = bitxor(obj.type, 1);
+            else
+                obj.type=state;
+            end
             obj.computeProj();
         end % fin de switchProjType
 
@@ -103,11 +111,26 @@ classdef Camera < matlab.mixin.Copyable
             obj.computeProj();
         end % fin de setNearFar
 
-        % Ration Width/Height
-        function setRatio(obj, newRatio)
-            obj.ratio = newRatio;
+        % Ratio Width/Height
+        function newRatio=getRatio(obj)
+            newRatio=obj.Width/obj.Height;
+        end % fin de getRatio
+
+        % Size Width , Height
+        function setSize(obj, w,h)
+            obj.Width = w;
+            obj.Height = h;
+
             obj.computeProj();
-        end % fin de setRation
+        end % fin de setSize    
+
+        function w=getWidth(obj)
+            w=obj.Width;
+        end
+
+        function w=getHeight(obj)
+            w=obj.Height;
+        end
 
         % FOV : Field Of View (perspective mode)
         function setFov(obj, newFov)
@@ -124,12 +147,12 @@ classdef Camera < matlab.mixin.Copyable
                 maxY = norm(obj.getDirection)/2;
                 att.coef = 0.173 * maxY; % 1.73 trouvé par essaies
             end
-            maxX = maxY * obj.ratio;
+            maxX = maxY * obj.getRatio;
             att.maxX  = maxX;
             att.maxY = maxY;
             att.view = obj.viewMatrix;
             att.proj = obj.projMatrix;
-            att.ratio = obj.ratio;
+            att.ratio = obj.getRatio;
             att.pos = obj.position;
             att.direction=obj.getDirection();
         end
@@ -211,6 +234,7 @@ classdef Camera < matlab.mixin.Copyable
         % modifiers : extented modifiers (SHIFT: slower , CTRL : faster)
         function zoom(obj,signe,modifiers)
             %ZOOM se deplace dans la direction de la target
+            disp('ZOOM')
             % % % dist = vecnorm(obj.position);
             % % % dist = sqrt(dist); % plus on est pres, plus on est precis,
             % % % dist = ceil(dist); % fonctionne par palier grace au ceil
@@ -221,12 +245,17 @@ classdef Camera < matlab.mixin.Copyable
             end
 
             dist=norm(obj.position-obj.target);
-            facteur = signe * dist *0.1*obj.sensibility; % obj.speed; % pourcentage de la distance restante
+            % Linear function : percentage of the remaining distance
+            facteur = signe * 0.1*dist; 
+
+            %polynom function
+            % facteur = signe *sqrt(0.1*dist);
+            % facteur = signe * 0.1*dist^2;
             
             if modifiers==128 %CTRL : faster
-                facteur=facteur*3;
+                facteur=facteur*5;
             elseif modifiers==64 %SHIFT : slower
-                facteur=facteur/3;
+                facteur=facteur/5;
             end
             vect = obj.getDirection/norm(obj.getDirection);
 
@@ -421,6 +450,9 @@ classdef Camera < matlab.mixin.Copyable
             obj.target = [0 0 0];
 
             obj.computeView(obj.smooth);
+            obj.setPosition(obj.position+[0 0 1]);
+            notify(obj, 'evt_updateUbo');
+            obj.setPosition(obj.position+[0 0 -1]);
         end   
 
         function rearView(obj,dist)
@@ -567,9 +599,9 @@ classdef Camera < matlab.mixin.Copyable
         function computeProj(obj)
             if obj.type == 0 % vue ortho
                 distance = norm(obj.getDirection);
-                obj.projMatrix = MProj3D('O', [distance * obj.ratio, distance, -obj.far, obj.far]);
+                obj.projMatrix = MProj3D('O', [distance * obj.getRatio, distance, -obj.far, obj.far]);
             else % vue en perspective
-                obj.projMatrix = MProj3D('P', [obj.ratio, obj.fov, obj.near, obj.far]);
+                obj.projMatrix = MProj3D('P', [obj.getRatio, obj.fov, obj.near, obj.far]);
             end
             notify(obj, 'evt_updateUbo');
         end % fin de computeProj

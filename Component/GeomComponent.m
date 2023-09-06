@@ -38,5 +38,10 @@ classdef (Abstract) GeomComponent < handle
                 notify(obj, 'evt_updateModel')
             end
         end % fin de setModelMatrix
+
+        function getSceneSize(obj)
+            m=min(x.mapElements(64).geom.listePoints);
+            M=min(x.mapElements(64).geom.listePoints);
+        end
     end % fin des methodes defaut
 end % fin de la classe geometrie

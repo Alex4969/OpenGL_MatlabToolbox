@@ -35,6 +35,7 @@ classdef Scene3D < handle
         selectObject struct       % struct qui contient les données de l'objets selectionné
         backgroundColor (1,4) double  % couleur du fond de la scene
         currentCamTarget
+        anim animator
     end %fin de propriete defaut
 
     properties(Access = private)
@@ -97,14 +98,16 @@ classdef Scene3D < handle
             gl.glEnable(gl.GL_DEPTH_TEST);
             % gl.glEnable(gl.GL_CULL_FACE); % optimisation : supprime l'affichage des faces arrieres
 
+            obj.camLightUBO = UBO(gl, 0, 96);
+            obj.context.release();
             % Camera and Light
-            obj.camera = Camera(obj.canvas.getWidth() / obj.canvas.getHeight());
+            obj.camera = Camera(obj.canvas.getWidth() , obj.canvas.getHeight());
             addlistener(obj.camera, 'evt_updateUbo', @obj.cbk_updateUbo);
             obj.lumiere = Light();
             addlistener(obj.lumiere, 'evt_updateUbo', @obj.cbk_updateUbo);
             addlistener(obj.lumiere, 'evt_updateForme', @obj.cbk_giveGL);
-            obj.camLightUBO = UBO(gl, 0, 96);
-            obj.fillCamUbo();
+            % obj.camLightUBO = UBO(gl, 0, 96);
+            % obj.fillCamUbo();
             obj.fillLightUbo();
             obj.generateInternalObject(); % axes, gyroscope, grille & framebuffer
             addlistener(obj,'evt_redraw',@obj.cbk_redraw);
@@ -123,7 +126,9 @@ classdef Scene3D < handle
             % Toolbar listeners
             addlistener(obj.fenetre.toolBarMap('Views'),'evt_mouseClickedButton',@obj.cbk_toolbarButtonClicked);           
             addlistener(obj.fenetre.toolBarMap('Camera'),'evt_mouseClickedButton',@obj.cbk_toolbarButtonClicked);
-
+            
+            % OTher
+            obj.anim=animator(obj.camera);
             
         end
 
@@ -247,14 +252,14 @@ classdef Scene3D < handle
 
         %Draw the whole scene
         function DrawScene(obj)
+            % disp('>>> START Drawscene')
+            % dbstack
             %DRAW dessine la scene avec tous ses objets
             gl = obj.getGL();
+
             gl.glClear(bitor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT));
             
-            %dessiner les objet interne a la scene
-            if ~isempty(obj.lumiere.forme)
-                obj.drawElem(gl, obj.lumiere.forme);
-            end
+            %dessiner les objets interne a la scene
             for i=obj.idLastInternal:-1
                 obj.drawElem(gl, obj.mapElements(i));
             end
@@ -266,8 +271,14 @@ classdef Scene3D < handle
                 end
             end
 
+            if ~isempty(obj.lumiere.forme)
+                obj.drawElem(gl, obj.lumiere.forme);
+            end
+
             obj.context.release();
+            pause(0.05)
             obj.canvas.swapBuffers(); % refresh the scene
+            % disp('<<< END Drawscene')
         end
     
         %Screenshot
@@ -297,10 +308,15 @@ classdef Scene3D < handle
             disp('MousePressed')
             obj.startX = event.getX();
             obj.startY = event.getY();
-            obj.mouseButton = event.getButton();
+            
+            % obj.anim.t.stop;
+            obj.anim.setBegin([obj.startX,obj.startY]);
+            
+            
+            % obj.mouseButton = event.getButton();
 
             event.getButton;
-            mod = event.getModifiersEx()
+            mod = event.getModifiersEx();
 
             % if obj.mouseButton == 1
             %     elemId = obj.pickObject();
@@ -334,7 +350,7 @@ classdef Scene3D < handle
             end
             if mod == obj.MOUSE_TARGET
                     disp('Set Target')
-                    elemId = obj.pickObject()
+                    elemId = obj.pickObject();
                     obj.camera.setTarget(obj.currentWorldCoord);
                     
                     obj.fenetre.setTextRight(['Camera target setted (ID = ' num2str(elemId) ')'],5);
@@ -356,6 +372,19 @@ classdef Scene3D < handle
 
 
             % obj.DrawScene;
+            
+                 
+            obj.anim.setEnd([event.getX() event.getY()]);
+            % obj.anim.t.start();
+
+            % dx = obj.animStopX - obj.animStartX;
+            % dy = obj.animStopY - obj.animStartY;
+            % time=toc
+            % depl=norm([dx,dy])
+            % V=depl/time %pix/sec
+            % for i= 1:fix(V)
+            %     obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight(),obj.camera.target);
+            % end
         end
 
           
@@ -367,6 +396,7 @@ classdef Scene3D < handle
             posY = event.getY();
             dy = posY - obj.startY;
             obj.startY = posY;
+            obj.anim.setCurrent([posX posY]);
 
             % worldcoord=obj.getWorldCoord()
 
@@ -377,11 +407,11 @@ classdef Scene3D < handle
             if mod==obj.MOUSE_TRANSLATE
                     obj.camera.translatePlanAct(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
             elseif mod==obj.MOUSE_ROTATE
-                    obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight(),obj.camera.target);
+                    obj.camera.rotate(dx/obj.camera.getWidth(),dy/obj.camera.getHeight(),obj.camera.target);
             elseif mod==obj.MOUSE_ROTATE+obj.SHIFT
-                    obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight(),obj.currentWorldCoord);
+                    obj.camera.rotate(dx/obj.camera.getWidth(),dy/obj.camera.getHeight(),obj.currentWorldCoord);
             elseif mod==obj.BUTTON1+obj.SHIFT+obj.CTRL
-                obj.camera.selfRotate((posX-obj.canvas.getWidth()/2)/obj.canvas.getWidth(),(posY-obj.canvas.getHeight()/2)/obj.canvas.getHeight(),dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight());
+                obj.camera.selfRotate((posX-obj.camera.getWidth()/2)/obj.camera.getWidth(),(posY-obj.camera.getHeight()/2)/obj.camera.getHeight(),dx/obj.camera.getWidth(),dy/obj.camera.getHeight());
             end
             if (obj.lumiere.onCamera == true)
                 obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.getDirection());
@@ -545,7 +575,7 @@ classdef Scene3D < handle
             %disp(['ComponentResized (' num2str(w) ' ; ' num2str(h) ')'])
             gl = obj.getGL();
             gl.glViewport(0, 0, w, h);
-            obj.camera.setRatio(w/h);
+            obj.camera.setSize(w,h);
             obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
         end
@@ -611,6 +641,7 @@ classdef Scene3D < handle
                                 obj.fenetre.setTextLeft('Flash mode On (light is on camera)');
                                 obj.lumiere.putOnCamera(true);
                                 obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.getDirection());
+                                obj.DrawScene();
                             else
                                 obj.fenetre.setTextLeft('Flash mode Off');
                                 obj.lumiere.putOnCamera(false);
@@ -629,19 +660,19 @@ classdef Scene3D < handle
         function cbk_updateUbo(obj, source, ~)
         % Appeler par la caméra et la light quand il faut mettre leurs données a jour
             % class(source)
-            if isa(source, 'Light')
-                obj.fillLightUbo();
-                % if (obj.lumiere.onCamera == false)
-                    obj.DrawScene();
-                % end
-            elseif isa(source, 'Camera')
-                obj.fillCamUbo();
-                obj.DrawScene();
-            end
+            % % % if isa(source, 'Light')
+            % % %     obj.fillLightUbo();
+            % % %     % if (obj.lumiere.onCamera == false)
+            % % %         obj.DrawScene();
+            % % %     % end
+            % % % elseif isa(source, 'Camera')
+            % % %     obj.fillCamUbo();
+            % % %     obj.DrawScene();
+            % % % end
             
-            % % % obj.fillLightUbo();
-            % % % obj.fillCamUbo();
-            % % % obj.DrawScene();
+            obj.fillLightUbo();
+            % obj.fillCamUbo();
+            obj.DrawScene();
         end % fin de cbk_updateUbo
 
         function cbk_redraw(obj, ~, ~)
@@ -792,7 +823,6 @@ classdef Scene3D < handle
 %=======
             
             NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
-%>>>>>>> 0a4e26a8d22708fedc7e774cbe8eea7584e9ebe9
 
             worldCoord = obj.camera.projMatrix * obj.camera.viewMatrix \ NDC;
             worldCoord = worldCoord(1:3)./worldCoord(4);
@@ -864,17 +894,32 @@ classdef Scene3D < handle
         end % fin de getOrientationMatrices
 
         function fillCamUbo(obj)
-            obj.camLightUBO.putVec3(obj.getGL(), obj.camera.position, 80);
+            % obj.camLightUBO.putVec3(obj.getGL(), obj.camera.position, 80);
         end % fin de fillCamUbo
 
         function fillLightUbo(obj)
             % disp('fill UBO')
+            % % % gl = obj.getGL();
+            % % % obj.camLightUBO.putVec3(gl, obj.lumiere.position, 0);
+            % % % obj.camLightUBO.putVec3(gl, obj.lumiere.couleurLumiere, 16);
+            % % % obj.camLightUBO.putVec3(gl, obj.lumiere.directionLumiere, 32);
+            % % % obj.camLightUBO.putVec3(gl, obj.lumiere.paramsLumiere , 48);
+            % % % obj.camLightUBO.putVec3(gl, [1 0 0], 64);
+            % % % obj.camLightUBO.putVec3(gl, obj.camera.position, 80);
+            % % % obj.context.release();
+
+            
+            data.lightPosition=obj.lumiere.position;
+            data.lightColor=obj.lumiere.couleurLumiere;
+            data.lightDirection=obj.lumiere.directionLumiere;
+            data.lightParam=obj.lumiere.paramsLumiere;
+            data.lightIntensity=[1 0 0];
+            data.cameraPosition=obj.camera.position;
+
             gl = obj.getGL();
-            obj.camLightUBO.putVec3(gl, obj.lumiere.position, 0);
-            obj.camLightUBO.putVec3(gl, obj.lumiere.couleurLumiere, 16);
-            obj.camLightUBO.putVec3(gl, obj.lumiere.directionLumiere, 32);
-            obj.camLightUBO.putVec3(gl, obj.lumiere.paramsLumiere, 48);
-            obj.camLightUBO.putVec3(gl, [0.5 0 0], 64);
+            obj.camLightUBO.putStruct(gl,data,0);
+            obj.context.release();
+
         end % fin de fillLightUbo
     end
 
@@ -1289,6 +1334,32 @@ classdef Scene3D < handle
             % viewer.delete();            
         end
         
+        function test3(obj)
+            
+            addpath('outils\');
+            addpath('java\');
+            addpath('Component\');
+            
+            viewer = obj;
+            viewer.setBackgroundColor([0.05 0.05 0.1]);
+            viewer.lumiere.dotLight(0.01, 0); % lumiere ponctuelle d'intensité 1 / (a * dist² + b * dist + 1)
+            viewer.lumiere.setColor([1 1 1]);
+            viewer.DrawScene();
+
+            %welcome message
+            viewer.fenetre.setTextNorth('Welcome in virtual X-ray Imaging',10);
+
+engine = MyGeom(64, "face", "objets3D/engine.stl");
+carbu = MyGeom(66, "face", "C:\Users\pduvauchelle\Philippe\Recherche\DATA\Modeles CAO\download\compressor.stl");
+elem1 = viewer.AddElement(engine);
+elem2 = viewer.AddElement(carbu);
+viewer.lumiere.dotLight(0.001 ,0);
+
+elem1.setColor([0.85 0.85 0.95 1]);
+elem2.setColor([0.05 0.85 0.05 1]);
+elem2.setModelMatrix(MTrans3D([200 0 -50])*MScale3D(0.5));
+        end
+
     end
 
 end % fin de la classe Scene3D
