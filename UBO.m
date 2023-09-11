@@ -35,7 +35,7 @@ classdef UBO < handle
             % dans les UBO les valeurs font 1, 2 ou 4 octets donc on occupe 16 bits pour un vec3
             obj.Bind(gl);
             vecUni = java.nio.FloatBuffer.allocate(24);
-            d=single([[data.lightPosition 0] [data.lightColor 0] [data.lightDirection 0] [data.lightParam 0] [data.lightIntensity 0] [data.cameraPosition 0]]);
+            d=single([[data.lightPosition 0] [data.lightColor 0] [data.lightDirection 0] [data.lightParam] [data.lightIntensity] [data.cameraPosition 0]]);
             vecUni.put(d);
             vecUni.rewind();
             gl.glBufferSubData(gl.GL_UNIFORM_BUFFER, deb, obj.taille, vecUni);

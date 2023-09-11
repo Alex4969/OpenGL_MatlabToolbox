@@ -22,6 +22,7 @@ classdef jOGLframe < jFrame
         icon_grid="grid3.png"
         icon_flash="flash1.png"
         icon_axis="axis1.png"
+        icon_spinner="toupie2.png"
     end
 
     properties
@@ -174,6 +175,8 @@ classdef jOGLframe < jFrame
             obj.addToolbarComponent('Camera','JButton','light',obj.getIconPathOnDisk(obj.icon_light),'Light');
             obj.addToolbarComponent('Camera','JToggleButton','flash',obj.getIconPathOnDisk(obj.icon_flash),'Flash mode : set light on camera');            
             obj.addToolbarComponent('Camera','JButton','color',obj.getIconPathOnDisk(obj.icon_color),'Background Color');
+            obj.addToolbarComponent('Camera','JToggleButton','spinner',obj.getIconPathOnDisk(obj.icon_spinner),'Spinner mode');   
+            tb.addSeparator();
             obj.addToolbarComponent('Camera','JButton','screenshot',obj.getIconPathOnDisk(obj.icon_camera),'Screenshot');          
 
             % Link Panels

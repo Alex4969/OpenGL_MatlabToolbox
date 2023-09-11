@@ -20,29 +20,29 @@ layout (std140, binding = 0) uniform light {
     vec3 ulightPos  ;
     vec3 uLightColor; 
     vec3 uLightDir  ; 
-    vec4 uLightType ;
+    vec3 uLightData ;
     //Phil
-    vec4 uLightIntensity; 
+    vec3 uLightParam; 
     vec3 uCamPos    ;
 };
 
 float pointLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
-    in vec3 lightPos, in float a, in float b, in float method, in vec4 lightIntensity);
+    in vec3 lightPos, in float a, in float b);
 float direcLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
-    in vec3 lightDirection, in vec4 lightIntensity);
+    in vec3 lightDirection);
 float spotLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
-    in vec3 lightPos, in vec3 lightDir, in float coneInterne, in float coneExterne, in vec4 lightIntensity);
+    in vec3 lightPos, in vec3 lightDir, in float coneInterne, in float coneExterne);
 
 void main()
 {
     vec3 laNormale = normalize(vNormal);
     float intensiteLumineuse = 1.0;
-    if (uLightType.x == 1.0){   //LIGHT
-        intensiteLumineuse = pointLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightType.y, uLightType.z, uLightType.w, uLightIntensity);   //LIGHT
-    } else if (uLightType.x == 2.0) {   //LIGHT
-        intensiteLumineuse = direcLight(vCrntPos, laNormale, uCamPos, uLightDir, uLightIntensity);   //LIGHT
-    } else if (uLightType.x == 3.0) {   //LIGHT
-        intensiteLumineuse = spotLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightDir, uLightType.y, uLightType.z, uLightIntensity); //LIGHT
+    if (uLightData.x == 1.0){   //LIGHT
+        intensiteLumineuse = pointLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightData.y, uLightData.z);   //LIGHT
+    } else if (uLightData.x == 2.0) {   //LIGHT
+        intensiteLumineuse = direcLight(vCrntPos, laNormale, uCamPos, uLightDir);   //LIGHT
+    } else if (uLightData.x == 3.0) {   //LIGHT
+        intensiteLumineuse = spotLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightDir, uLightData.y, uLightData.z); //LIGHT
     }   //LIGHT
 
 
@@ -93,79 +93,72 @@ void main()
 
     // Phil  * uLightParam.x
     couleur.xyz *= uLightColor * intensiteLumineuse;
+    couleur.xyz *= uLightParam.x;
     fragColor = couleur;
 }
 
 float pointLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
-    in vec3 lightPos, in float a, in float b, in float method, in vec4 lightIntensity)
+    in vec3 lightPos, in float a, in float b)
 // lumiere qui s'attenue en fonction de la distance (= ampoule)
 {
     vec3 lightVec = lightPos - crntPos;
     float dist = length(lightVec);
-	float intensity = 1.0f ;
+    //float intensity = 1.0 / (a * dist * dist + b * dist + 1.0);
 
-	if (method == 1.0)
-	{
-		intensity = exp(-a*dist);
-	}
-	else if (method == 2.0)
-	{
-		intensity = 1.0 / (a * dist * dist + b * dist + 1.0);
-	}
+    float intensity = exp(-a*dist);
 
-
-    //ambient lighting intensity.y
-    float ambient = lightIntensity.y;
+    //ambient lighting
+    float ambient = 0.3f;
 
     //diffuse lighting
     lightVec = normalize(lightVec);
-    float diffuse = max(0.0f, dot(normal, lightVec))*lightIntensity.w;
+    float diffuse = max(0.0f, dot(normal, lightVec));
 
     // speculat lighting
-    float specularLight = lightIntensity.z;
+    float specularLight = 0.5f;
     vec3 viewDirection = normalize(camPos - crntPos);
     vec3 reflectionDir  = reflect(-lightVec, normal);
     float specAmount = pow(max(dot(viewDirection, reflectionDir), 0.0f), 8);
     float specular = specAmount * specularLight;
 
-    return (diffuse * intensity + ambient + specular * intensity)*lightIntensity.x;
+    return (diffuse * intensity + ambient + specular * intensity);
 };
 
 float direcLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
-    in vec3 lightDirection, in vec4 lightIntensity)
+    in vec3 lightDirection)
 //tous les rayons sont paralelle (= soleil)
 {
     //ambient lighting
-    float ambient = lightIntensity.y;
+    float ambient = 0.3f;
 
     //diffuse lighting
     vec3 lightDir = normalize(-lightDirection); /*direction inverse de la lumiere*/
-    float diffuse = max(0.0f, dot(normal, lightDir))*lightIntensity.w;
+    float diffuse = max(0.0f, dot(normal, lightDir));
 
     // speculat lighting
-    float specularLight = lightIntensity.z;
+    float specularLight = 0.5f;
     vec3 viewDirection = normalize(camPos - crntPos);
     vec3 reflectionDir  = reflect(-lightDir, normal);
     float specAmount = pow(max(dot(viewDirection, reflectionDir), 0.0f), 8);
     float specular = specAmount * specularLight;
 
-    return (diffuse + ambient + specular)*lightIntensity.x;
+    return (diffuse + ambient + specular);
 };
 
 float spotLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
-    in vec3 lightPos, in vec3 lightDir, in float coneInterne, in float coneExterne, in vec4 lightIntensity)
+    in vec3 lightPos, in vec3 lightDir, in float coneInterne, in float coneExterne)
 // cone de lumiere (= projecteur de la Rotonde !)
 {
     lightDir = normalize(lightDir);
     //ambient lighting
-    float ambient = lightIntensity.y;
+    float ambient = 0.3f;
 
     //diffuse lighting
     vec3 lightVec = normalize(lightPos - crntPos);
-    float diffuse = max(0.0f, dot(normal, lightVec))*lightIntensity.w;
+    float diffuse = max(0.0f, dot(normal, lightVec));
 
     // speculat lighting
-    float specularLight = lightIntensity.z;
+    float specularLight = 0.5f;
     vec3 viewDirection = normalize(camPos - crntPos);
     vec3 reflectionDir  = reflect(-lightVec, normal);
     float specAmount = pow(max(dot(viewDirection, reflectionDir), 0.0f), 8);
@@ -174,5 +167,5 @@ float spotLight(in vec3 crntPos, in vec3 normal, in vec3 camPos,
     float angle = dot(lightDir, -lightVec);
     float intensity = clamp( (angle - coneExterne)/(coneInterne - coneExterne) , 0.0, 1.0 );
 
-    return (diffuse * intensity + ambient + specular * intensity)*lightIntensity.x;
+    return (diffuse * intensity + ambient + specular * intensity);
 };

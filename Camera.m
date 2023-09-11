@@ -41,7 +41,7 @@ classdef Camera < matlab.mixin.Copyable
     end
 
     properties (SetAccess=public)
-        smooth      (1,1) uint32 = 25; % For interpolated moving : step number
+        smooth      (1,1) uint32 = 12; % For interpolated moving : step number
     end
 
     events
@@ -66,6 +66,7 @@ classdef Camera < matlab.mixin.Copyable
             obj.type = 1;
             obj.computeProj();
             obj.constraint = [true true true]; %XYZ : authorized axis
+
         end % fin du constructeur camera
     end
 
@@ -124,14 +125,6 @@ classdef Camera < matlab.mixin.Copyable
             obj.computeProj();
         end % fin de setSize    
 
-        function w=getWidth(obj)
-            w=obj.Width;
-        end
-
-        function w=getHeight(obj)
-            w=obj.Height;
-        end
-
         % FOV : Field Of View (perspective mode)
         function setFov(obj, newFov)
             obj.fov = newFov;
@@ -167,6 +160,10 @@ classdef Camera < matlab.mixin.Copyable
             end
             obj.speed
         end
+
+        function setSpeed(obj,newSpeed)
+            obj.speed=newSpeed;
+        end
     
         % Camera sensibility
         function changeSensibility(obj,increment)
@@ -183,7 +180,7 @@ classdef Camera < matlab.mixin.Copyable
 
     methods % Mouse moving methods
         
-        function translatePlanAct(obj,dx,dy)
+        function translate(obj,dx,dy)
             % if any(obj.constraint) % si une contrainte axial est présente : 
             %     dz = 0;
             %     if obj.constraint(3)
@@ -206,7 +203,7 @@ classdef Camera < matlab.mixin.Copyable
             obj.position = obj.position + translation * obj.speed;
             obj.target = obj.target + translation * obj.speed;
             obj.computeView();
-        end % fin de translatePlanAct
+        end % fin de translate
 
         function obsolete_translatePlanAct(obj,dx,dy)
             if any(obj.constraint) % si une contrainte axial est présente : 
@@ -232,33 +229,20 @@ classdef Camera < matlab.mixin.Copyable
 
         % Zoom : sign = +/-1
         % modifiers : extented modifiers (SHIFT: slower , CTRL : faster)
-        function zoom(obj,signe,modifiers)
+        function zoom(obj,signe)
             %ZOOM se deplace dans la direction de la target
-            disp('ZOOM')
             % % % dist = vecnorm(obj.position);
             % % % dist = sqrt(dist); % plus on est pres, plus on est precis,
             % % % dist = ceil(dist); % fonctionne par palier grace au ceil
             % % % facteur = signe * dist *0.3; % obj.speed; 
 
-            if nargin==2
-                modifiers=0;
-            end
+            % disp('ZOOM')
 
             dist=norm(obj.position-obj.target);
             % Linear function : percentage of the remaining distance
             facteur = signe * 0.1*dist; 
 
-            %polynom function
-            % facteur = signe *sqrt(0.1*dist);
-            % facteur = signe * 0.1*dist^2;
-            
-            if modifiers==128 %CTRL : faster
-                facteur=facteur*5;
-            elseif modifiers==64 %SHIFT : slower
-                facteur=facteur/5;
-            end
             vect = obj.getDirection/norm(obj.getDirection);
-
             if norm(obj.position + vect * facteur-obj.target)>obj.near %dist>obj.near
                 obj.position = obj.position + vect * facteur;
             end
@@ -285,22 +269,6 @@ classdef Camera < matlab.mixin.Copyable
 
             obj.computeView();
             
-            % newUp=sind(theta)*left+cosd(theta)*up;
-            % left = cross(forward,newUp);
-            % left = left / norm(left);
-            % 
-            % 
-            % Mrot = eye(4);
-            % Mrot(1,1:3) = left;
-            % Mrot(2,1:3) = newUp;
-            % Mrot(3,1:3) = forward;
-            % 
-            % Mtrans = eye(4);
-            % Mtrans(1:3,4) = -obj.position';
-            % 
-            % obj.up=newUp;
-            % obj.viewMatrix = Mrot * Mtrans;
-            % notify(obj, 'evt_updateUbo');
         end
 
         % Rotation around camera axis depending on mouse move
@@ -311,7 +279,7 @@ classdef Camera < matlab.mixin.Copyable
             R=norm(P);
             u=[dx dy 0];
             sens=sign(cross(P,u));
-            theta=sens(3)*R*obj.speed;
+            theta=sens(3)*R*5;%*obj.speed;
             obj.rotationAroundAxis(theta);
         end
 
@@ -370,6 +338,9 @@ classdef Camera < matlab.mixin.Copyable
             obj.computeView();
         end % fin de rotate
 
+        function setviewMatrix(obj,M)
+            obj.viewMatrix=M;
+        end
     end %% end methods for mouse moving
 
     %specific view
@@ -378,17 +349,27 @@ classdef Camera < matlab.mixin.Copyable
         %user/storage view
         function userView(obj,camParam)
             %camParam : can be obtained with getParametersView function
-            obj.position = camParam.position;
-            obj.up = camParam.up;
-            obj.target = camParam.target;
-            obj.computeView(obj.smooth);
+            % obj.position = camParam.position;
+            % obj.up = camParam.up;
+            % obj.target = camParam.target;
+            % obj.computeView(obj.smooth);
+
+            obj.anim(camParam.position,camParam.up,camParam.target,obj.smooth);
         end 
 
         function camParam=getCurrentView(obj)
             camParam.position=obj.position;
             camParam.up=obj.up;
             camParam.target=obj.target;
+            camParam.viewMatrix=obj.viewMatrix;
         end       
+
+        function setCamParameters(obj,camParam)
+            obj.position=camParam.position;
+            obj.up=camParam.up;
+            obj.target=camParam.target;
+            obj.viewMatrix=camParam.viewMatrix;
+        end
 
         %Default views
         function numView=nextDefaultView(obj,dist)
@@ -416,26 +397,27 @@ classdef Camera < matlab.mixin.Copyable
             
             switch cadran
                 case 1
-                    obj.position = [-dist dist dist];
+                    position = [-dist dist dist];
                 case 2
-                    obj.position = [dist dist dist];
+                    position = [dist dist dist];
                 case 3
-                    obj.position = [dist dist -dist];
+                    position = [dist dist -dist];
                 case 4
-                    obj.position = [-dist dist -dist];
+                    position = [-dist dist -dist];
                 case 5
-                    obj.position = [-dist -dist dist];
+                    position = [-dist -dist dist];
                 case 6
-                    obj.position = [dist -dist dist];
+                    position = [dist -dist dist];
                 case 7
-                    obj.position = [dist -dist -dist];
+                    position = [dist -dist -dist];
                 case 8
-                    obj.position = [-dist -dist -dist];                    
+                    position = [-dist -dist -dist];                    
             end
 
-            obj.up = [0 1 0];
-            obj.target = [0 0 0];
-            obj.computeView(obj.smooth);
+            % obj.up = [0 1 0];
+            % obj.target = [0 0 0];
+            % obj.computeView(obj.smooth);
+            obj.anim(position,[0 1 0],[0 0 0],obj.smooth);
         end  
 
         %others view
@@ -445,14 +427,9 @@ classdef Camera < matlab.mixin.Copyable
             elseif nargin==2
                 dist=abs(dist);
             end
-            obj.position = [0 0 dist];
-            obj.up = [0 1 0];
-            obj.target = [0 0 0];
 
-            obj.computeView(obj.smooth);
-            obj.setPosition(obj.position+[0 0 1]);
-            notify(obj, 'evt_updateUbo');
-            obj.setPosition(obj.position+[0 0 -1]);
+            obj.anim([0 0 dist],[0 1 0],[0 0 0],obj.smooth);
+
         end   
 
         function rearView(obj,dist)
@@ -461,10 +438,8 @@ classdef Camera < matlab.mixin.Copyable
             elseif nargin==2
                 dist=abs(dist);
             end
-            obj.position = [0 0 -dist];
-            obj.up = [0 -1 0];
-            obj.target = [0 0 0];
-            obj.computeView(obj.smooth);
+
+            obj.anim([0 0 -dist],[0 -1 0],[0 0 0],obj.smooth);
         end     
 
         function backView(obj,dist)
@@ -473,10 +448,11 @@ classdef Camera < matlab.mixin.Copyable
             elseif nargin==2
                 dist=abs(dist);
             end
-            obj.position = [0 0 -dist];
-            obj.up = [0 1 0];
-            obj.target = [0 0 0];
-            obj.computeView(obj.smooth);
+            % obj.position = [0 0 -dist];
+            % obj.up = [0 1 0];
+            % obj.target = [0 0 0];
+            % obj.computeView(obj.smooth);
+            obj.anim([0 0 -dist],[0 1 0],[0 0 0],obj.smooth);
         end           
 
         function upView(obj,dist)
@@ -485,10 +461,11 @@ classdef Camera < matlab.mixin.Copyable
             elseif nargin==2
                 dist=abs(dist);
             end
-            obj.position = [0 dist 0];
-            obj.up = [0 0 -1];
-            obj.target = [0 0 0];
-            obj.computeView(obj.smooth);
+            % obj.position = [0 dist 0];
+            % obj.up = [0 0 -1];
+            % obj.target = [0 0 0];
+            % obj.computeView(obj.smooth);
+            obj.anim([0 dist 0],[0 0 -1],[0 0 0],obj.smooth);
         end
 
         function downView(obj,dist)
@@ -497,10 +474,11 @@ classdef Camera < matlab.mixin.Copyable
             elseif nargin==2
                 dist=abs(dist);
             end
-            obj.position = [0 -dist 0];
-            obj.up = [0 0 1];
-            obj.target = [0 0 0];
-            obj.computeView(obj.smooth);
+            % obj.position = [0 -dist 0];
+            % obj.up = [0 0 1];
+            % obj.target = [0 0 0];
+            % obj.computeView(obj.smooth);
+            obj.anim([0 -dist 0],[0 0 1],[0 0 0],obj.smooth);
         end
 
         function leftView(obj,dist)
@@ -509,10 +487,11 @@ classdef Camera < matlab.mixin.Copyable
             elseif nargin==2
                 dist=abs(dist);
             end
-            obj.position = [-dist 0 0];
-            obj.up = [0 1 0];
-            obj.target = [0 0 0];
-            obj.computeView(obj.smooth);
+            % obj.position = [-dist 0 0];
+            % obj.up = [0 1 0];
+            % obj.target = [0 0 0];
+            % obj.computeView(obj.smooth);
+            obj.anim([-dist 0 0],[0 1 0],[0 0 0],obj.smooth);
         end
 
         function rightView(obj,dist)
@@ -521,10 +500,11 @@ classdef Camera < matlab.mixin.Copyable
             elseif nargin==2
                 dist=abs(dist);
             end
-            obj.position = [dist 0 0];
-            obj.up = [0 1 0];
-            obj.target = [0 0 0];
-            obj.computeView(obj.smooth);
+            % obj.position = [dist 0 0];
+            % obj.up = [0 1 0];
+            % obj.target = [0 0 0];
+            % obj.computeView(obj.smooth);
+            obj.anim([dist 0 0],[0 1 0],[0 0 0],obj.smooth);
         end        
 
         % A supprimer si inutile
@@ -543,22 +523,16 @@ classdef Camera < matlab.mixin.Copyable
         function resetConstraint(obj)
             obj.constraint = [false false false];
         end
+    
+
     end 
 
-    methods (Access = private)
+    methods (Access = protected)
 
-        % Compute viewMatrix with/without interpolation
-        function computeView(obj,N)
-            % N : number of interpolated views between current and new one
+        function computeView(obj)
 
-            if nargin==1
-                N=1;
-            elseif nargin==2
-            else
-                return;
-            end
-
-            forward = -obj.getDirection;            
+            % target = reference
+            forward = -obj.getDirection; %target -> position      
             forward = forward / norm(forward);
 
             left = cross(obj.up, forward);
@@ -574,6 +548,67 @@ classdef Camera < matlab.mixin.Copyable
             Mtrans(1:3,4) = -obj.position';
 
             T1 = Mrot * Mtrans;
+            obj.viewMatrix=T1;
+            notify(obj, 'evt_updateUbo');
+
+            % % % % T1(15)=-T1(15);
+            % % % % T1
+            % % % T0 = obj.viewMatrix;
+            % % % sameMatrix=sum(abs(T1(:)-T0(:)))<1e-6;
+            % % % if ~sameMatrix && N==1
+            % % %     obj.viewMatrix=T1;
+            % % %     notify(obj, 'evt_updateUbo');
+            % % % elseif ~sameMatrix && N>1
+            % % %     M=obj.transformInterp(N,T0,T1);
+            % % %     for i=1:size(M,3)
+            % % %         obj.position=-M(1:3,4,i); %position
+            % % %         position=M(1:3,4,i)
+            % % %         % left=M(1,1:3,i);
+            % % %         % up=M(2,1:3,i)
+            % % %         % forward=M(3,1:3,i) % !!! normalized
+            % % %         % target=obj.position-forward
+            % % %         obj.up=M(2,1:3,i);
+            % % %         obj.viewMatrix=M(:,:,i);
+            % % %         notify(obj, 'evt_updateUbo');
+            % % %     end
+            % % % % else
+            % % % %     disp('Same Matrix')
+            % end
+
+            % obj.viewMatrix=T1;
+            % notify(obj, 'evt_updateUbo');
+
+        end % fin de computeView
+
+        % Compute viewMatrix with/without interpolation
+        function computeView_OK(obj,N)
+            % N : number of interpolated views between current and new one
+
+            if nargin==1
+                N=1;
+            elseif nargin==2
+            else
+                return;
+            end
+
+            forward = -obj.getDirection; %target -> position      
+            forward = forward / norm(forward);
+
+            left = cross(obj.up, forward);
+            left = left / norm(left);
+            newUp = cross(forward, left);
+
+            Mrot = eye(4);
+            Mrot(1,1:3) = left;
+            Mrot(2,1:3) = newUp;
+            Mrot(3,1:3) = forward;
+
+            Mtrans = eye(4);
+            Mtrans(1:3,4) = -obj.position';
+
+            T1 = Mrot * Mtrans;
+            % T1(15)=-T1(15);
+            % T1
             T0 = obj.viewMatrix;
             sameMatrix=sum(abs(T1(:)-T0(:)))<1e-6;
             if ~sameMatrix && N==1
@@ -582,7 +617,13 @@ classdef Camera < matlab.mixin.Copyable
             elseif ~sameMatrix && N>1
                 M=obj.transformInterp(N,T0,T1);
                 for i=1:size(M,3)
-                    obj.position
+                    obj.position=-M(1:3,4,i); %position
+                    position=M(1:3,4,i)
+                    % left=M(1,1:3,i);
+                    % up=M(2,1:3,i)
+                    % forward=M(3,1:3,i) % !!! normalized
+                    % target=obj.position-forward
+                    obj.up=M(2,1:3,i);
                     obj.viewMatrix=M(:,:,i);
                     notify(obj, 'evt_updateUbo');
                 end
@@ -606,13 +647,19 @@ classdef Camera < matlab.mixin.Copyable
             notify(obj, 'evt_updateUbo');
         end % fin de computeProj
 
+    end
+
+    methods (Access=public)
         % Matrix interpolation for smooth moving
-        function mat = transformInterp(obj,N,T0,T1)
+        function [mat,pos,target] = transformInterp(obj,N,T0,T1)
             % compute interpolated matrix between T0 and T1, N steps
             % Only rotation and translation
             % mat : 4x4xN matrices
+            % https://robotacademy.net.au/lesson/interpolating-pose-in-3d/
+            % https://en.wikipedia.org/wiki/Slerp
             
-            s=0:1/(double(N)-1):1;
+            % s=0:1/(double(N)-1):1;
+            s=1/double(N):1/double(N):1;
             
             q0=tform2quat(T0);
             q1=tform2quat(T1);      
@@ -627,6 +674,8 @@ classdef Camera < matlab.mixin.Copyable
             t1=T1(13:15);
 
             mat=zeros(4,4,N);
+            pos=zeros(N,3);
+            target=zeros(N,3);
             if theta==0
                 R=zeros(3,3);
                 R=T1(1:3,1:3);
@@ -635,6 +684,7 @@ classdef Camera < matlab.mixin.Copyable
                     mat(:,:,i)=eye(4);
                     mat(1:3,1:3,i)=R;
                     mat((13:15)+16*(double(i)-1))=new_t;
+                    pos(i,:)=-mat(1:3,1:3,i)'*mat(1:3,4,i);
                 end                
             else
                 for i=1:N
@@ -644,6 +694,8 @@ classdef Camera < matlab.mixin.Copyable
                     mat(:,:,i)=eye(4);
                     mat(1:3,1:3,i)=R;
                     mat((13:15)+16*(double(i)-1))=new_t;
+                    pos(i,:)=-mat(1:3,1:3,i)'*mat(1:3,4,i);
+                    target(i,:)=pos(i,:)-norm(pos(i,:))*mat(3,1:3,i);
                 end                
             end
 
@@ -656,6 +708,61 @@ classdef Camera < matlab.mixin.Copyable
             %     mat(1:3,1:3,i)=R;
             %     mat([13:15]+16*(double(i)-1))=new_t;
             % end
+
+        end
+    
+        function allPos=anim(obj,finalPos,finalUp,finalTarget,N)
+
+            if nargin<=2
+                finalUp=obj.up;
+                finalTarget=obj.target;
+                N=obj.smooth;
+            elseif nargin<=3
+                finalTarget=obj.target;
+                N=obj.smooth;                
+            elseif nargin<=4
+                N=obj.smooth;
+            end
+
+            %compute final pos
+            forward = (finalPos-finalTarget); %target -> position      
+            forward = forward / norm(forward);
+
+            left = cross(finalUp, forward);
+            if isequal(left,[0 0 0])
+                warning('Animation impossible: verify parameters')
+                return;
+            end
+            left = left / norm(left);
+            newUp = cross(forward, left);
+
+            Mrot = eye(4);
+            Mrot(1,1:3) = left;
+            Mrot(2,1:3) = newUp;
+            Mrot(3,1:3) = forward;
+
+            Mtrans = eye(4);
+            Mtrans(1:3,4) = -finalPos';
+
+            T1 = Mrot * Mtrans;
+            T0 = obj.viewMatrix;
+
+            sameMatrix=sum(abs(T1(:)-T0(:)))<1e-6;
+            if ~sameMatrix            
+                [M,allPos,allTarget]=obj.transformInterp(N,T0,T1);
+                % allPos=zeros(size(M,3),3);
+                for i=1:size(M,3)
+                    % disp('animation')
+                    obj.position=allPos(i,:);
+                    % left=M(1,1:3,i);
+                    % up=M(2,1:3,i)
+                    % forward=M(3,1:3,i) % !!! normalized
+                    obj.up=M(2,1:3,i);
+                    obj.target=allTarget(i,:);
+                    obj.viewMatrix=M(:,:,i);
+                    notify(obj, 'evt_updateUbo');
+                end        
+            end
 
         end
 
@@ -700,6 +807,6 @@ classdef Camera < matlab.mixin.Copyable
 
         end
 
-    end % fin des methodes privées
+    end 
 
 end %fin classe Camera
