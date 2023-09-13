@@ -72,6 +72,16 @@ classdef Camera < matlab.mixin.Copyable
 
     % set and get
     methods
+        % Camera initialisation (in case of error)
+        function init(obj)
+
+            obj.position = [0 0 500];
+            obj.target = [0 0 0];
+            obj.up = [0 1 0];
+            obj.computeView();
+
+        end
+
         % Camera position
         function setPosition(obj, newPosition)
             obj.position = newPosition;
@@ -82,6 +92,25 @@ classdef Camera < matlab.mixin.Copyable
         function dir=getDirection(obj)
             dir=obj.target - obj.position;
         end
+
+         % Direction position -> target
+         function setDirection(obj,newDir,changedParameter)
+             arguments
+                 obj
+                 newDir (1,3) double
+                 changedParameter {mustBeMember(changedParameter,["position","target"])} = 'position'
+             end
+
+             switch changedParameter
+                 case 'position'
+                    obj.position= newDir + obj.target;
+                 case 'target'
+                    obj.target= newDir + obj.position;
+                 otherwise
+                     return;
+             end
+            obj.computeView();
+        end       
 
         % Target : point looked at
         function setTarget(obj, newTarget)
@@ -289,6 +318,7 @@ classdef Camera < matlab.mixin.Copyable
             % target=obj.target;
             obj.setTarget(centre);
 
+            % centre
             pos = obj.position;
             pos = pos - centre;
             % conversion en coordonné sphérique et application du changement
@@ -307,6 +337,7 @@ classdef Camera < matlab.mixin.Copyable
             end
             % reconversion en coordonnée cartesien
             pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi) ] * rayon;
+
             obj.position = pos + centre;
             % obj.targetDir = obj.target - obj.position;
             % obj.setTarget(target);
@@ -354,7 +385,7 @@ classdef Camera < matlab.mixin.Copyable
             % obj.target = camParam.target;
             % obj.computeView(obj.smooth);
 
-            obj.anim(camParam.position,camParam.up,camParam.target,obj.smooth);
+            obj.move(camParam.position,camParam.up,camParam.target,obj.smooth);
         end 
 
         function camParam=getCurrentView(obj)
@@ -417,7 +448,7 @@ classdef Camera < matlab.mixin.Copyable
             % obj.up = [0 1 0];
             % obj.target = [0 0 0];
             % obj.computeView(obj.smooth);
-            obj.anim(position,[0 1 0],[0 0 0],obj.smooth);
+            obj.move(position,[0 1 0],[0 0 0],obj.smooth);
         end  
 
         %others view
@@ -428,7 +459,7 @@ classdef Camera < matlab.mixin.Copyable
                 dist=abs(dist);
             end
 
-            obj.anim([0 0 dist],[0 1 0],[0 0 0],obj.smooth);
+            obj.move([0 0 dist],[0 1 0],[0 0 0],obj.smooth);
 
         end   
 
@@ -439,7 +470,7 @@ classdef Camera < matlab.mixin.Copyable
                 dist=abs(dist);
             end
 
-            obj.anim([0 0 -dist],[0 -1 0],[0 0 0],obj.smooth);
+            obj.move([0 0 -dist],[0 -1 0],[0 0 0],obj.smooth);
         end     
 
         function backView(obj,dist)
@@ -452,7 +483,7 @@ classdef Camera < matlab.mixin.Copyable
             % obj.up = [0 1 0];
             % obj.target = [0 0 0];
             % obj.computeView(obj.smooth);
-            obj.anim([0 0 -dist],[0 1 0],[0 0 0],obj.smooth);
+            obj.move([0 0 -dist],[0 1 0],[0 0 0],obj.smooth);
         end           
 
         function upView(obj,dist)
@@ -465,7 +496,7 @@ classdef Camera < matlab.mixin.Copyable
             % obj.up = [0 0 -1];
             % obj.target = [0 0 0];
             % obj.computeView(obj.smooth);
-            obj.anim([0 dist 0],[0 0 -1],[0 0 0],obj.smooth);
+            obj.move([0 dist 0],[0 0 -1],[0 0 0],obj.smooth);
         end
 
         function downView(obj,dist)
@@ -478,7 +509,7 @@ classdef Camera < matlab.mixin.Copyable
             % obj.up = [0 0 1];
             % obj.target = [0 0 0];
             % obj.computeView(obj.smooth);
-            obj.anim([0 -dist 0],[0 0 1],[0 0 0],obj.smooth);
+            obj.move([0 -dist 0],[0 0 1],[0 0 0],obj.smooth);
         end
 
         function leftView(obj,dist)
@@ -491,7 +522,7 @@ classdef Camera < matlab.mixin.Copyable
             % obj.up = [0 1 0];
             % obj.target = [0 0 0];
             % obj.computeView(obj.smooth);
-            obj.anim([-dist 0 0],[0 1 0],[0 0 0],obj.smooth);
+            obj.move([-dist 0 0],[0 1 0],[0 0 0],obj.smooth);
         end
 
         function rightView(obj,dist)
@@ -504,7 +535,7 @@ classdef Camera < matlab.mixin.Copyable
             % obj.up = [0 1 0];
             % obj.target = [0 0 0];
             % obj.computeView(obj.smooth);
-            obj.anim([dist 0 0],[0 1 0],[0 0 0],obj.smooth);
+            obj.move([dist 0 0],[0 1 0],[0 0 0],obj.smooth);
         end        
 
         % A supprimer si inutile
@@ -711,7 +742,7 @@ classdef Camera < matlab.mixin.Copyable
 
         end
     
-        function allPos=anim(obj,finalPos,finalUp,finalTarget,N)
+        function allPos=move(obj,finalPos,finalUp,finalTarget,N)
 
             if nargin<=2
                 finalUp=obj.up;

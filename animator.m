@@ -3,21 +3,20 @@ classdef animator < handle
 
     properties%(SetAccess=protected,GetAccess=protected)
         t timer
-        camera Camera
-        Enable logical
+    end
 
-        beginPoint (1,2) double 
-        currentPoint (1,2) double
-        endPoint (1,2) double 
-
-        currentVector
-        nbAppel
-
-        impulse
-
-        beginTime
+    properties(SetAccess=protected,GetAccess=public)
         acceleration
-        rotAxis
+        Enable logical
+    end
+
+    properties(SetAccess=protected,GetAccess=protected)
+        camera Camera
+        
+        currentPoint (1,2) double   % in screen space
+        currentVector (1,2) double  % in screen space
+
+        currentRotationMatrix (4,4) double
     end
 
     methods
@@ -36,22 +35,39 @@ classdef animator < handle
             obj.t.StopFcn=@(src,evt)obj.cbk_stopTimer(src,evt);
 
             obj.camera=camera_;
+            obj.Enable=false;
 
         end
 
+        function state=isRunning(obj)
+            if strcmpi(obj.t.Running,'off')
+                state=false;
+            else
+                state=true;
+            end
+        end
+
+        function setEnable(obj,state)
+            if state
+                obj.Enable=true;
+            else
+                obj.Enable=false;
+                obj.t.stop;
+            end
+        end        
 
         function setBegin(obj,P)
+            % Begin dynamic animation
+            disp('BEGIN')
+            
             if obj.Enable==false
                 return;
             end
-            disp('BEGIN')
-            
+                      
             obj.t.stop;
-            
-            obj.beginPoint=P; 
+            obj.acceleration=0;
             obj.currentPoint=P;
-            obj.beginTime=tic;
-            % obj
+            tic; %beginning the drag
         end
 
         function setCurrent(obj,P)
@@ -60,11 +76,9 @@ classdef animator < handle
             end
 
             dt=toc;
-
-            obj.currentVector=P-obj.currentPoint;
+            obj.currentVector=(P-obj.currentPoint).*[1 -1];
             obj.acceleration=norm(obj.currentVector)/(dt^2);
-            % scatter(toc(uint64(obj.beginTime)),obj.acceleration)
-            % a=obj.acceleration;
+
             obj.currentPoint=P;
             tic;
             
@@ -72,42 +86,15 @@ classdef animator < handle
         end        
 
         function setEnd(obj,P)
+            disp('END')
             if obj.Enable==false
                 return;
-            end
-            disp('END')
+            end            
             
-
+            dt=toc;
+            obj.currentVector=(P-obj.currentPoint).*[1 -1];
+            obj.acceleration=norm(obj.currentVector)/(dt^2);
             
-
-            % % % obj.impulse=P-obj.currentPoint;
-            % % % 
-            % % % % obj.anim(d_uv);
-            % % % 
-            % % % if obj.acceleration>2000
-            % % %     obj.t.start;
-            % % % end
-            % v=v/norm(v)
-
-
-
-            % dt=toc(uint64(obj.elapsedTime)); 
-            % 
-            % obj.endPoint=P;            
-            % obj.acceleration=norm(obj.endPoint-obj.startPoint)/(dt^2);
-            % 
-            % % aaa=obj.acceleration
-            % if obj.acceleration>1000
-            % 
-            %     obj.t.start;
-            % else
-            %     obj.t.stop;
-            % end
-            % % obj
-        end
-
-        function vector=getMovingVector(obj)
-            vector=obj.endPoint-obj.startPoint;
         end
 
         function delete(obj)
@@ -118,121 +105,116 @@ classdef animator < handle
 
     % interpolations
     methods
-        function anim(obj,d_uv)
-            [u_xyz,v_xyz]=obj.getRotationAxis();
+        function animate(obj,posList)
+            %animat the camera from a list of generated position
+            %postList : Nx3 list camera position
 
+            figure(1)
+            clf(1)
+            hold on
 
-            transl=d_uv(1)*[1 0]+d_uv(2)*[0 1];
-            transl=transl/norm(transl);
-
-            axis=[-transl(2) transl(1)];
-            axis=axis/norm(axis);
-
-            rotAxis=axis(1)*u_xyz+axis(2)*v_xyz;
-            norm(rotAxis);
-
-            Mtrans = eye(4);
-            Mtrans(1:3,4) = -obj.camera.position';
-
-            for i=1:10
+            N=numel(posList)/3;
+            dir=obj.camera.getDirection();
+            for i=1:N
                 disp('anim')
-                % T1 = MRot3DbyAxe(i*6,rotAxis) * Mtrans;
-                % position=-T1(1:3,1:3)'*obj.camera.position'
-                % obj.camera.setviewMatrix(T1);
-                % notify(obj.camera, 'evt_updateUbo');
-                % obj.camera.setPosition(position)
+                position=posList(i,:);
+                    %debug
+                    scatter3(position(1),position(2),position(3))
+                cam.position=position;
+                % obj.camera.setDirection(dir,"target");
+                cam.target=position.*[0 1 0];
+                cam.up=obj.camera.up;
+                cam.viewMatrix=obj.camera.viewMatrix;
+                % obj.camera.setCamParameters(cam);
+                obj.camera.move(cam.position,cam.up,cam.target,1);
+            end
 
-                d_uv=[100 0];
-                obj.camera.rotate( d_uv(1)/obj.camera.Width , d_uv(2)/obj.camera.Height ,obj.camera.target)
-                d_uv(1)/obj.camera.Width
-                d_uv(2)/obj.camera.Height
-                % notify(obj.camera, 'evt_updateUbo');
+        end
 
+        function posList=genTranslationMove(obj,origin,vecTrans,N)
+            posList=zeros(N,3);
+            T=MTrans3D(vecTrans);
+            posList(1,:)=origin;
+            for i=2:N
+                newPos=T*[posList(i-1,:) 1]';
+                posList(i,:)=newPos(1:3)';
             end
         end
+
+        function posList=genHelicoidalMove(obj,origin,vecTrans,angle,N)
+            posList=zeros(N,3);
+            Tr=MTrans3D(vecTrans);
+            R=MRot3D(angle);
+            T=Tr*R;
+            posList(1,:)=origin;
+            for i=2:N
+                newPos=T*[posList(i-1,:) 1]';
+                posList(i,:)=newPos(1:3)';
+            end
+        end        
+
 
     end
 
     % Callback
     methods(Access=protected)
         function cbk_startTimer(obj,source,event)
+            accelCoef=25000;
 
+            disp('start timer')
 
-            [u_xyz,v_xyz]=obj.getRotationAxis();
+            [u_xyz,v_xyz]=obj.get3DRotationAxis();
 
+            % Mouse translation vector
             transl=obj.currentVector;
-            % transl=d_uv(1)*[1 0]+d_uv(2)*[0 1];
             transl=transl/norm(transl);
 
-            axis=[-transl(2) transl(1)];
-            % axis=axis/norm(axis);
+            axis=[-transl(2) transl(1)]; %normal to transl
 
-            obj.rotAxis=axis(1)*u_xyz+axis(2)*v_xyz;
-            % norm(rotAxis);
+            % 3D rotation axis
+            rotAxis=(axis(1)*u_xyz+axis(2)*v_xyz);
+            rotSign=sign(dot(obj.camera.up,rotAxis));
+            rotAxis=rotSign*rotAxis;
 
-            obj.nbAppel=0;
+            obj.camera.setUp(rotAxis);
 
-                % T1 = MRot3DbyAxe(i*6,rotAxis) * Mtrans;
-                % position=-T1(1:3,1:3)'*obj.camera.position'
-                % obj.camera.setviewMatrix(T1);
-                % notify(obj.camera, 'evt_updateUbo');
-                % obj.camera.setPosition(position)
-                figure(1)
-                clf;
-                hold on
+            rotationStep=rotSign*obj.acceleration/accelCoef;
+
+            obj.currentRotationMatrix = MRot3DbyAxe(rotationStep,-rotAxis); % minus come from the camera is moving, not the object (need to invert)
+
+            %debug
+            % figure(1)
+            % clf;
+            % hold on
 
         end
 
         function cbk_animate(obj,source,event)
-            % disp('animate')
-                % d_uv=[150 -10];
+            % disp('animate timer')
 
-                % fonction a peu pres
-                % % % d_uv(1)=obj.impulse(1);
-                % % % d_uv(2)=obj.impulse(2);
-                % % % d_uv=d_uv*obj.acceleration/1000;
-                % % % obj.camera.rotate( d_uv(1)/obj.camera.Width , d_uv(2)/obj.camera.Height ,obj.camera.target)
+            position=obj.currentRotationMatrix*[obj.camera.position 1]';
+            position=position(1:3)';
 
-                % % % obj.impulse=P-obj.currentPoint;
+            obj.camera.setPosition(position);
 
-            % obj.anim(d_uv);
-            
-            % if obj.acceleration>2000
-            %     obj.t.start;
-            % end
-
-            Mtrans = eye(4);
-            Mtrans(1:3,4) = -obj.camera.position';
-            if obj.nbAppel==0
-                Mtrans(1:3,4)=-[0 0 500]';
-            end
-            %******************
-            obj.nbAppel=obj.nbAppel+1;
-            step=1*obj.acceleration/1000;
-            r=obj.rotAxis
-            T1 = MRot3DbyAxe(step,obj.rotAxis) * Mtrans;
-                position=T1(1:3,1:3)'*obj.camera.position'
-                % obj.camera.setviewMatrix(T1);
-                % notify(obj.camera, 'evt_updateUbo');
-                scatter3(position(1),position(2),position(3))
-                obj.camera.setPosition(position);
+            %debug
+            % scatter3(position(1),position(2),position(3))
 
         end
 
         function cbk_stopTimer(obj,source,event)
-
+            disp('stop timer')
         end
 
-        function [u_axis,v_axis]=getRotationAxis(obj)
-                u_right = cross(obj.camera.getDirection, obj.camera.up);
-                u_right = u_right/norm(u_right);
-                v_up=cross(u_right,obj.camera.getDirection);
-                v_up=v_up/norm(v_up);
-                u_axis=u_right;
-                v_axis=v_up;
-                % vectN=+v_up-u_right; %perpendicular to vect
-                % axis=vectN/norm(vectN)
-                % % axis = +v_up-u_right;
+        function [u_axis,v_axis]=get3DRotationAxis(obj)
+            % u_axis,v_axis : u,v vector define camera's plane in absolute coordinate system
+
+            u_right = cross(obj.camera.getDirection, obj.camera.up);
+            u_right = u_right/norm(u_right);
+            v_up=cross(u_right,obj.camera.getDirection);
+            v_up=v_up/norm(v_up);
+            u_axis=u_right;
+            v_axis=v_up;
         end
 
 

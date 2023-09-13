@@ -310,6 +310,16 @@ classdef Scene3D_test < Scene3D
             % elem2 = viewer.AddElement(carbu);
             % elem2.setColor([0.05 0.85 0.05 1]);
             % elem2.setModelMatrix(MTrans3D([200 0 -50])*MScale3D(0.5));
+
+            % Cube
+            [pos, ind, mapping] = generateCube();
+            cubeGeom = GeomFace(1, pos, ind);
+            viewer.AddElement(cubeGeom);
+            
+            elem = viewer.mapElements(1);
+            elem.setColor([0 1 1 1]);
+            elem.setCouleurArretes([1 0 0]);
+            elem.setModelMatrix(MScale3D(230));
         end
 
     end    

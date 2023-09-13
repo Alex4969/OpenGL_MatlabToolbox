@@ -99,7 +99,7 @@ classdef Scene3D < handle
             % gl.glEnable(gl.GL_CULL_FACE); % optimisation : supprime l'affichage des faces arrieres
 
             obj.camLightUBO = UBO(gl, 0, 96);
-            obj.context.release();
+            obj.releaseGL();
 
             % Camera and Light
             obj.camera = Camera(obj.canvas.getWidth() , obj.canvas.getHeight());
@@ -144,7 +144,7 @@ classdef Scene3D < handle
             end
             Texture.DeleteAll(gl);
             obj.camLightUBO.delete(gl);
-            obj.context.release();
+            obj.releaseGL();
             obj.fenetre.delete();
         end
     
@@ -292,8 +292,11 @@ classdef Scene3D < handle
                 obj.drawElem(gl, obj.lumiere.forme);
             end
 
-            obj.context.release();
-            pause(0.05)
+            obj.releaseGL();
+            % Make a short pause to avoid refresh issues : DO NOT USEpause(0.05) which cause error
+            tic;
+            while ~(toc>0.02);end
+
             obj.canvas.swapBuffers(); % refresh the scene
             % disp('<<< END Drawscene')
         end
@@ -322,7 +325,7 @@ classdef Scene3D < handle
     methods 
         function cbk_MousePressed(obj, ~, event)
             obj.cbk_manager.rmCallback('MouseDragged');
-            disp('MousePressed')
+            % disp('MousePressed')
             obj.startX = event.getX();
             obj.startY = event.getY();
             
@@ -355,11 +358,11 @@ classdef Scene3D < handle
             obj.currentWorldCoord = obj.getWorldCoord();
             obj.currentCamTarget=obj.camera.target;
 
-            disp([' Coord = ' num2str(obj.currentWorldCoord)]);
+            % disp([' Coord = ' num2str(obj.currentWorldCoord)]);
             if mod == obj.MOUSE_SELECT
                 elemId = obj.pickObject();                
                 obj.fenetre.setTextRight(['Selected (ID = ' num2str(elemId) ')']);
-                disp(['Selected (ID = ' num2str(elemId)]);% ' Coord = ' num2str(worldCoord)]);
+                % disp(['Selected (ID = ' num2str(elemId)]);% ' Coord = ' num2str(worldCoord)]);
                 if elemId ~= 0              
                     obj.selectById(elemId);
                     obj.DrawScene();
@@ -390,26 +393,25 @@ classdef Scene3D < handle
             % obj.DrawScene;
             
                  
-            a=obj.anim.acceleration
-            if strcmpi(obj.anim.t.Running,'off') && a>2000
-                obj.anim.setEnd([event.getX() event.getY()]);
+            obj.anim.setEnd([event.getX() event.getY()]);
+            % a=obj.anim.acceleration
+            if obj.anim.isRunning==false && obj.anim.acceleration>1000 && obj.anim.Enable   
                 obj.anim.t.start;
             else
                 obj.anim.t.stop;
+                % Re-activate callback in case of failed synchronisation
+                obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseDragged');
+                obj.cbk_manager.setMethodCallbackWithSource(obj,'MouseWheelMoved');
+                obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
             end
-            % obj.anim.t.start();
 
-            % dx = obj.animStopX - obj.animStartX;
-            % dy = obj.animStopY - obj.animStartY;
-            % time=toc
-            % depl=norm([dx,dy])
-            % V=depl/time %pix/sec
-            % for i= 1:fix(V)
-            %     obj.camera.rotate(dx/obj.canvas.getWidth(),dy/obj.canvas.getHeight(),obj.camera.target);
-            % end
         end
           
         function cbk_MouseDragged(obj, ~, event)
+            if obj.anim.isRunning
+                return;
+            end
+
             obj.cbk_manager.rmCallback('MouseDragged');
             posX = event.getX();
             dx = posX - obj.startX;
@@ -418,7 +420,9 @@ classdef Scene3D < handle
             dy = posY - obj.startY;
             obj.startY = posY;
 
-            obj.anim.setCurrent([posX posY]);
+            if obj.anim.Enable && ~obj.anim.isRunning
+                obj.anim.setCurrent([posX posY]);
+            end
 
             % worldcoord=obj.getWorldCoord()
 
@@ -440,7 +444,14 @@ classdef Scene3D < handle
                 obj.camera.rotate(dx/obj.camera.Width,dy/obj.camera.Height,obj.currentWorldCoord);
             elseif mod==obj.BUTTON1+obj.SHIFT+obj.CTRL
                 obj.camera.selfRotate((posX-obj.camera.Width/2)/obj.camera.Width,(posY-obj.camera.Height/2)/obj.camera.Height,dx/obj.camera.Width,dy/obj.camera.Height);
-            end
+            elseif mod==obj.BUTTON3+obj.SHIFT+obj.CTRL
+                stepIntensity=dy/obj.camera.Height*2;
+                stepSpecular=-dx/obj.camera.Height*2;
+                I=obj.lumiere.Intensity;
+                I(1)=max(0.1,min(I(1)-stepIntensity,5)); %between 0.1 and 5
+                I(3)=max(0.1,min(I(3)-stepSpecular,5)); %between 0.1 and 5
+                obj.lumiere.setIntensity(I);
+            end            
 
             if (obj.lumiere.onCamera == true)
                 obj.lumiere.setPositionWithCamera(obj.camera.position, obj.camera.getDirection());
@@ -476,7 +487,7 @@ classdef Scene3D < handle
 
             gl = obj.getGL();
             gl.glViewport(0, 0, w, h);
-            obj.context.release();
+            obj.releaseGL();
             
             obj.DrawScene();
             obj.cbk_manager.setMethodCallbackWithSource(obj,'ComponentResized');
@@ -491,7 +502,7 @@ classdef Scene3D < handle
             % for CTRL + character
             % for special keys : F1 ... F12 , esc ...
             % ATTENTION : event.getKeyCode() retourne toujours le code ascii de la majuscule
-            disp(['KeyPressed : ' event.getKeyChar  '   modifiersEx : ' num2str(event.getModifiersEx) '   ascii : ' num2str(event.getKeyCode)])
+            % % disp(['KeyPressed : ' event.getKeyChar  '   modifiersEx : ' num2str(event.getModifiersEx) '   ascii : ' num2str(event.getKeyCode)])
 
             % code=event.getModifiersEx+uint32(event.getKeyCode);
             % disp(['CODE : ' num2str(code)])
@@ -702,10 +713,10 @@ classdef Scene3D < handle
                         case 'spinner'
                             if event.handle.isSelected
                                 obj.fenetre.setTextLeft('Spinner mode On');
-                                obj.anim.Enable=true;
+                                obj.anim.setEnable(true);
                             else
                                 obj.fenetre.setTextLeft('Spinner mode Off');
-                                obj.anim.Enable=false;
+                                obj.anim.setEnable(false);
                             end
                     end
             end
@@ -718,7 +729,8 @@ classdef Scene3D < handle
     methods(Access = protected)
 
         function cbk_updateUbo(obj, source, ~)
-        % Appeler par la caméra et la light quand il faut mettre leurs données a jour
+            %update camera position and light parameters when needed
+
             % class(source)
             % % % if isa(source, 'Light')
             % % %     obj.fillLightUbo();
@@ -745,9 +757,17 @@ classdef Scene3D < handle
 
             gl = obj.getGL();
             obj.camLightUBO.putStruct(gl,data,0);
-            obj.context.release();
+            obj.releaseGL();
 
-            obj.DrawScene();
+            try
+                obj.DrawScene();
+            catch ME
+                disp('******************************************************************************')
+                disp(ME.identifier)
+                disp('******************************************************************************')
+            end
+
+            
 
         end % fin de cbk_updateUbo
 
@@ -773,6 +793,12 @@ classdef Scene3D < handle
             end
             gl = obj.context.getCurrentGL();
         end % fin de getGL
+
+        function releaseGL(obj)
+            if obj.context.isCurrent()
+                obj.context.release();
+            end
+        end % fin de getGL       
 
         function drawElem(obj, gl, elem)
             elem.shader.Bind(gl);
@@ -897,7 +923,10 @@ classdef Scene3D < handle
             
             NDC = [ x/w ; y/h ; profondeur ; 1 ].*2 - 1; % coordonnées dans l'écran -1 -> 1
 
-            worldCoord = obj.camera.projMatrix * obj.camera.viewMatrix \ NDC;
+            %SOLVING : A*worldCoord = NDC
+            % worldCoord = obj.camera.projMatrix * obj.camera.viewMatrix\NDC; % give error
+            worldCoord = inv(obj.camera.projMatrix * obj.camera.viewMatrix) * NDC;
+
             worldCoord = worldCoord(1:3)./worldCoord(4);
             worldCoord = worldCoord';
             if profondeur == 1
