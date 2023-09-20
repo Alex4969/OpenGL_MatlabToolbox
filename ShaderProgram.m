@@ -125,7 +125,7 @@ classdef ShaderProgram < handle
             fId = fopen(filePath);
             while ~feof(fId)
                 tline = fgets(fId);
-                if contains(tline, "//")
+                if contains(tline, "/*CHOIX")
                     if contains(tline, keyWords)
                         src = src + tline;
                     end 

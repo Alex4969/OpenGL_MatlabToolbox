@@ -4,17 +4,17 @@ out vec4 fragColor;
 
 in vec3 vNormal;
 in vec3 vCrntPos;
-in vec4 vColor;         //COL3 COL4
-in vec2 vTextureCoord;  //TEX
+in vec4 vColor;         /*CHOIX : COL3 COL4 */
+in vec2 vTextureCoord;  /*CHOIX : TEX */
 in vec2 interpolation;
 
-uniform vec4 uFaceColor = vec4(1.0);    //DEF
+uniform vec4 uFaceColor = vec4(1.0);    /*CHOIX : DEF */
 uniform vec4 uLineColor;
 uniform vec4 uPointColor;
 uniform float uLineSize;
 uniform float uPointSize;
 uniform int  uQuoiAfficher = 1;
-uniform sampler2D uTexture;             //TEX
+uniform sampler2D uTexture;             /*CHOIX : TEX */
 
 //layout (std140, binding = 0) uniform light {
 layout (std140) uniform light {
@@ -38,22 +38,22 @@ void main()
 {
     vec3 laNormale = normalize(vNormal);
     float intensiteLumineuse = 1.0;
-    if (uLightType.x == 1.0){   //LIGHT
-        intensiteLumineuse = pointLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightType.y, uLightType.z, uLightType.w, uLightIntensity);   //LIGHT
-    } else if (uLightType.x == 2.0) {   //LIGHT
-        intensiteLumineuse = direcLight(vCrntPos, laNormale, uCamPos, uLightDir, uLightIntensity);   //LIGHT
-    } else if (uLightType.x == 3.0) {   //LIGHT
-        intensiteLumineuse = spotLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightDir, uLightType.y, uLightType.z, uLightIntensity); //LIGHT
-    }   //LIGHT
+    if (uLightType.x == 1.0){   /*CHOIX : LIGHT */
+        intensiteLumineuse = pointLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightType.y, uLightType.z, uLightType.w, uLightIntensity);   /*CHOIX : LIGHT */
+    } else if (uLightType.x == 2.0) {   /*CHOIX : LIGHT */
+        intensiteLumineuse = direcLight(vCrntPos, laNormale, uCamPos, uLightDir, uLightIntensity);   /*CHOIX : LIGHT */
+    } else if (uLightType.x == 3.0) {   /*CHOIX : LIGHT */
+        intensiteLumineuse = spotLight(vCrntPos, laNormale, uCamPos, ulightPos, uLightDir, uLightType.y, uLightType.z, uLightIntensity); /*CHOIX : LIGHT */
+    }   /*CHOIX : LIGHT */
 
 
     
 
     vec4 couleur;
     if ((uQuoiAfficher & 1) > 0){
-        couleur = texture(uTexture, vTextureCoord); //TEX
-        couleur = uFaceColor; //DEF
-        couleur = vColor; //COL3 COL4
+        couleur = texture(uTexture, vTextureCoord); /*CHOIX : TEX */
+        couleur = uFaceColor; /*CHOIX : DEF */
+        couleur = vColor; /*CHOIX : COL3 COL4 */
     }
 
     if (uQuoiAfficher > 1){
