@@ -312,7 +312,7 @@ classdef Camera < matlab.mixin.Copyable
             obj.rotationAroundAxis(theta);
         end
 
-        % Rotatin due to (dx,dy) mouse move
+        % Rotation due to (dx,dy) mouse move
         function rotate(obj, dx, dy,centre)
 
             % target=obj.target;
@@ -321,7 +321,7 @@ classdef Camera < matlab.mixin.Copyable
             % centre
             pos = obj.position;
             pos = pos - centre;
-            % conversion en coordonné sphérique et application du changement
+            % conversion en coordonnée sphérique et application du changement
             % en coordonnée spherique les axes ne sont pas dans le meme ordre : https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_sph%C3%A9riques)
             rayon = norm(pos);
             theta = acos(pos(2) / rayon)   - dy * obj.sensibility;
@@ -339,8 +339,8 @@ classdef Camera < matlab.mixin.Copyable
             pos = [ sin(theta)*sin(phi)   cos(theta)   sin(theta)*cos(phi) ] * rayon;
 
             obj.position = pos + centre;
-            % obj.targetDir = obj.target - obj.position;
-            % obj.setTarget(target);
+
+            % Compute ViewMAtrix
             obj.computeView();
         end % fin de rotate
 
@@ -742,6 +742,7 @@ classdef Camera < matlab.mixin.Copyable
 
         end
     
+        % Move camera from current camra parameters to new's parameters
         function allPos=move(obj,finalPos,finalUp,finalTarget,N)
 
             if nargin<=2

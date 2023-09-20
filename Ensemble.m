@@ -6,7 +6,11 @@ classdef Ensemble < handle
         sousElements    containers.Map
         groupMatrix     (4,4) double   = eye(4);
         visible         logical
-    end    
+    end   
+
+    events
+        evt_redraw          % redraw needed
+    end      
 
     methods
         function obj = Ensemble(id)
@@ -24,8 +28,9 @@ classdef Ensemble < handle
             b = obj.visible;
         end % fin de isVisible
 
-        function setVisibilite(obj, b)
+        function setVisible(obj, b)
             obj.visible = b;
+            notify(obj, 'evt_redraw');
         end % fin de setVisibilite
 
         function AddElem(obj, elem)

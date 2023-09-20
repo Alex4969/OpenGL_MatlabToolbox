@@ -122,7 +122,7 @@ classdef animator < handle
                     scatter3(position(1),position(2),position(3))
                 cam.position=position;
                 % obj.camera.setDirection(dir,"target");
-                cam.target=position.*[0 1 0];
+                cam.target=obj.camera.target;%  position.*[0 1 0];
                 cam.up=obj.camera.up;
                 cam.viewMatrix=obj.camera.viewMatrix;
                 % obj.camera.setCamParameters(cam);

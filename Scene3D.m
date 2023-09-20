@@ -184,6 +184,7 @@ classdef Scene3D < handle
         function group = CreateGroup(obj, groupId)
             group = Ensemble(groupId);
             obj.mapGroups(groupId) = group;
+            addlistener(group,'evt_redraw',@obj.cbk_redraw);
         end
 
         %Remove element from 3D Scene
@@ -292,10 +293,11 @@ classdef Scene3D < handle
                 obj.drawElem(gl, obj.lumiere.forme);
             end
 
+            % gl.glFlush();
             obj.releaseGL();
             % Make a short pause to avoid refresh issues : DO NOT USEpause(0.05) which cause error
-            tic;
-            while ~(toc>0.02);end
+            % tic;
+            % while ~(toc>0.005);end
 
             obj.canvas.swapBuffers(); % refresh the scene
             % disp('<<< END Drawscene')
@@ -395,7 +397,7 @@ classdef Scene3D < handle
                  
             obj.anim.setEnd([event.getX() event.getY()]);
             % a=obj.anim.acceleration
-            if obj.anim.isRunning==false && obj.anim.acceleration>1000 && obj.anim.Enable   
+            if obj.anim.isRunning==false & obj.anim.acceleration>1000 & obj.anim.Enable   
                 obj.anim.t.start;
             else
                 obj.anim.t.stop;
