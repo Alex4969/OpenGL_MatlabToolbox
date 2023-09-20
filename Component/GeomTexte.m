@@ -122,7 +122,7 @@ classdef GeomTexte < ClosedGeom
                 cursor.x = cursor.x - infos.xoffset + infos.xadvance;
                 cursor.y = cursor.y + infos.yoffset;
                 ind = [ind base base+1 base+2 base+2 base+3 base];
-                zValue = zValue + 3e-4; % on avance légérement la lettre suivante pour eviter l'overlapping
+                zValue = zValue + 3e-3; % on avance légérement la lettre suivante pour eviter l'overlapping
             end
             pos(:, 1:2) = pos(:, 1:2) / double(obj.police.taille);
             minX = min(pos(:,1));
