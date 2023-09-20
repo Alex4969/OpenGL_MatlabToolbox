@@ -61,7 +61,7 @@ classdef ElementLigne < VisibleElement
             obj.color = s.couleur;
             obj.epaisseur = s.epaisseur;
             if bitand(obj.typeRendu, 1) == 0
-                obj.setModeRendu("UNIFORME");
+                obj.setModeColoration("UNIFORME");
             end
         end % fin de select
 
@@ -72,7 +72,7 @@ classdef ElementLigne < VisibleElement
             obj.color = s.couleur;
             obj.epaisseur = s.epaisseur;
             if obj.typeRendu ~= s.oldType
-                obj.setModeRendu("PAR_SOMMET");
+                obj.setModeColoration("PAR_SOMMET");
             end
         end % fin de deselect
     end % fin des methodes cachés
