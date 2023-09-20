@@ -47,10 +47,13 @@ classdef ElementLigne < VisibleElement
             end
             gl.glDrawElements(gl.GL_LINES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
         end % fin de Draw
+
         function DrawId(obj, gl)
             % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
-            obj.GLGeom.Bind(gl);
-            gl.glDrawElements(gl.GL_LINES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+            if obj.isVisible()
+                obj.GLGeom.Bind(gl);
+                gl.glDrawElements(gl.GL_LINES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+            end
         end % fin de drawID
 
         function sNew = select(obj, s)
