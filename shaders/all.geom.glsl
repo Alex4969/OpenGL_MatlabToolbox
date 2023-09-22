@@ -3,6 +3,8 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 3) out;
 
+uniform mat4 uCamMatrix = mat4(1.0);
+
 out vec3 vNormal;
 out vec3 vCrntPos;
 out vec2 vTextureCoord;  /*CHOIX : TEX */
@@ -12,7 +14,6 @@ out vec2 interpolation;
 in DATA
 {
 	vec3 vCrntPos;
-	mat4 vProjection;
     vec2 vTextureCoord; /*CHOIX : TEX */
     vec4 vColor;        /*CHOIX : COL3 COL4 */
 	vec3 vNormal;       /*CHOIX : NORM */
@@ -24,7 +25,7 @@ void main()
 	vec3 v2 = vec3(gl_in[2].gl_Position - gl_in[1].gl_Position); /*CHOIX : TEX COL3 COL4 DEF */
 	vec3 SurfaceNormal = cross(v1, v2);							 /*CHOIX : TEX COL3 COL4 DEF */
 
-	gl_Position = data_in[0].vProjection * gl_in[0].gl_Position;
+	gl_Position = uCamMatrix * gl_in[0].gl_Position;
 	vNormal = SurfaceNormal;					/*CHOIX : TEX COL3 COL4 DEF */
 	vNormal = data_in[0].vNormal;				/*CHOIX : NORM */
 	vCrntPos = data_in[0].vCrntPos;
@@ -33,7 +34,7 @@ void main()
 	interpolation = vec2(1.0, 0.0);
 	EmitVertex();
 	
-	gl_Position = data_in[1].vProjection * gl_in[1].gl_Position;
+	gl_Position = uCamMatrix * gl_in[1].gl_Position;
 	vNormal = SurfaceNormal;					/*CHOIX : TEX COL3 COL4 DEF */
 	vNormal = data_in[1].vNormal;				/*CHOIX : NORM */
 	vCrntPos = data_in[1].vCrntPos;
@@ -42,7 +43,7 @@ void main()
 	interpolation = vec2(0.0, 1.0);
 	EmitVertex();
 
-	gl_Position = data_in[2].vProjection * gl_in[2].gl_Position;
+	gl_Position = uCamMatrix * gl_in[2].gl_Position;
 	vNormal = SurfaceNormal;					/*CHOIX : TEX COL3 COL4 DEF */
 	vNormal = data_in[2].vNormal;				/*CHOIX : NORM */
 	vCrntPos = data_in[2].vCrntPos;

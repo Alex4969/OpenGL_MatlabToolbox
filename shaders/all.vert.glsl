@@ -6,12 +6,10 @@ layout(location = 2) in vec4 color4D;    /*CHOIX : COL4 */
 layout(location = 3) in vec2 textureCoord;  /*CHOIX : TEX */
 layout(location = 4) in vec3 normal;     /*CHOIX : NORM */
 
-uniform mat4 uModelMatrix = mat4(1.0); //comentaire de ligne
-uniform mat4 uCamMatrix = mat4(1.0);
+uniform mat4 uModelMatrix = mat4(1.0);
 
 out DATA {
 	vec3 vCrntPos;
-	mat4 vProjection;
     vec2 vTextureCoord; /*CHOIX : TEX */
     vec4 vColor;        /*CHOIX : COL3 COL4 */
     vec3 vNormal;       /*CHOIX : NORM */
@@ -22,7 +20,6 @@ void main() {
     gl_Position = crntPos;
 
     data_out.vCrntPos = crntPos.xyz;
-    data_out.vProjection = uCamMatrix;
     data_out.vColor = color4D;                /*CHOIX : COL4 */
     data_out.vColor = vec4(color3D, 1.0);     /*CHOIX : COL3 */
     data_out.vTextureCoord = textureCoord;    /*CHOIX : TEX */
