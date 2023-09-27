@@ -72,23 +72,23 @@ classdef (Abstract) VisibleElement < handle
             obj.geom.modifyModelMatrix(matrix, after);
         end % fin de ModifymodelMatrix
 
-        function setModeRendu(obj, newTypeColoration)
+        function setModeColoration(obj, newTypeColoration)
             if obj.enumColoration.isKey(newTypeColoration)
                 obj.typeRendu = obj.enumShading("SANS") + obj.enumColoration(newTypeColoration);
                 notify(obj, 'evt_updateRendu');
             else
-                disp('Valuer non existante');
-                disp(['valeurs pour la coloration : ' obj.enumColoration.keys']);
+                disp('Choix non existant, les valeurs possibles sont : ');
+                disp(obj.enumColoration.keys');
             end
-        end % fin de setModeRendu
+        end % fin de setModeColoration
 
         function setOrientation(obj, newOrientation)
             if obj.enumOrientation.isKey(newOrientation)
                 obj.typeOrientation = obj.enumOrientation(newOrientation);
                 notify(obj, 'evt_redraw');
             else
-                disp('Nouvelle orientation incorrect');
-                disp(['Valeurs possibles : ' VisibleElement.enumOrientation.keys']);
+                disp('Choix non existant, les valeurs possibles sont : ');
+                disp(VisibleElement.enumOrientation.keys');
             end
         end % fin de setOrientation
 

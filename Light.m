@@ -150,9 +150,9 @@ classdef Light < handle
             % intensite calculation depends on method
             % 1 : I=exp(-a*dist)
             % 2 : I=1/a*dist² + b*dist + 1
-            % voir allfrag.glsl
+            % voir all.frag.glsl
             if nargin == 1
-                a = 0.01; b = 0; % valeurs de a et b par defaut
+                a = 0.01; b = 0; method = 1;% valeurs de a et b par defaut
             end
             obj.Type = [1 a b method];
             notify(obj, 'evt_updateUbo');
@@ -208,7 +208,8 @@ classdef Light < handle
             obj.forme.setModelMatrix(MTrans3D(obj.position));
 
             obj.forme.setColor(obj.color);
-            obj.forme.setModeRendu("UNIFORME", "SANS");
+            obj.forme.setModeColoration("UNIFORME");
+            obj.forme.setModeShading("SANS");
             obj.forme.glUpdate(gl, "evt_updateModel")
             obj.modelListener = addlistener(obj.forme.geom,'evt_updateModel',@obj.cbk_updateModel);
         end

@@ -47,10 +47,13 @@ classdef ElementPoint < VisibleElement
             % gl.glDrawArrays(gl.GL_POINTS, 0, size(obj.Geom.listePoints, 1));
             gl.glDrawElements(gl.GL_POINTS, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
         end % fin de Draw
+
         function DrawId(obj, gl)
             % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
-            obj.GLGeom.Bind(gl);
-            gl.glDrawElements(gl.GL_POINTS, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+            if obj.isVisible()
+                obj.GLGeom.Bind(gl);
+                gl.glDrawElements(gl.GL_POINTS, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+            end
         end % fin de drawID
 
         function sNew = select(obj, s)
@@ -61,7 +64,7 @@ classdef ElementPoint < VisibleElement
             obj.color = s.couleur;
             obj.epaisseur = s.epaisseur;
             if bitand(obj.typeRendu, 1) == 0
-                obj.setModeRendu("UNIFORME");
+                obj.setModeColoration("UNIFORME");
             end
         end % fin de select
 
@@ -72,7 +75,7 @@ classdef ElementPoint < VisibleElement
             obj.color = s.couleur;
             obj.epaisseur = s.epaisseur;
             if obj.typeRendu ~= s.oldType
-                obj.setModeRendu("PAR_SOMMET");
+                obj.setModeColoration("PAR_SOMMET");
             end
         end % fin de deselect
     end % fin des methodes cachés

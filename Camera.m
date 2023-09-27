@@ -164,10 +164,10 @@ classdef Camera < matlab.mixin.Copyable
             att.near = obj.near;
             if obj.type % perspective
                 maxY = obj.near * tan(deg2rad(obj.fov/2));
-                att.coef = 0.1 * obj.near; % ne s'adapte pas aux variations de fov...
+                att.coef = 0.1 * obj.near; % ne s'adapte pas bien aux variations de fov...
             else
                 maxY = norm(obj.getDirection)/2;
-                att.coef = 0.173 * maxY; % 1.73 trouvé par essaies
+                att.coef = 0.173 * maxY; % 0.173 trouvé par essaies
             end
             maxX = maxY * obj.getRatio;
             att.maxX  = maxX;
@@ -276,10 +276,10 @@ classdef Camera < matlab.mixin.Copyable
                 obj.position = obj.position + vect * facteur;
             end
 
-            obj.computeView();
             if obj.type == 0 % recompute la matrice orthonorme car depend de la distance
                 obj.computeProj();
             end
+            obj.computeView();
         end % fin de zoom
 
         % Rotation around camera axis, theta in degree

@@ -32,7 +32,7 @@ classdef ElementFace < VisibleElement
                 return 
             end
             if bitand(obj.typeRendu, 4) == 0
-                obj.setModeRendu("TEXTURE");
+                obj.setModeColoration("TEXTURE");
             end
             obj.texture = fileName;
             notify(obj, 'evt_textureUpdate');
@@ -78,20 +78,29 @@ classdef ElementFace < VisibleElement
             end
         end % fin de setQuoiAfficher
 
-        function setModeRendu(obj, newTypeColoration, newTypeLumiere)
-            if nargin == 2 && obj.enumColoration.isKey(newTypeColoration)
-                obj.typeRendu = bitand(obj.typeRendu, 0xF0); % on garde la composante de lumiere
-                obj.typeRendu = obj.typeRendu + obj.enumColoration(newTypeColoration);
-                notify(obj, 'evt_updateRendu');
-            elseif obj.enumColoration.isKey(newTypeColoration) && obj.enumShading.isKey(newTypeLumiere)
-                obj.typeRendu = obj.enumColoration(newTypeColoration) + obj.enumShading(newTypeLumiere);
+
+%        function setModeRendu(obj, newTypeColoration, newTypeLumiere)
+%            if nargin == 2 && obj.enumColoration.isKey(newTypeColoration)
+%                obj.typeRendu = bitand(obj.typeRendu, 0xF0); % on garde la composante de lumiere
+%                obj.typeRendu = obj.typeRendu + obj.enumColoration(newTypeColoration);
+%                notify(obj, 'evt_updateRendu');
+%            elseif obj.enumColoration.isKey(newTypeColoration) && obj.enumShading.isKey(newTypeLumiere)
+%                obj.typeRendu = obj.enumColoration(newTypeColoration) + obj.enumShading(newTypeLumiere);
+
+        function setModeShading(obj, newTypeLumiere)
+            if obj.enumShading.isKey(newTypeLumiere)
+                if newTypeLumiere == "LISSE" && obj.GLGeom.nLayout(4) == 0
+                    disp('Generation des normales...')
+                    obj.GenerateNormals();
+                end
+                obj.typeRendu = bitand(obj.typeRendu, 0X0F); % on garde la composante de coloration
+                obj.typeRendu = obj.typeRendu + obj.enumShading(newTypeLumiere);
                 notify(obj, 'evt_updateRendu');
             else
-                disp('valeurs incompatibles')
-                disp(['valeurs pour la coloration : ' obj.enumColoration.keys'])
-                disp(['valeurs pour le shading : ' obj.enumShading.keys'])
+                disp('Choix non existant, les valeurs possibles sont : ');
+                disp(obj.enumShading.keys')
             end
-        end % fin de setModeRendu
+        end % fin de setModeShading
 
         function AddMapping(obj, matMapping)
             obj.GLGeom.addDataToBuffer(matMapping, 3);
@@ -145,8 +154,10 @@ classdef ElementFace < VisibleElement
 
         function DrawId(obj, gl)
             % DRAWID dessine uniquement l'id dans le frameBuffer (pour la selection)
-            obj.GLGeom.Bind(gl);
-            gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+            if obj.isVisible()
+                obj.GLGeom.Bind(gl);
+                gl.glDrawElements(gl.GL_TRIANGLES, numel(obj.geom.listeConnection) , gl.GL_UNSIGNED_INT, 0);
+            end
         end % fin de drawID
 
         function sNew = select(obj, s)

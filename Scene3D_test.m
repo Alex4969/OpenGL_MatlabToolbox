@@ -83,7 +83,8 @@ classdef Scene3D_test < Scene3D
             % chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2)); % pour le loup
             elem.GenerateNormals();
             elem.setQuoiAfficher(3);
-            elem.setModeRendu("UNIFORME", "DUR"); % uniform & dur
+            elem.setModeColoration("UNIFORME");
+            elem.setModeShading("DUR");
             
             ravie = Police("textes/ravie");
             geomTexte = GeomTexte(101, 'Hello World !', ravie, "CENTRE");
@@ -220,7 +221,8 @@ classdef Scene3D_test < Scene3D
             % chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2)); % pour le loup
             elem.GenerateNormals();
             elem.setQuoiAfficher(3);
-            elem.setModeRendu("UNIFORME", "DUR"); % uniform & dur
+            elem.setModeColoration("UNIFORME");
+            elem.setModeShading("DUR");
             
             ravie = Police("textes/ravie");
             geomTexte = GeomTexte(101, 'Hello World !', ravie, "CENTRE");
@@ -394,7 +396,8 @@ classdef Scene3D_test < Scene3D
             % chess.setModelMatrix(MTrans3D([2 0 2]) * MRot3D([-90 0 0]) * MScale3D(2)); % pour le loup
             elem.GenerateNormals();
             elem.setQuoiAfficher(3);
-            elem.setModeRendu("UNIFORME", "DUR"); % uniform & dur
+            elem.setModeColoration("UNIFORME");
+            elem.setModeShading("DUR");
             
             ravie = Police("textes/ravie");
             geomTexte = GeomTexte(101, 'Hello World !', ravie, "CENTRE");

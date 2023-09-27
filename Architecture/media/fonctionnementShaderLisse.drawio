@@ -1,0 +1,166 @@
+<mxfile host="Electron" modified="2023-09-21T09:53:15.176Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.1 Chrome/112.0.5615.204 Electron/24.6.1 Safari/537.36" etag="qd_kiQcFr9t5CHpXXIuG" version="21.6.1" type="device">
+  <diagram name="Page-1" id="LJhDoYM8GGtGKUL-O_BZ">
+    <mxGraphModel dx="1150" dy="711" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="R9aIYXGMt73mxW7MGIt1-1" value="Vertex Shader :&amp;nbsp;&lt;br&gt;Pour chaque sommet&lt;br&gt;&lt;br&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;font style=&quot;font-size: 9px;&quot;&gt;- Application de la matrice modèle à la position&lt;/font&gt;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;font style=&quot;font-size: 9px;&quot;&gt;- Application de la matrice modèle aux normales&lt;/font&gt;&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
+          <mxGeometry x="420" y="290" width="120" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="R9aIYXGMt73mxW7MGIt1-2" value="" style="endArrow=classic;html=1;rounded=0;fontColor=#FF0000;strokeColor=#FF0000;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="360" y="376.76" as="sourcePoint" />
+            <mxPoint x="420" y="376.76" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="R9aIYXGMt73mxW7MGIt1-3" value="VBO" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#FF0000;" parent="1" vertex="1">
+          <mxGeometry x="360" y="350" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="R9aIYXGMt73mxW7MGIt1-4" value="Uniform" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#3333FF;" parent="1" vertex="1">
+          <mxGeometry x="450" y="480" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="R9aIYXGMt73mxW7MGIt1-5" value="" style="endArrow=classic;html=1;rounded=0;fontColor=#FF0000;strokeColor=#3333FF;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="480" y="480" as="sourcePoint" />
+            <mxPoint x="480" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="R9aIYXGMt73mxW7MGIt1-12" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="540" y="372.5" as="sourcePoint" />
+            <mxPoint x="620" y="372.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-19" value="Geometry Shader :&lt;br&gt;Pour chaque face&lt;br&gt;&lt;br&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;font-size: 9px; background-color: initial;&quot;&gt;- Application de la matrice camProj à la position&lt;/span&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
+          <mxGeometry x="800" y="290" width="120" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-35" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="720" y="350" as="sourcePoint" />
+            <mxPoint x="800" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-36" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="720" y="372.02" as="sourcePoint" />
+            <mxPoint x="800" y="372.02" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-37" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="720" y="394.26" as="sourcePoint" />
+            <mxPoint x="800" y="394.26" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-38" value="3 sommets d&#39;un face" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="720" y="312.5" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-39" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="920" y="352.63" as="sourcePoint" />
+            <mxPoint x="1000" y="352.63" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-40" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="920" y="374.65" as="sourcePoint" />
+            <mxPoint x="1000" y="374.65" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-41" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="920" y="396.89" as="sourcePoint" />
+            <mxPoint x="1000" y="396.89" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-42" value="3 sommets d&#39;une face" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="920" y="310" width="73.5" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-44" value="fragment Shader :&lt;br&gt;Pour chaque pixel&lt;br&gt;&lt;br&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;font style=&quot;font-size: 9px;&quot;&gt;- Calcul de l&#39;intensité lumineuse&lt;/font&gt;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;font style=&quot;font-size: 9px;&quot;&gt;- Calcul de la couleur selon les couleurs des faces, arretes et points&lt;/font&gt;&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
+          <mxGeometry x="1170" y="290" width="120" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-46" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="j9u7WpE4ALorNl15ndxJ-56" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1090" y="374.76" as="sourcePoint" />
+            <mxPoint x="1170" y="374.76" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-48" value="1 point" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1100" y="342.5" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-50" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#CC00CC;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1290" y="374.65" as="sourcePoint" />
+            <mxPoint x="1370" y="374.65" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-54" value="&lt;font color=&quot;#cc00cc&quot;&gt;La couleur du pixel&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="1296.5" y="340" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-55" value="Connnection des points avec le EBO" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#B3B3B3;fillColor=#B3B3B3;" parent="1" vertex="1">
+          <mxGeometry x="620" y="300" width="100" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-56" value="Rasterisation : interpolation des 3 sommets vers un point de la face" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#B3B3B3;fillColor=#B3B3B3;" parent="1" vertex="1">
+          <mxGeometry x="1000" y="305" width="100" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-58" value="" style="endArrow=classic;html=1;rounded=0;fontColor=#FF0000;strokeColor=#3333FF;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1190" y="490" as="sourcePoint" />
+            <mxPoint x="1190" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-59" value="Uniform" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#3333FF;" parent="1" vertex="1">
+          <mxGeometry x="1160" y="490" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-60" value="" style="endArrow=classic;html=1;rounded=0;fontColor=#FF0000;strokeColor=#00CC00;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1270" y="490" as="sourcePoint" />
+            <mxPoint x="1270" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-61" value="UBO" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#00CC00;" parent="1" vertex="1">
+          <mxGeometry x="1240" y="490" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-63" value="1 sommet" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="540" y="340" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-65" value="- positions&#xa;- normales" style="text;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#FF0000;" parent="1" vertex="1">
+          <mxGeometry x="350" y="380" width="70" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-66" value="- matrice modele" style="text;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#3333FF;" parent="1" vertex="1">
+          <mxGeometry x="435" y="500" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="j9u7WpE4ALorNl15ndxJ-69" value="- position&#xa;- normale" style="text;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="548" y="372.5" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="yZNYXsLpvncfmWdorTTr-1" value="- position&#xa;- normale" style="text;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="725" y="392.5" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="yZNYXsLpvncfmWdorTTr-2" value="Uniform" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#3333FF;" parent="1" vertex="1">
+          <mxGeometry x="830" y="480" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="yZNYXsLpvncfmWdorTTr-3" value="" style="endArrow=classic;html=1;rounded=0;fontColor=#FF0000;strokeColor=#3333FF;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="860" y="480" as="sourcePoint" />
+            <mxPoint x="860" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="yZNYXsLpvncfmWdorTTr-4" value="- matrice camProj" style="text;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#3333FF;" parent="1" vertex="1">
+          <mxGeometry x="815" y="500" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yZNYXsLpvncfmWdorTTr-5" value="- position&#xa;- normale&#xa;- interpolation" style="text;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="916.75" y="390" width="80" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="yZNYXsLpvncfmWdorTTr-6" value="- position&#xa;- normale&#xa;- interpolation" style="text;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1090" y="372.5" width="80" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="yZNYXsLpvncfmWdorTTr-7" value="valeurs de&#xa;couleurs pour&#xa;points/arretes/faces" style="text;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#3333FF;" parent="1" vertex="1">
+          <mxGeometry x="1140" y="510" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="yZNYXsLpvncfmWdorTTr-8" value="données de&#xa;caméra et lumière&#xa;pour shading" style="text;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#00CC00;" parent="1" vertex="1">
+          <mxGeometry x="1220" y="510" width="100" height="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -47,7 +47,7 @@ classdef jOGLframe < jFrame
     end
 
     properties(GetAccess=public)
-        iconpath='C:\Users\pduvauchelle\Philippe\Matlab\openGL\Stage Alexandre Biaud (opengl4-2023)\OpenGL_MatlabToolbox\icons';
+        iconpath=[pwd '/icons'];
     end
 
     methods

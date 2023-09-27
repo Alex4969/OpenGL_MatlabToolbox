@@ -10,6 +10,9 @@ classdef ShaderProgram < handle
         function obj = ShaderProgram(gl, nLayout, type, typeRendu)
             % construit le programme qui correspond au choix de rendu choisi par l'utilisateur
             % on commence par verifier que les choix soient applicables
+            % type = "Face", "Ligne", "Point" ou "Texte"
+            % le type rendu est in uint8 qui contient le type de coloration
+            % et le type de shading souhaité
             obj.mapUniformLocation = containers.Map('KeyType','char','ValueType','int32');
             obj.shaderProgId = gl.glCreateProgram();
             if type == "id"
@@ -125,7 +128,7 @@ classdef ShaderProgram < handle
             fId = fopen(filePath);
             while ~feof(fId)
                 tline = fgets(fId);
-                if contains(tline, "//")
+                if contains(tline, "/*CHOIX")
                     if contains(tline, keyWords)
                         src = src + tline;
                     end 
