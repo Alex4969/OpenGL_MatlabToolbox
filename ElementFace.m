@@ -80,7 +80,7 @@ classdef ElementFace < VisibleElement
 
         function setModeRendu(obj, newTypeColoration, newTypeLumiere)
             if nargin == 2 && obj.enumColoration.isKey(newTypeColoration)
-                obj.typeRendu = bitand(obj.typeRendu, 0xF0); % on grade la composante de lumiere
+                obj.typeRendu = bitand(obj.typeRendu, 0xF0); % on garde la composante de lumiere
                 obj.typeRendu = obj.typeRendu + obj.enumColoration(newTypeColoration);
                 notify(obj, 'evt_updateRendu');
             elseif obj.enumColoration.isKey(newTypeColoration) && obj.enumShading.isKey(newTypeLumiere)
