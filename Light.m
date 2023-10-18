@@ -116,7 +116,7 @@ classdef Light < handle
             arguments
                 obj
                 type enum.LightType
-                param
+                param 
             end
 
             switch type

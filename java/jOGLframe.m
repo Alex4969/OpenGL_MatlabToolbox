@@ -47,7 +47,7 @@ classdef jOGLframe < jFrame
     end
 
     properties(GetAccess=public)
-        iconpath=[pwd '/icons'];
+        iconpath
     end
 
     methods
@@ -61,6 +61,8 @@ classdef jOGLframe < jFrame
             end
 
             disp('Hello, i am a OpenGL 3D scene')
+
+            obj.iconpath=[pwd '\icons'];
             obj.canvas=glCanvas(glprofile,aaSample);
             obj.configure;% add canvas to Frame
             
